@@ -1,0 +1,61 @@
+[
+  {
+    "race_id": "202602010811",
+    "date": "2026-02-01",
+    "day_of_week": "土",
+    "week_key": "2026-W05",
+    "venue": "中山",
+    "race_num": 11,
+    "race_name": "第11レース（テスト）",
+    "distance": "1600m",
+    "surface": "芝",
+    "weather": "晴",
+    "track_condition": "良",
+    "grade": "一般",
+    "horses": [
+      {
+        "umaban": 1,
+        "wakuban": 1,
+        "horse_name": "テストホース",
+        "uma_index": 85.5,
+        "rank": "A",
+        "confidence": 0.75,
+        "expected_value": 1.28,
+        "mark": "◎",
+        "jockey": "武豊",
+        "odds": 3.2
+      }
+    ],
+    "honmei": {
+      "umaban": 1,
+      "horse_name": "テストホース",
+      "uma_index": 85.5,
+      "rank": "A",
+      "confidence": 0.75,
+      "expected_value": 1.28
+    },
+    "bets": {
+      "単勝": [1],
+      "複勝": [1],
+      "ワイド": [[1, 2]],
+      "馬連": [[1, 2]],
+      "馬単": [[1, 2]],
+      "三連複": [[1, 2, 3]],
+      "三連単": [[1, 2, 3]]
+    },
+    "budget_allocation": {
+      "style": "回収率重視",
+      "total_budget": 5000,
+      "breakdown": {
+        "単勝": 750,
+        "複勝": 500,
+        "ワイド": 1000,
+        "馬連": 750,
+        "馬単": 500,
+        "三連複": 750,
+        "三連単": 750
+      }
+    },
+    "result": null
+  }
+]

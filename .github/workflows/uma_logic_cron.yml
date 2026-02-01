@@ -2,9 +2,9 @@ name: UMA-Logic Pro Auto Update
 
 on:
   schedule:
-    - cron: '0 23 * * 5,6' # 土日の朝8時(日本時間)
-    - cron: '0 10 * * 6,0' # 土日の夜19時(日本時間)
-  workflow_dispatch: # 手動実行ボタン
+    - cron: '0 23 * * 5,6'
+    - cron: '0 10 * * 6,0'
+  workflow_dispatch:
 
 jobs:
   update-data:
@@ -25,15 +25,14 @@ jobs:
 
       - name: Run Scripts
         run: |
-          echo "=== 1. Scraper Check ==="
-          python scripts/scraper_realtime.py && echo "Scraper DONE" || echo "Scraper SKIP/FAIL"
+          echo "Starting Scraper..."
+          python scripts/scraper_realtime.py || true
           
-          echo "=== 2. Calculator Check ==="
-          python scripts/calculator_pro.py && echo "Calculator DONE" || echo "Calculator SKIP/FAIL"
+          echo "Starting Calculator..."
+          python scripts/calculator_pro.py || true
           
-          echo "=== 3. Data Fetcher Check ==="
-          # 平日はデータがないため、長時間止まらないようにエラーを許容して次へ進ませます
-          python scripts/fetch_race_data.py && echo "Fetcher DONE" || echo "Fetcher SKIP/FAIL (No Race Today)"
+          echo "Starting Fetcher (Skipping if no race)..."
+          python scripts/fetch_race_data.py || true
 
       - name: Commit and Push
         run: |

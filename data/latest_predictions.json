@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-02-01 16:34",
+  "total_races": 0,
+  "races": [],
+  "rank_summary": {
+    "S": 0,
+    "A": 0,
+    "B": 0
+  },
+  "win5_strategies": {
+    "is_valid": false,
+    "message": "レースデータなし"
+  }
+}

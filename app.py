@@ -510,10 +510,16 @@ with tab2:
                 key="result_year"
             )
         
-        # 日付選択（選択した年の日付のみ表示）
+       # 日付選択（選択した年の日付のみ表示）
         with filter_col2:
             year_dates = dates_by_year.get(selected_year, [])
-            date_options = [d.strftime("%m月%d日 (%a)") for d in year_dates]
+            
+            # 曜日を漢字で表示
+            def format_date_jp(d):
+                weekday_jp = ["月", "火", "水", "木", "金", "土", "日"]
+                return f"{d.month}月{d.day}日 ({weekday_jp[d.weekday()]})"
+            
+            date_options = [format_date_jp(d) for d in year_dates]
             
             if date_options:
                 selected_date_idx = st.selectbox(
@@ -583,8 +589,8 @@ with tab2:
                                 medal = ["🥇", "🥈", "🥉"][i] if i < 3 else ""
                                 st.markdown(f"{medal} **{horse.get('馬番', '')}** {horse.get('馬名', '')}")
                         
-                        # 詳細アコーディオン
-                        with st.expander("📊 詳細を見る"):
+                        # 詳細アコーディオン（絵文字なしでシンプルに）
+                        with st.expander("詳細を見る"):
                             # --- 着順テーブル ---
                             st.markdown("**🏇 着順表**")
                             all_results = race.get("all_results", race.get("top3", []))

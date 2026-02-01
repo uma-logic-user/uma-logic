@@ -1,0 +1,69 @@
+name: UMA-Logic 完全自動更新
+
+on:
+  schedule:
+    # 土曜 7:00 JST = 金曜 22:00 UTC
+    - cron: '0 22 * * 5'
+    # 土曜 17:00 JST = 土曜 8:00 UTC
+    - cron: '0 8 * * 6'
+    # 日曜 7:00 JST = 土曜 22:00 UTC
+    - cron: '0 22 * * 6'
+    # 日曜 17:00 JST = 日曜 8:00 UTC
+    - cron: '0 8 * * 0'
+  
+  workflow_dispatch:
+
+jobs:
+  auto-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Determine task
+        id: determine_task
+        run: |
+          HOUR=$(date -u +%H)
+          if [ "$HOUR" == "22" ]; then
+            echo "task=prediction" >> $GITHUB_OUTPUT
+          elif [ "$HOUR" == "08" ]; then
+            echo "task=result" >> $GITHUB_OUTPUT
+          else
+            echo "task=none" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Run prediction script
+        if: steps.determine_task.outputs.task == 'prediction'
+        run: |
+          python scripts/fetch_race_data_enhanced.py
+      
+      - name: Run result script
+        if: steps.determine_task.outputs.task == 'result'
+        run: |
+          python scripts/update_results_enhanced.py
+      
+      - name: Commit and push changes
+        if: steps.determine_task.outputs.task != 'none'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "UMA-Logic Bot"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "変更なし"
+          else
+            git commit -m "🤖 自動更新: $(date +'%Y-%m-%d %H:%M')"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -2,11 +2,6 @@ name: 💹 リアルタイムオッズ取得
 
 on:
   workflow_dispatch:
-    inputs:
-      race_id:
-        description: 'レースID (例: 202506010101)'
-        required: false
-        default: ''
 
 jobs:
   fetch-odds:
@@ -17,6 +12,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: 🐍 Python環境をセットアップ
         uses: actions/setup-python@v5
@@ -32,21 +28,17 @@ jobs:
         run: mkdir -p data
 
       - name: 💹 リアルタイムオッズを取得
-        run: |
-          echo "=========================================="
-          echo "💹 リアルタイムオッズ取得"
-          echo "=========================================="
-          python scripts/scraper_realtime.py
+        run: python scripts/scraper_realtime.py
 
       - name: 💾 変更をコミット＆プッシュ
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
+          git pull --rebase origin main || git pull origin main
           git add data/
           if git diff --staged --quiet; then
-            echo "📭 変更なし、コミットをスキップ"
+            echo "📭 変更なし"
           else
             git commit -m "💹 オッズ更新: $(TZ=Asia/Tokyo date +'%Y-%m-%d %H:%M')"
             git push
-            echo "✅ プッシュ完了"
           fi

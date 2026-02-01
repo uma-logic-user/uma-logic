@@ -1,5 +1,5 @@
 # app_commercial.py
-# UMA-Logic Pro - 商用グレード完成版（6タブ構成 + エラーハンドリング強化）
+# UMA-Logic Pro - 商用グレード完成版（レース結果タブ強化版）
 
 import streamlit as st
 import pandas as pd
@@ -123,6 +123,76 @@ st.markdown("""
         margin-bottom: 20px;
         border-left: 4px solid #F6C953;
     }
+
+    .race-card {
+        background: linear-gradient(135deg, #252545, #1e1e3a);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #3c3c5a;
+    }
+
+    .race-card:hover {
+        border-color: #F6C953;
+    }
+
+    .payout-table {
+        background-color: #16213E;
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    .payout-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-bottom: 1px solid #3c3c5a;
+    }
+
+    .payout-row:last-child {
+        border-bottom: none;
+    }
+
+    .payout-label {
+        color: #AAAAAA;
+    }
+
+    .payout-value {
+        color: #F6C953;
+        font-weight: bold;
+    }
+
+    .venue-button {
+        background-color: #2a2a4e;
+        color: white;
+        border: 2px solid #3c3c5a;
+        padding: 10px 20px;
+        border-radius: 8px;
+        margin-right: 8px;
+        cursor: pointer;
+    }
+
+    .venue-button-active {
+        background-color: #F6C953;
+        color: #1A1A2E;
+        border-color: #F6C953;
+    }
+
+    .result-header {
+        background: linear-gradient(135deg, #F6C953, #e5b84a);
+        color: #1A1A2E;
+        padding: 10px 15px;
+        border-radius: 8px 8px 0 0;
+        font-weight: bold;
+    }
+
+    .result-body {
+        background-color: #16213E;
+        padding: 15px;
+        border-radius: 0 0 8px 8px;
+        border: 1px solid #3c3c5a;
+        border-top: none;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -138,6 +208,46 @@ def safe_load_json(filepath: Path) -> dict:
     except Exception:
         pass
     return {}
+
+
+def get_available_dates_by_year() -> dict:
+    """年ごとの利用可能な日付リストを取得"""
+    dates_by_year = {}
+    try:
+        for filepath in DATA_DIR.glob(f"{RESULTS_PREFIX}*.json"):
+            date_str = filepath.stem.replace(RESULTS_PREFIX, "")
+            if len(date_str) == 8 and date_str.isdigit():
+                try:
+                    date = datetime.strptime(date_str, "%Y%m%d").date()
+                    year = date.year
+                    if year not in dates_by_year:
+                        dates_by_year[year] = []
+                    dates_by_year[year].append(date)
+                except ValueError:
+                    continue
+        
+        # 予想ファイルからも日付を取得
+        for filepath in DATA_DIR.glob(f"{PREDICTIONS_PREFIX}*.json"):
+            date_str = filepath.stem.replace(PREDICTIONS_PREFIX, "")
+            if len(date_str) == 8 and date_str.isdigit():
+                try:
+                    date = datetime.strptime(date_str, "%Y%m%d").date()
+                    year = date.year
+                    if year not in dates_by_year:
+                        dates_by_year[year] = []
+                    if date not in dates_by_year[year]:
+                        dates_by_year[year].append(date)
+                except ValueError:
+                    continue
+        
+        # 各年の日付をソート
+        for year in dates_by_year:
+            dates_by_year[year] = sorted(dates_by_year[year], reverse=True)
+            
+    except Exception:
+        pass
+    
+    return dates_by_year
 
 
 def get_available_dates() -> list:
@@ -230,6 +340,16 @@ def check_hit(prediction: dict, result: dict) -> dict:
         hit_result["三連複"] = {"hit": True, "payout": payouts.get("三連複", 0)}
     
     return hit_result
+
+
+def format_payout(value) -> str:
+    """払戻金を表示用にフォーマット"""
+    if isinstance(value, dict):
+        return " / ".join([f"¥{v:,}" for v in value.values() if v])
+    elif isinstance(value, (int, float)) and value > 0:
+        return f"¥{int(value):,}"
+    else:
+        return "-"
 
 
 # --- サイドバー ---
@@ -366,59 +486,166 @@ with tab1:
 
 
 # ========================================
-# タブ2: レース結果
+# タブ2: レース結果（大幅アップデート版）
 # ========================================
 with tab2:
-    st.markdown(f"## 🏁 {selected_date.strftime('%Y年%m月%d日')} のレース結果")
+    st.markdown("## 🏁 レース結果")
     
-    result_races = results_data.get("races", [])
+    # --- 階層化された検索・絞り込み機能 ---
+    dates_by_year = get_available_dates_by_year()
     
-    if not result_races:
-        st.info("この日の結果データはまだありません。レース終了後に自動取得されます。")
+    if not dates_by_year:
+        st.warning("結果データがありません。")
     else:
-        result_venues = sorted(set(r.get("venue", "不明") for r in result_races))
-        selected_venue = st.selectbox("競馬場を選択", result_venues)
+        # 検索フィルター（3カラム）
+        filter_col1, filter_col2, filter_col3 = st.columns(3)
         
-        venue_results = sorted(
-            [r for r in result_races if r.get("venue") == selected_venue],
-            key=lambda x: x.get("race_num", 0)
-        )
+        # 年選択
+        with filter_col1:
+            available_years = sorted(dates_by_year.keys(), reverse=True)
+            selected_year = st.selectbox(
+                "📅 年を選択",
+                available_years,
+                index=0,
+                key="result_year"
+            )
         
-        for race in venue_results:
-            st.markdown(f"### {race.get('race_num', '')}R {race.get('race_name', '')}")
+        # 日付選択（選択した年の日付のみ表示）
+        with filter_col2:
+            year_dates = dates_by_year.get(selected_year, [])
+            date_options = [d.strftime("%m月%d日 (%a)") for d in year_dates]
             
-            top3 = race.get("top3", [])
-            if top3:
-                df = pd.DataFrame([
-                    {
-                        "着順": i + 1,
-                        "馬番": h.get("馬番", ""),
-                        "馬名": h.get("馬名", ""),
-                        "騎手": h.get("騎手", ""),
-                        "タイム": h.get("タイム", ""),
-                        "上がり3F": h.get("上がり3F", "")
-                    }
-                    for i, h in enumerate(top3)
-                ])
-                st.dataframe(df, use_container_width=True, hide_index=True)
+            if date_options:
+                selected_date_idx = st.selectbox(
+                    "📆 開催日を選択",
+                    range(len(date_options)),
+                    format_func=lambda x: date_options[x],
+                    index=0,
+                    key="result_date"
+                )
+                result_target_date = year_dates[selected_date_idx]
+            else:
+                st.warning("この年のデータがありません")
+                result_target_date = None
+        
+        # 結果データを読み込み
+        if result_target_date:
+            result_data_for_display = load_results(result_target_date)
+            result_races = result_data_for_display.get("races", [])
             
-            payouts = race.get("payouts", {})
-            if payouts:
-                st.markdown("**💰 払戻金**")
-                p_cols = st.columns(4)
-                bet_types = ["単勝", "複勝", "馬連", "馬単", "ワイド", "三連複", "三連単", "枠連"]
-                for i, bt in enumerate(bet_types):
-                    if bt in payouts:
-                        val = payouts[bt]
-                        if isinstance(val, dict):
-                            display = " / ".join([f"¥{v:,}" for v in val.values()])
-                        elif isinstance(val, (int, float)) and val > 0:
-                            display = f"¥{int(val):,}"
-                        else:
-                            display = "-"
-                        p_cols[i % 4].metric(bt, display)
+            # 競馬場選択
+            with filter_col3:
+                if result_races:
+                    venues_in_day = sorted(set(r.get("venue", "不明") for r in result_races))
+                    selected_result_venue = st.selectbox(
+                        "🏇 競馬場を選択",
+                        venues_in_day,
+                        index=0,
+                        key="result_venue"
+                    )
+                else:
+                    selected_result_venue = None
+                    st.info("この日の結果データはまだありません")
             
             st.markdown("---")
+            
+            # --- 選択した競馬場のレース結果を表示 ---
+            if result_races and selected_result_venue:
+                venue_results = sorted(
+                    [r for r in result_races if r.get("venue") == selected_result_venue],
+                    key=lambda x: x.get("race_num", 0)
+                )
+                
+                st.markdown(f'<div class="venue-card"><h3>🏇 {selected_result_venue}競馬場 - {result_target_date.strftime("%Y年%m月%d日")}</h3></div>', unsafe_allow_html=True)
+                
+                # レース数サマリー
+                st.markdown(f"**全 {len(venue_results)} レース**")
+                
+                # 3カラムグリッドでレースカードを表示
+                cols = st.columns(3)
+                
+                for idx, race in enumerate(venue_results):
+                    with cols[idx % 3]:
+                        race_num = race.get("race_num", "")
+                        race_name = race.get("race_name", f"{race_num}R")
+                        
+                        # レースカードヘッダー
+                        st.markdown(f"""
+                        <div class="result-header">
+                            🏆 {race_num}R {race_name}
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # 着順表示（簡易版）
+                        top3 = race.get("top3", race.get("all_results", []))[:3]
+                        if top3:
+                            for i, horse in enumerate(top3):
+                                medal = ["🥇", "🥈", "🥉"][i] if i < 3 else ""
+                                st.markdown(f"{medal} **{horse.get('馬番', '')}** {horse.get('馬名', '')}")
+                        
+                        # 詳細アコーディオン
+                        with st.expander("📊 詳細を見る"):
+                            # --- 着順テーブル ---
+                            st.markdown("**🏇 着順表**")
+                            all_results = race.get("all_results", race.get("top3", []))
+                            
+                            if all_results:
+                                result_df = pd.DataFrame([
+                                    {
+                                        "着順": h.get("着順", i + 1),
+                                        "馬番": h.get("馬番", ""),
+                                        "馬名": h.get("馬名", ""),
+                                        "騎手": h.get("騎手", ""),
+                                        "タイム": h.get("タイム", ""),
+                                        "上がり3F": h.get("上がり3F", ""),
+                                        "オッズ": h.get("オッズ", h.get("単勝オッズ", "-"))
+                                    }
+                                    for i, h in enumerate(all_results[:8])  # 上位8頭まで
+                                ])
+                                st.dataframe(result_df, use_container_width=True, hide_index=True)
+                            
+                            # --- 払戻金テーブル ---
+                            st.markdown("**💰 払戻金**")
+                            payouts = race.get("payouts", {})
+                            
+                            if payouts:
+                                # 2カラムで払戻金を表示
+                                payout_col1, payout_col2 = st.columns(2)
+                                
+                                # 単勝・複勝系
+                                with payout_col1:
+                                    st.markdown("**単勝・複勝**")
+                                    payout_items_1 = [
+                                        ("単勝", payouts.get("単勝", 0)),
+                                        ("複勝", payouts.get("複勝", {})),
+                                        ("枠連", payouts.get("枠連", 0)),
+                                        ("馬連", payouts.get("馬連", 0)),
+                                    ]
+                                    for label, value in payout_items_1:
+                                        display_val = format_payout(value)
+                                        if display_val != "-":
+                                            st.markdown(f"**{label}**: {display_val}")
+                                
+                                # 連複・連単系
+                                with payout_col2:
+                                    st.markdown("**連複・連単**")
+                                    payout_items_2 = [
+                                        ("馬単", payouts.get("馬単", 0)),
+                                        ("ワイド", payouts.get("ワイド", {})),
+                                        ("三連複", payouts.get("三連複", 0)),
+                                        ("三連単", payouts.get("三連単", 0)),
+                                    ]
+                                    for label, value in payout_items_2:
+                                        display_val = format_payout(value)
+                                        if display_val != "-":
+                                            st.markdown(f"**{label}**: {display_val}")
+                            else:
+                                st.info("払戻金データがありません")
+                        
+                        st.markdown("")  # スペーサー
+            
+            elif not result_races:
+                st.info("この日の結果データはまだありません。レース終了後に自動取得されます。")
 
 
 # ========================================

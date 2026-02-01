@@ -1,173 +1,580 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-UMA-Logic シンプル版アプリ
+UMA-Logic 商用グレード完成版 app.py v14.0
+- 今週の予想タブ
+- WIN5専用タブ
+- 全レース結果タブ
+- 的中実績レポートタブ
+- 動的資金配分（総合バランス/一撃Ver）
+- スマホ最適化UI
 """
+
 import json
-import streamlit as st
+from datetime import datetime
 from pathlib import Path
-import pandas as pd
+
+import streamlit as st
 
 # ページ設定
 st.set_page_config(
-    page_title="🏇 UMA-Logic",
+    page_title="UMA-Logic 競馬AI予想",
     page_icon="🏇",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# タイトル
-st.title("🏇 UMA-Logic | AI競馬予想システム")
-st.caption("回収率重視の科学的予想")
+# カスタムCSS（スマホ最適化）
+st.markdown("""
+<style>
+    /* スマホ最適化 */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding: 1rem 0.5rem;
+        }
+        h1 { font-size: 1.5rem !important; }
+        h2 { font-size: 1.2rem !important; }
+        h3 { font-size: 1rem !important; }
+    }
+    
+    /* ランクバッジ */
+    .rank-s { 
+        background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+        color: white; padding: 4px 12px; border-radius: 20px;
+        font-weight: bold; font-size: 0.9rem;
+    }
+    .rank-a { 
+        background: linear-gradient(135deg, #ffd93d, #f0c000);
+        color: #333; padding: 4px 12px; border-radius: 20px;
+        font-weight: bold; font-size: 0.9rem;
+    }
+    .rank-b { 
+        background: linear-gradient(135deg, #6bcb77, #4caf50);
+        color: white; padding: 4px 12px; border-radius: 20px;
+        font-weight: bold; font-size: 0.9rem;
+    }
+    
+    /* カード */
+    .race-card {
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        margin: 8px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* 本命馬ハイライト */
+    .honmei-highlight {
+        background: linear-gradient(135deg, #fff3cd, #ffeeba);
+        border-left: 4px solid #ffc107;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 8px 0;
+    }
+    
+    /* 的中バッジ */
+    .hit-badge {
+        background: #28a745;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    
+    /* 統計カード */
+    .stat-card {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin: 8px;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# データ読み込み
-DATA_DIR = Path(__file__).parent / "data"
-HISTORY_FILE = DATA_DIR / "history.json"
-STATS_FILE = DATA_DIR / "stats.json"
 
-# 履歴読み込み
-if HISTORY_FILE.exists():
-    with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-        history = json.load(f)
-else:
-    history = []
+def load_predictions():
+    """予想データを読み込み"""
+    try:
+        path = Path(__file__).parent / "data" / "latest_predictions.json"
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        st.error(f"予想データ読み込みエラー: {e}")
+    return None
 
-# 統計読み込み
-if STATS_FILE.exists():
-    with open(STATS_FILE, "r", encoding="utf-8") as f:
-        stats = json.load(f)
-else:
-    stats = {
-        "total_profit": 0,
-        "recovery_rate": 0,
-        "hit_rate": 0,
-        "hit_count": 0,
-        "total_races": 0
+
+def load_history():
+    """履歴データを読み込み"""
+    try:
+        path = Path(__file__).parent / "data" / "history.json"
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        pass
+    return []
+
+
+def load_stats():
+    """統計データを読み込み"""
+    try:
+        path = Path(__file__).parent / "data" / "stats.json"
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        pass
+    return {
+        "total_bets": 0,
+        "total_wins": 0,
+        "total_payout": 0,
+        "total_investment": 0
     }
 
-# サイドバー
-st.sidebar.header("📊 累計収支")
-st.sidebar.metric("損益", f"{stats.get('total_profit', 0):+,}円")
-st.sidebar.metric("回収率", f"{stats.get('recovery_rate', 0)}%")
-st.sidebar.metric("的中率", f"{stats.get('hit_rate', 0)}%")
 
-# メインエリア
-if not history:
-    st.warning("📭 まだレースデータがありません")
-    st.info("以下のコマンドでデータを取得してください:")
-    st.code("python scripts/fetch_race_data_enhanced.py", language="bash")
-else:
-    st.success(f"✅ {len(history)}件のレースデータを読み込みました")
+def get_rank_badge(rank):
+    """ランクバッジのHTML"""
+    if rank == "S":
+        return '<span class="rank-s">🔥 Sランク</span>'
+    elif rank == "A":
+        return '<span class="rank-a">⭐ Aランク</span>'
+    else:
+        return '<span class="rank-b">Bランク</span>'
+
+
+def render_predictions_tab(data, budget, style):
+    """予想タブを描画"""
+    st.header("🎯 今週の予想")
     
-    # タブ作成
-    tab1, tab2 = st.tabs(["📅 最新の予想", "📊 全レース一覧"])
+    if not data:
+        st.warning("予想データがありません")
+        return
     
-    with tab1:
-        st.subheader("最新5レースの予想")
+    races = data.get("races", [])
+    if not races:
+        st.warning("レースデータがありません")
+        return
+    
+    # 生成日時
+    st.caption(f"📅 生成日時: {data.get('generated_at', '不明')}")
+    
+    # ランクサマリー
+    rank_summary = data.get("rank_summary", {})
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("総レース数", f"{len(races)}R")
+    with col2:
+        st.metric("🔥 Sランク", f"{rank_summary.get('S', 0)}R")
+    with col3:
+        st.metric("⭐ Aランク", f"{rank_summary.get('A', 0)}R")
+    with col4:
+        st.metric("Bランク", f"{rank_summary.get('B', 0)}R")
+    
+    st.divider()
+    
+    # 会場ごとにグループ化
+    venues = {}
+    for race in races:
+        venue = race.get("venue", "不明")
+        if venue not in venues:
+            venues[venue] = []
+        venues[venue].append(race)
+    
+    # 会場タブ
+    if venues:
+        venue_tabs = st.tabs(list(venues.keys()))
         
-        # 最新5レースを表示
-        for race in history[:5]:
-            with st.expander(
-                f"🏁 {race.get('venue', '不明')} 第{race.get('race_num', '?')}R - {race.get('race_name', '不明')}",
-                expanded=True
-            ):
-                # 本命馬情報
-                honmei = race.get("honmei", {})
+        for tab, (venue_name, venue_races) in zip(venue_tabs, venues.items()):
+            with tab:
+                # レース番号順にソート
+                venue_races.sort(key=lambda x: x.get("race_num", 0))
                 
-                col1, col2, col3, col4 = st.columns(4)
+                for race in venue_races:
+                    render_race_card(race, budget, style)
+
+
+def render_race_card(race, budget, style):
+    """レースカードを描画"""
+    rank = race.get("rank", "B")
+    race_num = race.get("race_num", 0)
+    race_name = race.get("race_name", "")
+    venue = race.get("venue", "")
+    
+    # 本命馬情報
+    honmei = race.get("honmei", {})
+    honmei_name = honmei.get("horse_name", "未定")
+    honmei_umaban = honmei.get("umaban", 0)
+    honmei_mark = honmei.get("mark", "◎")
+    
+    # WIN5対象
+    is_win5 = race.get("is_win5", False)
+    win5_badge = " 🎯WIN5" if is_win5 else ""
+    
+    # タイトル作成
+    rank_emoji = {"S": "🔥", "A": "⭐", "B": "📌"}.get(rank, "📌")
+    title = f"{venue} {race_num}R [{rank}]{rank_emoji} {honmei_mark}{honmei_umaban}番 {honmei_name}{win5_badge}"
+    
+    # Sランクは自動展開
+    expanded = rank == "S"
+    
+    with st.expander(title, expanded=expanded):
+        st.markdown(f"**{race_name}**")
+        
+        # 本命馬ハイライト
+        if honmei:
+            uma_index = honmei.get("uma_index", 0)
+            reasons = honmei.get("reasons", [])
+            horse_type = honmei.get("horse_type", "標準")
+            
+            st.markdown(f"""
+            <div class="honmei-highlight">
+                <strong>◎ 本命: {honmei_umaban}番 {honmei_name}</strong><br>
+                UMA指数: <strong>{uma_index}</strong> | タイプ: {horse_type}<br>
+                推奨理由: {', '.join(reasons) if reasons else '総合評価'}
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # 推奨馬一覧（上位5頭）
+        horses = race.get("horses", [])
+        if horses:
+            sorted_horses = sorted(horses, key=lambda x: x.get("uma_index", 0), reverse=True)[:5]
+            
+            st.markdown("**📋 推奨馬（上位5頭）**")
+            
+            for i, horse in enumerate(sorted_horses):
+                mark = ["◎", "○", "▲", "△", "△"][i]
+                umaban = horse.get("umaban", 0)
+                name = horse.get("horse_name", "")
+                jockey = horse.get("jockey", "")
+                uma_index = horse.get("uma_index", 0)
+                odds = horse.get("odds", 0)
                 
+                st.markdown(f"{mark} **{umaban}番** {name} ({jockey}) - UMA指数:{uma_index} オッズ:{odds:.1f}")
+        
+        # 買い目
+        bets = race.get("bets", {})
+        if bets:
+            st.markdown("**🎫 買い目（馬番表示）**")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"- 単勝: **{bets.get('tansho_display', '-')}**")
+                st.markdown(f"- 馬連: **{bets.get('umaren_display', '-')}**")
+                st.markdown(f"- 馬単: **{bets.get('umatan_display', '-')}**")
+            with col2:
+                st.markdown(f"- 三連複: **{bets.get('sanrenpuku_display', '-')}**")
+                formation = bets.get("sanrentan_formation", {})
+                if formation:
+                    st.markdown(f"- 三連単: **{formation.get('display', '-')}**")
+                    st.caption(f"  ({formation.get('point_count', 0)}点)")
+        
+        # 資金配分
+        st.markdown("**💰 推奨資金配分**")
+        
+        if style == "総合バランス投資":
+            allocation = race.get("budget_balanced", {})
+        else:
+            allocation = race.get("budget_aggressive", {})
+        
+        if allocation:
+            # 予算に応じて調整
+            ratio = budget / 10000
+            
+            cols = st.columns(5)
+            bet_names = ["単勝", "馬連", "馬単", "三連複", "三連単"]
+            bet_keys = ["tansho", "umaren", "umatan", "sanrenpuku", "sanrentan"]
+            
+            for col, name, key in zip(cols, bet_names, bet_keys):
+                amount = int(allocation.get(key, 0) * ratio / 100) * 100
+                with col:
+                    st.metric(name, f"¥{amount:,}")
+
+
+def render_win5_tab(data):
+    """WIN5タブを描画"""
+    st.header("🎯 WIN5予想")
+    
+    if not data:
+        st.warning("予想データがありません")
+        return
+    
+    win5 = data.get("win5_strategies", {})
+    
+    if not win5.get("is_valid", False):
+        st.info(win5.get("message", "WIN5は日曜日のみ発売です"))
+        return
+    
+    st.success(f"WIN5対象レース: {win5.get('target_race_count', 0)}レース")
+    
+    # 3つのプラン
+    plans = ["conservative", "balanced", "aggressive"]
+    plan_tabs = st.tabs(["🛡️ 堅実プラン", "⚖️ バランスプラン", "🚀 高配当プラン"])
+    
+    for tab, plan_key in zip(plan_tabs, plans):
+        with tab:
+            plan = win5.get(plan_key, {})
+            
+            st.markdown(f"**{plan.get('name', '')}**")
+            st.caption(plan.get("description", ""))
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("購入点数", f"{plan.get('point_count', 0)}点")
+            with col2:
+                st.metric("購入金額", f"¥{plan.get('estimated_cost', 0):,}")
+            with col3:
+                st.metric("的中確率目安", plan.get("hit_probability", "-"))
+            
+            st.divider()
+            
+            # 各レースの選択馬
+            selections = plan.get("selections", [])
+            for i, sel in enumerate(selections):
+                venue = sel.get("venue", "")
+                race_num = sel.get("race_num", 0)
+                race_name = sel.get("race_name", "")
+                horses = sel.get("horses", [])
+                
+                horse_str = " / ".join([f"{h.get('umaban', 0)}番{h.get('name', '')}" for h in horses])
+                
+                st.markdown(f"**第{i+1}レース**: {venue}{race_num}R {race_name}")
+                st.markdown(f"→ {horse_str}")
+
+
+def render_results_tab(history):
+    """全レース結果タブを描画"""
+    st.header("📊 全レース結果")
+    
+    if not history:
+        st.info("まだ結果データがありません。レース終了後に自動更新されます。")
+        return
+    
+    # 日付でソート（新しい順）
+    sorted_history = sorted(history, key=lambda x: x.get("date", ""), reverse=True)
+    
+    for day in sorted_history:
+        date = day.get("date", "")
+        results = day.get("results", [])
+        
+        with st.expander(f"📅 {date} ({len(results)}レース)", expanded=(day == sorted_history[0])):
+            if not results:
+                st.caption("結果データなし")
+                continue
+            
+            for result in results:
+                venue = result.get("venue", "")
+                race_num = result.get("race_num", 0)
+                race_name = result.get("race_name", "")
+                
+                first = result.get("result_1st", {})
+                second = result.get("result_2nd", {})
+                third = result.get("result_3rd", {})
+                
+                payouts = result.get("payouts", {})
+                hits = result.get("hits", {})
+                
+                # 的中があればハイライト
+                has_hit = any(h.get("is_hit", False) for h in hits.values())
+                
+                st.markdown(f"**{venue} {race_num}R {race_name}**")
+                
+                col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("本命馬", f"◎{honmei.get('umaban', '?')}番")
-                    st.caption(honmei.get('horse_name', '不明'))
+                    st.markdown(f"🥇 1着: {first.get('umaban', '-')}番 {first.get('name', '-')}")
+                    st.markdown(f"🥈 2着: {second.get('umaban', '-')}番 {second.get('name', '-')}")
+                    st.markdown(f"🥉 3着: {third.get('umaban', '-')}番 {third.get('name', '-')}")
                 
                 with col2:
-                    st.metric("UMA指数", honmei.get('uma_index', 0))
-                    rank = honmei.get('rank', 'C')
-                    if rank == 'S':
-                        st.error(f"ランク: {rank} 🔥")
-                    elif rank == 'A':
-                        st.warning(f"ランク: {rank}")
-                    else:
-                        st.info(f"ランク: {rank}")
+                    if payouts:
+                        st.markdown(f"単勝: ¥{payouts.get('tansho', 0):,}")
+                        st.markdown(f"馬連: ¥{payouts.get('umaren', 0):,}")
+                        st.markdown(f"三連複: ¥{payouts.get('sanrenpuku', 0):,}")
                 
-                with col3:
-                    confidence = honmei.get('confidence', 0)
-                    st.metric("信頼度", f"{confidence * 100:.0f}%")
-                
-                with col4:
-                    expected = honmei.get('expected_value', 0)
-                    st.metric("期待値", f"{expected:.2f}")
-                    if expected >= 1.2:
-                        st.success("期待値◎")
-                    elif expected >= 1.0:
-                        st.warning("期待値○")
-                    else:
-                        st.info("期待値△")
-                
-                # レース情報
-                st.caption(
-                    f"📍 {race.get('surface', '不明')}{race.get('distance', '不明')} | "
-                    f"天候: {race.get('weather', '晴')} | "
-                    f"馬場: {race.get('track_condition', '良')}"
-                )
-                
-                # 結果表示
-                result = race.get("result")
-                if result:
-                    hits = result.get("hits", {})
-                    profit = result.get("profit", 0)
-                    
-                    hit_list = [k for k, v in hits.items() if v]
-                    
-                    if hit_list:
-                        st.success(f"✅ 的中！ {', '.join(hit_list)} → {profit:+,}円")
-                    else:
-                        st.error(f"❌ 不的中 → {profit:,}円")
-                
-                # 買い目表示
-                st.markdown("**🎯 推奨買い目:**")
-                bets = race.get("bets", {})
-                
-                bet_text = []
-                if "単勝" in bets and bets["単勝"]:
-                    bet_text.append(f"単勝: {', '.join(map(str, bets['単勝']))}番")
-                if "ワイド" in bets and bets["ワイド"]:
-                    wide_list = [f"{b[0]}-{b[1]}" for b in bets["ワイド"][:3]]
-                    bet_text.append(f"ワイド: {', '.join(wide_list)}")
-                if "馬連" in bets and bets["馬連"]:
-                    umaren_list = [f"{b[0]}-{b[1]}" for b in bets["馬連"][:3]]
-                    bet_text.append(f"馬連: {', '.join(umaren_list)}")
-                
-                if bet_text:
-                    for text in bet_text:
-                        st.write(f"- {text}")
+                if has_hit:
+                    hit_types = [k for k, v in hits.items() if v.get("is_hit", False)]
+                    st.success(f"✅ 的中: {', '.join(hit_types)}")
                 
                 st.divider()
+
+
+def render_hit_report_tab(history, stats):
+    """的中実績レポートタブを描画"""
+    st.header("🏆 的中実績レポート")
+    
+    # 統計カード
+    col1, col2, col3, col4 = st.columns(4)
+    
+    total_payout = stats.get("total_payout", 0)
+    total_investment = stats.get("total_investment", 0)
+    total_wins = stats.get("total_wins", 0)
+    recovery = (total_payout / total_investment * 100) if total_investment > 0 else 0
+    
+    with col1:
+        st.markdown(f"""
+        <div class="stat-card">
+            <div class="stat-value">¥{total_payout:,}</div>
+            <div class="stat-label">累計配当</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="stat-card">
+            <div class="stat-value">{recovery:.1f}%</div>
+            <div class="stat-label">回収率</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div class="stat-card">
+            <div class="stat-value">{total_wins}</div>
+            <div class="stat-label">的中数</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        profit = total_payout - total_investment
+        color = "#28a745" if profit >= 0 else "#dc3545"
+        st.markdown(f"""
+        <div class="stat-card" style="background: {color};">
+            <div class="stat-value">¥{profit:,}</div>
+            <div class="stat-label">収支</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.divider()
+    
+    # 券種別成績
+    st.subheader("📊 券種別成績")
+    
+    bet_types = [
+        ("単勝", "tansho_stats"),
+        ("馬連", "umaren_stats"),
+        ("馬単", "umatan_stats"),
+        ("三連複", "sanrenpuku_stats"),
+        ("三連単", "sanrentan_stats")
+    ]
+    
+    cols = st.columns(5)
+    for col, (name, key) in zip(cols, bet_types):
+        with col:
+            bet_stats = stats.get(key, {})
+            bets = bet_stats.get("bets", 0)
+            hits = bet_stats.get("hits", 0)
+            payout = bet_stats.get("payout", 0)
+            investment = bet_stats.get("investment", 0)
+            
+            hit_rate = (hits / bets * 100) if bets > 0 else 0
+            bet_recovery = (payout / investment * 100) if investment > 0 else 0
+            
+            st.metric(name, f"{hits}/{bets}")
+            st.caption(f"的中率: {hit_rate:.1f}%")
+            st.caption(f"回収率: {bet_recovery:.1f}%")
+    
+    st.divider()
+    
+    # 的中履歴
+    st.subheader("🎯 的中履歴")
+    
+    if not history:
+        st.info("まだ的中履歴がありません")
+        return
+    
+    hit_records = []
+    for day in history:
+        date = day.get("date", "")
+        for result in day.get("results", []):
+            hits = result.get("hits", {})
+            for bet_type, hit_info in hits.items():
+                if hit_info.get("is_hit", False):
+                    hit_records.append({
+                        "date": date,
+                        "venue": result.get("venue", ""),
+                        "race_num": result.get("race_num", 0),
+                        "race_name": result.get("race_name", ""),
+                        "bet_type": bet_type,
+                        "payout": hit_info.get("payout", 0)
+                    })
+    
+    if hit_records:
+        # 新しい順にソート
+        hit_records.sort(key=lambda x: (x["date"], x["race_num"]), reverse=True)
+        
+        for record in hit_records[:20]:  # 最新20件
+            st.markdown(f"""
+            **{record['date']}** {record['venue']}{record['race_num']}R {record['race_name']}
+            - 的中券種: {record['bet_type']} → **¥{record['payout']:,}**
+            """)
+    else:
+        st.info("まだ的中がありません")
+
+
+def main():
+    """メイン関数"""
+    # サイドバー
+    st.sidebar.title("🏇 UMA-Logic")
+    st.sidebar.caption("競馬AI予想システム v14.0")
+    
+    st.sidebar.divider()
+    
+    # 予算設定
+    st.sidebar.subheader("💰 予算設定")
+    budget = st.sidebar.slider(
+        "軍資金（1日あたり）",
+        min_value=1000,
+        max_value=50000,
+        value=10000,
+        step=1000,
+        format="¥%d"
+    )
+    
+    # 投資スタイル
+    style = st.sidebar.radio(
+        "投資スタイル",
+        ["総合バランス投資", "連勝複式・一撃Ver"],
+        help="総合バランス: 全券種に分散投資\n一撃Ver: 連勝式に集中投資"
+    )
+    
+    st.sidebar.divider()
+    st.sidebar.caption("© 2026 UMA-Logic")
+    
+    # データ読み込み
+    predictions = load_predictions()
+    history = load_history()
+    stats = load_stats()
+    
+    # メインタブ
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "🎯 今週の予想",
+        "🎰 WIN5予想",
+        "📊 全レース結果",
+        "🏆 的中実績"
+    ])
+    
+    with tab1:
+        render_predictions_tab(predictions, budget, style)
     
     with tab2:
-        st.subheader("全レース一覧")
-        
-        # データフレーム作成
-        df_data = []
-        for race in history:
-            honmei = race.get("honmei", {})
-            result = race.get("result")
-            
-            df_data.append({
-                "日付": race.get("date", ""),
-                "会場": race.get("venue", ""),
-                "R": race.get("race_num", ""),
-                "レース名": race.get("race_name", ""),
-                "本命": f"{honmei.get('umaban', '?')}番",
-                "馬名": honmei.get("horse_name", ""),
-                "指数": honmei.get("uma_index", 0),
-                "ランク": honmei.get("rank", ""),
-                "期待値": f"{honmei.get('expected_value', 0):.2f}",
-                "結果": "的中" if (result and any(result.get("hits", {}).values())) else ("不的中" if result else "未確定"),
-                "収支": f"{result.get('profit', 0):+,}円" if result else "-"
-            })
-        
-        df = pd.DataFrame(df_data)
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        render_win5_tab(predictions)
+    
+    with tab3:
+        render_results_tab(history)
+    
+    with tab4:
+        render_hit_report_tab(history, stats)
 
-# フッター
-st.divider()
-st.caption("💡 土日 7:00に予想取得 / 17:00に結果更新")
+
+if __name__ == "__main__":
+    main()

@@ -1,20 +1,24 @@
-name: UMA-Logic 完全自動更新
+name: UMA-Logic Auto Update
 
 on:
   schedule:
-    # 土曜 7:00 JST = 金曜 22:00 UTC
+    # 金曜日 21:00 JST (12:00 UTC)
+    - cron: '0 12 * * 5'
+    # 土曜日 07:00 JST (22:00 UTC 前日)
     - cron: '0 22 * * 5'
-    # 土曜 17:00 JST = 土曜 8:00 UTC
-    - cron: '0 8 * * 6'
-    # 日曜 7:00 JST = 土曜 22:00 UTC
+    # 日曜日 07:00 JST (22:00 UTC 前日)
     - cron: '0 22 * * 6'
-    # 日曜 17:00 JST = 日曜 8:00 UTC
-    - cron: '0 8 * * 0'
-  
+    # 土曜日 18:00 JST (09:00 UTC)
+    - cron: '0 9 * * 6'
+    # 日曜日 18:00 JST (09:00 UTC)
+    - cron: '0 9 * * 0'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  auto-update:
+  update:
     runs-on: ubuntu-latest
     
     steps:
@@ -28,42 +32,40 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install requests beautifulsoup4
       
-      - name: Determine task
-        id: determine_task
+      - name: Determine task type
+        id: task
         run: |
-          HOUR=$(date -u +%H)
-          if [ "$HOUR" == "22" ]; then
-            echo "task=prediction" >> $GITHUB_OUTPUT
-          elif [ "$HOUR" == "08" ]; then
-            echo "task=result" >> $GITHUB_OUTPUT
+          HOUR=$(TZ=Asia/Tokyo date +%H)
+          DAY=$(TZ=Asia/Tokyo date +%u)
+          
+          echo "Hour: $HOUR, Day: $DAY"
+          
+          # 17-19時台は結果取得、それ以外は予想生成
+          if [ "$HOUR" -ge 17 ] && [ "$HOUR" -le 19 ]; then
+            echo "task=results" >> $GITHUB_OUTPUT
           else
-            echo "task=none" >> $GITHUB_OUTPUT
+            echo "task=predictions" >> $GITHUB_OUTPUT
           fi
       
       - name: Run prediction script
-        if: steps.determine_task.outputs.task == 'prediction'
+        if: steps.task.outputs.task == 'predictions'
         run: |
-          python scripts/fetch_race_data_enhanced.py
+          python scripts/fetch_race_data.py
+        continue-on-error: true
       
-      - name: Run result script
-        if: steps.determine_task.outputs.task == 'result'
+      - name: Run results script
+        if: steps.task.outputs.task == 'results'
         run: |
-          python scripts/update_results_enhanced.py
+          python scripts/update_results.py
+        continue-on-error: true
       
       - name: Commit and push changes
-        if: steps.determine_task.outputs.task != 'none'
         run: |
           git config --local user.email "action@github.com"
-          git config --local user.name "UMA-Logic Bot"
-          git add data/
-          if git diff --staged --quiet; then
-            echo "変更なし"
-          else
-            git commit -m "🤖 自動更新: $(date +'%Y-%m-%d %H:%M')"
-            git push
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git config --local user.name "GitHub Action"
+          git add -A
+          git diff --staged --quiet || git commit -m "Auto update: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M') JST"
+          git push
+        continue-on-error: true

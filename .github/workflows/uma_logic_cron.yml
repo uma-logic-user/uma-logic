@@ -21,7 +21,9 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: pip install -r requirements_commercial.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install streamlit pandas numpy plotly streamlit-aggrid beautifulsoup4 lxml requests pytz
 
       - name: Run Scripts
         run: |

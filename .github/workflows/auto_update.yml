@@ -2,70 +2,69 @@ name: UMA-Logic Auto Update
 
 on:
   schedule:
-    # 金曜日 21:00 JST (12:00 UTC)
+    # 金曜21:00 JST (UTC 12:00) - 土曜の予想準備
     - cron: '0 12 * * 5'
-    # 土曜日 07:00 JST (22:00 UTC 前日)
+    # 土曜07:00 JST (UTC 22:00 前日) - 土曜の予想生成
     - cron: '0 22 * * 5'
-    # 日曜日 07:00 JST (22:00 UTC 前日)
+    # 日曜07:00 JST (UTC 22:00 前日) - 日曜の予想生成
     - cron: '0 22 * * 6'
-    # 土曜日 18:00 JST (09:00 UTC)
+    # 土曜18:00 JST (UTC 09:00) - 土曜の結果取得
     - cron: '0 9 * * 6'
-    # 日曜日 18:00 JST (09:00 UTC)
+    # 日曜18:00 JST (UTC 09:00) - 日曜の結果取得
     - cron: '0 9 * * 0'
-  workflow_dispatch:
-
-permissions:
-  contents: write
+  workflow_dispatch:  # 手動実行も可能
 
 jobs:
   update:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
-      
-      - name: Set up Python
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
-      - name: Install dependencies
+
+      - name: Install Dependencies
         run: |
-          pip install requests beautifulsoup4
-      
-      - name: Determine task type
-        id: task
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create Data Directory
+        run: mkdir -p data
+
+      - name: Run Prediction Scripts (Morning)
+        if: github.event.schedule == '0 22 * * 5' || github.event.schedule == '0 22 * * 6' || github.event_name == 'workflow_dispatch'
         run: |
-          HOUR=$(TZ=Asia/Tokyo date +%H)
-          DAY=$(TZ=Asia/Tokyo date +%u)
+          echo "=== 1. Fetching Race Data ==="
+          python scripts/fetch_race_data.py && echo "✅ Fetch DONE" || echo "⚠️ Fetch SKIP (No Race Today)"
           
-          echo "Hour: $HOUR, Day: $DAY"
+          echo ""
+          echo "=== 2. Running Calculator Pro ==="
+          python scripts/calculator_pro.py && echo "✅ Calculator DONE" || echo "⚠️ Calculator SKIP"
           
-          # 17-19時台は結果取得、それ以外は予想生成
-          if [ "$HOUR" -ge 17 ] && [ "$HOUR" -le 19 ]; then
-            echo "task=results" >> $GITHUB_OUTPUT
+          echo ""
+          echo "=== 3. Running Realtime Scraper (Optional) ==="
+          if [ -f "scripts/scraper_realtime.py" ]; then
+            python scripts/scraper_realtime.py && echo "✅ Scraper DONE" || echo "⚠️ Scraper SKIP"
           else
-            echo "task=predictions" >> $GITHUB_OUTPUT
+            echo "ℹ️ scraper_realtime.py not found, skipping..."
           fi
-      
-      - name: Run prediction script
-        if: steps.task.outputs.task == 'predictions'
+
+      - name: Run Result Scripts (Evening)
+        if: github.event.schedule == '0 9 * * 6' || github.event.schedule == '0 9 * * 0'
         run: |
-          python scripts/fetch_race_data.py
-        continue-on-error: true
-      
-      - name: Run results script
-        if: steps.task.outputs.task == 'results'
-        run: |
-          python scripts/update_results.py
-        continue-on-error: true
-      
-      - name: Commit and push changes
+          echo "=== Fetching Race Results ==="
+          python scripts/update_results.py && echo "✅ Results DONE" || echo "⚠️ Results SKIP"
+
+      - name: Commit and Push Changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -A
-          git diff --staged --quiet || git commit -m "Auto update: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M') JST"
+          git add data/
+          git diff --staged --quiet || git commit -m "🐎 Auto update: $(date +'%Y-%m-%d %H:%M')"
           git push
-        continue-on-error: true

@@ -1,1 +1,65 @@
-[]
+{
+  "last_updated": "2026-01-31T18:00:00+09:00",
+  "total_stats": {
+    "total_races": 36,
+    "total_investment": 360000,
+    "total_return": 485600,
+    "profit": 125600,
+    "roi": 134.9
+  },
+  "by_ticket_type": {
+    "tansho": {"races": 36, "hits": 18, "investment": 72000, "return": 98500, "roi": 136.8},
+    "umaren": {"races": 36, "hits": 12, "investment": 90000, "return": 125800, "roi": 139.8},
+    "umatan": {"races": 36, "hits": 10, "investment": 54000, "return": 68500, "roi": 126.9},
+    "sanrenpuku": {"races": 36, "hits": 8, "investment": 72000, "return": 98200, "roi": 136.4},
+    "sanrentan": {"races": 36, "hits": 4, "investment": 72000, "return": 94600, "roi": 131.4}
+  },
+  "by_rank": {
+    "S": {"races": 8, "hits": 6, "investment": 80000, "return": 125000, "roi": 156.3},
+    "A": {"races": 18, "hits": 10, "investment": 180000, "return": 235000, "roi": 130.6},
+    "B": {"races": 10, "hits": 2, "investment": 100000, "return": 125600, "roi": 125.6}
+  },
+  "daily_records": [
+    {
+      "date": "2026-01-31",
+      "day_of_week": "土曜日",
+      "races": 36,
+      "investment": 360000,
+      "return": 485600,
+      "profit": 125600,
+      "roi": 134.9,
+      "highlights": [
+        {"race": "東京11R 白富士S", "ticket": "三連単", "payout": 15680, "bet": 2500},
+        {"race": "京都11R シルクロードS", "ticket": "三連単", "payout": 12850, "bet": 2500},
+        {"race": "東京1R", "ticket": "単勝", "payout": 420, "bet": 100}
+      ]
+    }
+  ],
+  "monthly_records": [
+    {
+      "month": "2026-01",
+      "races": 36,
+      "investment": 360000,
+      "return": 485600,
+      "profit": 125600,
+      "roi": 134.9
+    }
+  ],
+  "hit_log": [
+    {"date": "2026-01-31", "race": "東京1R", "ticket": "単勝", "payout": 420},
+    {"date": "2026-01-31", "race": "東京1R", "ticket": "馬連", "payout": 1250},
+    {"date": "2026-01-31", "race": "東京1R", "ticket": "馬単", "payout": 2480},
+    {"date": "2026-01-31", "race": "東京1R", "ticket": "三連複", "payout": 4560},
+    {"date": "2026-01-31", "race": "東京2R", "ticket": "単勝", "payout": 350},
+    {"date": "2026-01-31", "race": "東京11R 白富士S", "ticket": "単勝", "payout": 580},
+    {"date": "2026-01-31", "race": "東京11R 白富士S", "ticket": "馬連", "payout": 850},
+    {"date": "2026-01-31", "race": "東京11R 白富士S", "ticket": "馬単", "payout": 1980},
+    {"date": "2026-01-31", "race": "東京11R 白富士S", "ticket": "三連複", "payout": 2850},
+    {"date": "2026-01-31", "race": "東京11R 白富士S", "ticket": "三連単", "payout": 15680},
+    {"date": "2026-01-31", "race": "京都11R シルクロードS", "ticket": "単勝", "payout": 450},
+    {"date": "2026-01-31", "race": "京都11R シルクロードS", "ticket": "馬連", "payout": 620},
+    {"date": "2026-01-31", "race": "京都11R シルクロードS", "ticket": "馬単", "payout": 1450},
+    {"date": "2026-01-31", "race": "京都11R シルクロードS", "ticket": "三連複", "payout": 2180},
+    {"date": "2026-01-31", "race": "京都11R シルクロードS", "ticket": "三連単", "payout": 12850}
+  ]
+}

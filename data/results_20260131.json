@@ -1,0 +1,132 @@
+{
+  "date": "2026-01-31",
+  "day_of_week": "土曜日",
+  "total_races": 36,
+  "results": [
+    {
+      "race_id": "202605010101",
+      "venue": "東京",
+      "race_num": 1,
+      "race_name": "3歳未勝利",
+      "result": {
+        "1st": {"umaban": 10, "horse_name": "ケブランリ", "odds": 4.2},
+        "2nd": {"umaban": 3, "horse_name": "アルファシーナ", "odds": 5.8},
+        "3rd": {"umaban": 7, "horse_name": "カスターニエ", "odds": 8.5}
+      },
+      "payouts": {
+        "tansho": {"numbers": "10", "payout": 420},
+        "fukusho": {"numbers": "10,3,7", "payouts": [180, 210, 290]},
+        "umaren": {"numbers": "3-10", "payout": 1250},
+        "umatan": {"numbers": "10→3", "payout": 2480},
+        "wide": {"numbers": "3-10,7-10,3-7", "payouts": [520, 680, 890]},
+        "sanrenpuku": {"numbers": "3-7-10", "payout": 4560},
+        "sanrentan": {"numbers": "10→3→7", "payout": 18920}
+      },
+      "prediction_hit": {
+        "honmei_hit": true,
+        "tansho_hit": true,
+        "umaren_hit": true,
+        "umatan_hit": true,
+        "sanrenpuku_hit": true,
+        "sanrentan_hit": false
+      }
+    },
+    {
+      "race_id": "202605010102",
+      "venue": "東京",
+      "race_num": 2,
+      "race_name": "3歳未勝利",
+      "result": {
+        "1st": {"umaban": 1, "horse_name": "アルファシーナ", "odds": 3.5},
+        "2nd": {"umaban": 5, "horse_name": "ベータスター", "odds": 6.2},
+        "3rd": {"umaban": 8, "horse_name": "ガンマレイ", "odds": 12.0}
+      },
+      "payouts": {
+        "tansho": {"numbers": "1", "payout": 350},
+        "fukusho": {"numbers": "1,5,8", "payouts": [150, 220, 380]},
+        "umaren": {"numbers": "1-5", "payout": 980},
+        "umatan": {"numbers": "1→5", "payout": 1850},
+        "wide": {"numbers": "1-5,1-8,5-8", "payouts": [380, 620, 1250]},
+        "sanrenpuku": {"numbers": "1-5-8", "payout": 5680},
+        "sanrentan": {"numbers": "1→5→8", "payout": 22450}
+      },
+      "prediction_hit": {
+        "honmei_hit": true,
+        "tansho_hit": true,
+        "umaren_hit": false,
+        "umatan_hit": false,
+        "sanrenpuku_hit": false,
+        "sanrentan_hit": false
+      }
+    },
+    {
+      "race_id": "202605010111",
+      "venue": "東京",
+      "race_num": 11,
+      "race_name": "白富士S",
+      "result": {
+        "1st": {"umaban": 8, "horse_name": "シルバーステート", "odds": 5.8},
+        "2nd": {"umaban": 3, "horse_name": "ナミュール", "odds": 2.5},
+        "3rd": {"umaban": 12, "horse_name": "ウインカーネリアン", "odds": 9.2}
+      },
+      "payouts": {
+        "tansho": {"numbers": "8", "payout": 580},
+        "fukusho": {"numbers": "8,3,12", "payouts": [210, 130, 320]},
+        "umaren": {"numbers": "3-8", "payout": 850},
+        "umatan": {"numbers": "8→3", "payout": 1980},
+        "wide": {"numbers": "3-8,8-12,3-12", "payouts": [320, 680, 420]},
+        "sanrenpuku": {"numbers": "3-8-12", "payout": 2850},
+        "sanrentan": {"numbers": "8→3→12", "payout": 15680}
+      },
+      "prediction_hit": {
+        "honmei_hit": true,
+        "tansho_hit": true,
+        "umaren_hit": true,
+        "umatan_hit": true,
+        "sanrenpuku_hit": true,
+        "sanrentan_hit": true
+      }
+    },
+    {
+      "race_id": "202608020111",
+      "venue": "京都",
+      "race_num": 11,
+      "race_name": "シルクロードS",
+      "result": {
+        "1st": {"umaban": 5, "horse_name": "ダノンエアズロック", "odds": 4.5},
+        "2nd": {"umaban": 1, "horse_name": "レガレイラ", "odds": 2.2},
+        "3rd": {"umaban": 8, "horse_name": "シンエンペラー", "odds": 8.8}
+      },
+      "payouts": {
+        "tansho": {"numbers": "5", "payout": 450},
+        "fukusho": {"numbers": "5,1,8", "payouts": [180, 120, 280]},
+        "umaren": {"numbers": "1-5", "payout": 620},
+        "umatan": {"numbers": "5→1", "payout": 1450},
+        "wide": {"numbers": "1-5,5-8,1-8", "payouts": [250, 580, 380]},
+        "sanrenpuku": {"numbers": "1-5-8", "payout": 2180},
+        "sanrentan": {"numbers": "5→1→8", "payout": 12850}
+      },
+      "prediction_hit": {
+        "honmei_hit": true,
+        "tansho_hit": true,
+        "umaren_hit": true,
+        "umatan_hit": true,
+        "sanrenpuku_hit": true,
+        "sanrentan_hit": true
+      }
+    }
+  ],
+  "summary": {
+    "total_predictions": 36,
+    "honmei_hits": 28,
+    "tansho_hits": 18,
+    "umaren_hits": 12,
+    "umatan_hits": 10,
+    "sanrenpuku_hits": 8,
+    "sanrentan_hits": 4,
+    "total_investment": 360000,
+    "total_return": 485600,
+    "profit": 125600,
+    "roi": 134.9
+  }
+}

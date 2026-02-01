@@ -2,16 +2,9 @@ name: 🐎 予想データ取得
 
 on:
   schedule:
-    # 土曜07:00 JST (UTC 22:00 金曜)
     - cron: '0 22 * * 5'
-    # 日曜07:00 JST (UTC 22:00 土曜)
     - cron: '0 22 * * 6'
   workflow_dispatch:
-    inputs:
-      target_date:
-        description: '対象日 (YYYYMMDD形式、空欄で自動判定)'
-        required: false
-        default: ''
 
 jobs:
   fetch-predictions:
@@ -22,6 +15,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: 🐍 Python環境をセットアップ
         uses: actions/setup-python@v5
@@ -37,32 +31,20 @@ jobs:
         run: mkdir -p data
 
       - name: 🏇 レースデータを取得
-        run: |
-          echo "=========================================="
-          echo "🏇 レースデータ取得開始"
-          echo "=========================================="
-          if [ -n "${{ github.event.inputs.target_date }}" ]; then
-            python scripts/fetch_race_data.py ${{ github.event.inputs.target_date }}
-          else
-            python scripts/fetch_race_data.py
-          fi
+        run: python scripts/fetch_race_data.py
 
       - name: 🧮 高精度スコア計算
-        run: |
-          echo "=========================================="
-          echo "🧮 Calculator Pro 実行"
-          echo "=========================================="
-          python scripts/calculator_pro.py
+        run: python scripts/calculator_pro.py
 
       - name: 💾 変更をコミット＆プッシュ
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
+          git pull --rebase origin main || git pull origin main
           git add data/
           if git diff --staged --quiet; then
-            echo "📭 変更なし、コミットをスキップ"
+            echo "📭 変更なし"
           else
             git commit -m "🐎 予想更新: $(TZ=Asia/Tokyo date +'%Y-%m-%d %H:%M')"
             git push
-            echo "✅ プッシュ完了"
           fi

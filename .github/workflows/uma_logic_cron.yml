@@ -1,0 +1,45 @@
+name: UMA-Logic Pro Auto Update
+
+on:
+  schedule:
+    # 毎週土日の午前8時(日本時間)に予想を取得 (UTC 23:00)
+    - cron: '0 23 * * 5,6'
+    # 毎週土日の午後19時(日本時間)に結果を更新 (UTC 10:00)
+    - cron: '0 10 * * 6,0'
+  workflow_dispatch: # 手動で「今すぐ実行」ボタンを表示
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install -r requirements_commercial.txt
+
+      - name: Run Scripts
+        run: |
+          # リアルタイムデータの取得
+          python scripts/scraper_realtime.py
+          
+          # 時間帯によって動かすスクリプトを分ける
+          HOUR=$(date +%H)
+          if [ "$HOUR" -lt 12 ]; then
+            python scripts/fetch_race_data.py
+          else
+            python scripts/update_results.py
+          fi
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/*.json
+          git commit -m "Auto-update: $(date +'%Y-%m-%d')" || echo "No changes"
+          git push

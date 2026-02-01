@@ -1,6 +1,6 @@
 # scripts/fetch_historical_data.py
-# UMA-Logic Pro - 過去データ一括取得スクリプト（修正版 ）
-# db.netkeiba.com から過去レース結果を取得
+# UMA-Logic Pro - 過去データ一括取得スクリプト（完全修正版）
+# netkeibaのカレンダーから開催日を取得し、レース結果を収集
 
 import requests
 from bs4 import BeautifulSoup
@@ -9,15 +9,11 @@ import time
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 import sys
 
 # --- 定数 ---
-# 過去データは db.netkeiba.com を使用
-DB_BASE_URL = "https://db.netkeiba.com"
-RACE_LIST_URL = "https://db.netkeiba.com/race/list"
-
-DATA_DIR = Path("data" )
+DATA_DIR = Path("data")
 ARCHIVE_DIR = DATA_DIR / "archive"
 RESULTS_PREFIX = "results_"
 
@@ -25,25 +21,37 @@ RESULTS_PREFIX = "results_"
 MAX_RETRIES = 3
 RETRY_DELAY = 3
 REQUEST_TIMEOUT = 30
-REQUEST_INTERVAL = 2.5  # サーバー負荷軽減
+REQUEST_INTERVAL = 1.5
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
-    "Referer": "https://db.netkeiba.com/",
 }
 
 
-def fetch_with_retry(url: str ) -> Optional[requests.Response]:
+def fetch_with_retry(url: str, encoding: str = None) -> Optional[str]:
     """リトライ機能付きHTTPリクエスト"""
     for attempt in range(MAX_RETRIES):
         try:
             response = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
             response.raise_for_status()
-            return response
+            
+            # 文字コード処理
+            if encoding:
+                return response.content.decode(encoding, errors='replace')
+            
+            # 自動検出
+            content = response.content[:2000].lower()
+            if b'euc-jp' in content:
+                return response.content.decode('euc-jp', errors='replace')
+            elif b'shift_jis' in content:
+                return response.content.decode('shift_jis', errors='replace')
+            
+            return response.content.decode('utf-8', errors='replace')
+            
         except requests.RequestException as e:
-            print(f"  [WARN] リクエスト失敗 (試行 {attempt + 1}/{MAX_RETRIES}): {e}")
+            print(f"    [WARN] リクエスト失敗 ({attempt + 1}/{MAX_RETRIES}): {e}")
             if attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_DELAY)
     return None
@@ -66,84 +74,70 @@ def parse_float(text: str) -> float:
     return float(nums[0]) if nums else 0.0
 
 
-def get_jra_race_dates(year: int, month: int) -> List[str]:
+def get_race_dates_from_calendar(year: int, month: int) -> List[str]:
     """
-    指定年月のJRA開催日リストを取得
-    返り値: ['20240106', '20240107', ...] 形式
+    netkeibaのカレンダーから開催日を取得
     """
-    # JRAの開催は基本的に土日
-    # 年間スケジュールから開催日を推定
+    url = f"https://race.netkeiba.com/top/calendar.html?year={year}&month={month}"
+    
+    html = fetch_with_retry(url)
+    if not html:
+        return []
+    
+    soup = BeautifulSoup(html, 'lxml')
     dates = []
     
-    # 月の初日から最終日まで
-    if month == 12:
-        next_month = datetime(year + 1, 1, 1)
-    else:
-        next_month = datetime(year, month + 1, 1)
+    # カレンダーのリンクから開催日を抽出
+    for link in soup.find_all('a', href=True):
+        href = link['href']
+        match = re.search(r'kaisai_date=(\d{8})', href)
+        if match:
+            date_str = match.group(1)
+            if date_str not in dates:
+                dates.append(date_str)
     
-    current = datetime(year, month, 1)
-    
-    while current < next_month:
-        # 土曜(5)と日曜(6)を開催日として追加
-        if current.weekday() in [5, 6]:
-            dates.append(current.strftime("%Y%m%d"))
-        current += timedelta(days=1)
-    
-    return dates
+    return sorted(dates)
 
 
-def get_race_ids_from_db(date_str: str) -> List[str]:
+def get_race_ids_for_date(date_str: str) -> List[str]:
     """
-    db.netkeiba.com から指定日のレースIDを取得
+    指定日のレースIDリストを取得
     """
-    # 日付からレースIDのプレフィックスを生成
-    # レースID形式: YYYYJJKKNNRR
-    # YYYY: 年, JJ: 場所コード, KK: 回次, NN: 日次, RR: レース番号
+    url = f"https://race.netkeiba.com/top/race_list.html?kaisai_date={date_str}"
     
-    # 開催場所コード
-    venue_codes = {
-        "01": "札幌", "02": "函館", "03": "福島", "04": "新潟",
-        "05": "東京", "06": "中山", "07": "中京", "08": "京都",
-        "09": "阪神", "10": "小倉"
-    }
+    html = fetch_with_retry(url)
+    if not html:
+        return []
     
+    soup = BeautifulSoup(html, 'lxml')
     race_ids = []
-    year = date_str[:4]
     
-    # 各競馬場をチェック
-    for venue_code in venue_codes.keys():
-        # 回次は1〜5程度、日次は1〜12程度
-        for kai in range(1, 6):
-            for nichi in range(1, 13):
-                # 12レース分のIDを生成
-                for race_num in range(1, 13):
-                    race_id = f"{year}{venue_code}{kai:02d}{nichi:02d}{race_num:02d}"
-                    race_ids.append(race_id)
+    # レースリンクからIDを抽出
+    for link in soup.find_all('a', href=True):
+        href = link['href']
+        match = re.search(r'race_id=(\d+)', href)
+        if match:
+            race_id = match.group(1)
+            if race_id not in race_ids and len(race_id) >= 12:
+                race_ids.append(race_id)
     
     return race_ids
 
 
-def fetch_race_result_from_db(race_id: str) -> Optional[Dict]:
+def fetch_race_result(race_id: str) -> Optional[Dict]:
     """
-    db.netkeiba.com からレース結果を取得
+    レース結果を取得（race.netkeiba.com/race/result.html）
     """
-    url = f"{DB_BASE_URL}/race/{race_id}/"
+    url = f"https://race.netkeiba.com/race/result.html?race_id={race_id}"
     
-    response = fetch_with_retry(url)
-    if not response:
+    html = fetch_with_retry(url)
+    if not html:
         return None
-    
-    # 文字コード処理
-    try:
-        html = response.content.decode('euc-jp', errors='replace')
-    except:
-        html = response.text
     
     soup = BeautifulSoup(html, 'lxml')
     
     # ページが存在するか確認
-    title = soup.find('title')
-    if not title or 'レース結果' not in title.get_text():
+    if 'レース結果' not in html and '着順' not in html:
         return None
     
     race_data = {
@@ -156,70 +150,91 @@ def fetch_race_result_from_db(race_id: str) -> Optional[Dict]:
         "payouts": {}
     }
     
-    # レース情報
-    race_name_elem = soup.select_one('.racedata fc h1, .data_intro h1, h1')
+    # レース番号
+    race_num_elem = soup.select_one('.RaceNum')
+    if race_num_elem:
+        race_data["race_num"] = parse_number(race_num_elem.get_text())
+    
+    # レース名
+    race_name_elem = soup.select_one('.RaceName')
     if race_name_elem:
         race_data["race_name"] = race_name_elem.get_text(strip=True)
     
-    # レース番号を抽出
-    race_num_match = re.search(r'(\d+)R', race_data.get("race_name", ""))
-    if race_num_match:
-        race_data["race_num"] = int(race_num_match.group(1))
-    else:
-        # レースIDから抽出
-        race_data["race_num"] = int(race_id[-2:])
-    
     # 競馬場
-    venue_code = race_id[4:6]
-    venue_map = {
-        "01": "札幌", "02": "函館", "03": "福島", "04": "新潟",
-        "05": "東京", "06": "中山", "07": "中京", "08": "京都",
-        "09": "阪神", "10": "小倉"
-    }
-    race_data["venue"] = venue_map.get(venue_code, "不明")
+    venue_elem = soup.select_one('.RaceData02 span')
+    if venue_elem:
+        venue_text = venue_elem.get_text(strip=True)
+        venue_match = re.search(r'[0-9]+回(.+?)[0-9]+日', venue_text)
+        if venue_match:
+            race_data["venue"] = venue_match.group(1)
+        else:
+            # 競馬場名を抽出
+            for v in ["東京", "中山", "阪神", "京都", "中京", "小倉", "新潟", "福島", "札幌", "函館"]:
+                if v in venue_text:
+                    race_data["venue"] = v
+                    break
     
     # 着順テーブル
-    result_table = soup.select_one('.race_table_01, table.nk_tb_common')
+    result_table = soup.select_one('.ResultTableWrap table, table.RaceTable01')
     if result_table:
-        rows = result_table.select('tr')[1:]  # ヘッダーをスキップ
+        rows = result_table.select('tr')
         
         for row in rows:
+            # ヘッダー行をスキップ
+            if row.select('th'):
+                continue
+            
             cells = row.select('td')
-            if len(cells) < 10:
+            if len(cells) < 5:
                 continue
             
             try:
                 # 着順
-                rank_text = cells[0].get_text(strip=True)
-                rank = parse_number(rank_text)
+                rank_elem = row.select_one('.Rank, td:first-child')
+                rank = parse_number(rank_elem.get_text()) if rank_elem else 0
                 if rank == 0:
                     continue
                 
                 # 馬番
-                umaban = parse_number(cells[2].get_text(strip=True))
+                umaban_elem = row.select_one('.Umaban, .Waku span')
+                umaban = 0
+                if umaban_elem:
+                    umaban = parse_number(umaban_elem.get_text())
+                else:
+                    # 2番目か3番目のセルから取得
+                    for i in [1, 2]:
+                        if i < len(cells):
+                            umaban = parse_number(cells[i].get_text())
+                            if 1 <= umaban <= 18:
+                                break
                 
                 # 馬名
-                horse_name_elem = cells[3].select_one('a')
-                horse_name = horse_name_elem.get_text(strip=True) if horse_name_elem else cells[3].get_text(strip=True)
+                horse_name_elem = row.select_one('.Horse_Name a, .HorseName a')
+                horse_name = horse_name_elem.get_text(strip=True) if horse_name_elem else ""
                 
                 # 騎手
-                jockey_elem = cells[6].select_one('a')
-                jockey = jockey_elem.get_text(strip=True) if jockey_elem else cells[6].get_text(strip=True)
+                jockey_elem = row.select_one('.Jockey a')
+                jockey = jockey_elem.get_text(strip=True) if jockey_elem else ""
                 
                 # タイム
-                race_time = cells[7].get_text(strip=True) if len(cells) > 7 else ""
+                time_elem = row.select_one('.Time .RaceTime, .Time')
+                race_time = ""
+                if time_elem:
+                    time_text = time_elem.get_text(strip=True)
+                    time_match = re.search(r'[\d:\.]+', time_text)
+                    if time_match:
+                        race_time = time_match.group()
                 
                 # 上がり3F
-                last3f = ""
-                if len(cells) > 11:
-                    last3f = cells[11].get_text(strip=True)
+                last3f_elem = row.select_one('.Time .RapTime')
+                last3f = last3f_elem.get_text(strip=True) if last3f_elem else ""
                 
                 # オッズ
-                odds = 0.0
-                if len(cells) > 12:
-                    odds = parse_float(cells[12].get_text(strip=True))
-                elif len(cells) > 10:
-                    odds = parse_float(cells[10].get_text(strip=True))
+                odds_elem = row.select_one('.Odds span, .Odds')
+                odds = parse_float(odds_elem.get_text()) if odds_elem else 0.0
+                
+                if not horse_name:
+                    continue
                 
                 horse_result = {
                     "着順": rank,
@@ -247,49 +262,56 @@ def fetch_race_result_from_db(race_id: str) -> Optional[Dict]:
     race_data["all_results"] = sorted(race_data["all_results"], key=lambda x: x.get("着順", 99))
     
     # 払戻金テーブル
-    payout_tables = soup.select('.pay_table_01, .pay_block table')
+    payout_section = soup.select_one('.FullWrap, .PaybackWrap, #All_Result_PayBack')
+    if payout_section:
+        # 単勝
+        tansho = payout_section.select_one('.Tansho .Value, [class*="Tansho"] .Payout')
+        if tansho:
+            race_data["payouts"]["単勝"] = parse_number(tansho.get_text())
+        
+        # 馬連
+        umaren = payout_section.select_one('.Umaren .Value, [class*="Umaren"] .Payout')
+        if umaren:
+            race_data["payouts"]["馬連"] = parse_number(umaren.get_text())
+        
+        # 馬単
+        umatan = payout_section.select_one('.Umatan .Value, [class*="Umatan"] .Payout')
+        if umatan:
+            race_data["payouts"]["馬単"] = parse_number(umatan.get_text())
+        
+        # 三連複
+        sanrenpuku = payout_section.select_one('.Fuku3 .Value, [class*="Sanrenpuku"] .Payout')
+        if sanrenpuku:
+            race_data["payouts"]["三連複"] = parse_number(sanrenpuku.get_text())
+        
+        # 三連単
+        sanrentan = payout_section.select_one('.Tan3 .Value, [class*="Sanrentan"] .Payout')
+        if sanrentan:
+            race_data["payouts"]["三連単"] = parse_number(sanrentan.get_text())
     
-    for table in payout_tables:
-        rows = table.select('tr')
-        for row in rows:
-            header = row.select_one('th')
-            value_cell = row.select_one('td')
-            
-            if not header or not value_cell:
+    # 別パターンの払戻金取得
+    if not race_data["payouts"]:
+        payout_rows = soup.select('.Payout tr, .PaybackTable tr')
+        for row in payout_rows:
+            try:
+                th = row.select_one('th')
+                td = row.select_one('td')
+                if th and td:
+                    bet_type = th.get_text(strip=True)
+                    payout = parse_number(td.get_text())
+                    
+                    if "単勝" in bet_type:
+                        race_data["payouts"]["単勝"] = payout
+                    elif "馬連" in bet_type:
+                        race_data["payouts"]["馬連"] = payout
+                    elif "馬単" in bet_type:
+                        race_data["payouts"]["馬単"] = payout
+                    elif "三連複" in bet_type or "3連複" in bet_type:
+                        race_data["payouts"]["三連複"] = payout
+                    elif "三連単" in bet_type or "3連単" in bet_type:
+                        race_data["payouts"]["三連単"] = payout
+            except:
                 continue
-            
-            bet_type = header.get_text(strip=True)
-            
-            # 払戻金額を取得
-            payout_text = value_cell.get_text(strip=True)
-            payout_value = parse_number(payout_text)
-            
-            if "単勝" in bet_type:
-                race_data["payouts"]["単勝"] = payout_value
-            elif "複勝" in bet_type:
-                # 複勝は複数ある場合がある
-                if "複勝" not in race_data["payouts"]:
-                    race_data["payouts"]["複勝"] = {}
-                nums = re.findall(r'(\d+)\s*[\-－]\s*(\d+)', payout_text)
-                if nums:
-                    for num, pay in nums:
-                        race_data["payouts"]["複勝"][num] = parse_number(pay)
-                else:
-                    race_data["payouts"]["複勝"]["1"] = payout_value
-            elif "枠連" in bet_type:
-                race_data["payouts"]["枠連"] = payout_value
-            elif "馬連" in bet_type:
-                race_data["payouts"]["馬連"] = payout_value
-            elif "馬単" in bet_type:
-                race_data["payouts"]["馬単"] = payout_value
-            elif "ワイド" in bet_type:
-                if "ワイド" not in race_data["payouts"]:
-                    race_data["payouts"]["ワイド"] = {}
-                race_data["payouts"]["ワイド"]["1"] = payout_value
-            elif "三連複" in bet_type or "3連複" in bet_type:
-                race_data["payouts"]["三連複"] = payout_value
-            elif "三連単" in bet_type or "3連単" in bet_type:
-                race_data["payouts"]["三連単"] = payout_value
     
     return race_data
 
@@ -303,7 +325,7 @@ def file_exists_and_valid(filepath: Path) -> bool:
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
             races = data.get("races", [])
-            if races and len(races) > 0:
+            if races and len(races) >= 6:  # 最低6レース以上
                 if races[0].get("top3") or races[0].get("all_results"):
                     return True
     except:
@@ -333,63 +355,13 @@ def save_results(results: List[Dict], target_date: datetime):
     with open(archive_path, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, ensure_ascii=False, indent=2)
     
-    print(f"  [SAVED] {filepath} ({len(results)}レース)")
-
-
-def fetch_date_results(date_str: str) -> List[Dict]:
-    """
-    指定日の全レース結果を取得
-    """
-    year = date_str[:4]
-    
-    # 各競馬場・回次・日次を試す
-    venue_codes = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"]
-    
-    results = []
-    found_venues = set()
-    
-    for venue_code in venue_codes:
-        # 回次と日次を推定して試す
-        for kai in range(1, 6):
-            for nichi in range(1, 13):
-                venue_found = False
-                
-                for race_num in range(1, 13):
-                    race_id = f"{year}{venue_code}{kai:02d}{nichi:02d}{race_num:02d}"
-                    
-                    # 既に見つかった競馬場の場合は続ける
-                    if venue_code in found_venues and race_num > 1:
-                        result = fetch_race_result_from_db(race_id)
-                        if result:
-                            results.append(result)
-                            time.sleep(REQUEST_INTERVAL)
-                        continue
-                    
-                    # 1Rを試してこの開催があるか確認
-                    if race_num == 1:
-                        result = fetch_race_result_from_db(race_id)
-                        if result:
-                            results.append(result)
-                            found_venues.add(venue_code)
-                            venue_found = True
-                            time.sleep(REQUEST_INTERVAL)
-                        else:
-                            break  # この回次・日次は存在しない
-                    elif venue_found:
-                        result = fetch_race_result_from_db(race_id)
-                        if result:
-                            results.append(result)
-                            time.sleep(REQUEST_INTERVAL)
-                
-                if not venue_found:
-                    break  # この回次は存在しない
-    
-    return results
+    print(f"    [SAVED] {len(results)}レース")
+    return True
 
 
 def main():
     print("=" * 60)
-    print("🏇 UMA-Logic Pro - 過去データ一括取得（修正版）")
+    print("🏇 UMA-Logic Pro - 過去データ一括取得（完全修正版）")
     print("=" * 60)
     
     # 引数で年を指定可能
@@ -410,17 +382,24 @@ def main():
     
     total_saved = 0
     total_skipped = 0
+    total_failed = 0
     
     for year in years:
-        print(f"\n{'='*40}")
+        print(f"\n{'='*50}")
         print(f"📅 {year}年のデータ取得開始")
-        print(f"{'='*40}")
+        print(f"{'='*50}")
         
         for month in range(1, 13):
-            print(f"\n[INFO] {year}年{month}月")
+            print(f"\n[INFO] {year}年{month}月の開催日を取得中...")
             
-            # 土日の日付リストを取得
-            dates = get_jra_race_dates(year, month)
+            # カレンダーから開催日を取得
+            dates = get_race_dates_from_calendar(year, month)
+            
+            if not dates:
+                print(f"  開催日なし")
+                continue
+            
+            print(f"  {len(dates)}日の開催日を発見")
             
             for date_str in dates:
                 target_date = datetime.strptime(date_str, "%Y%m%d")
@@ -430,7 +409,8 @@ def main():
                 if target_date > datetime.now():
                     continue
                 
-                print(f"\n  [{date_str}] {target_date.strftime('%m/%d')}")
+                weekday_jp = ["月", "火", "水", "木", "金", "土", "日"]
+                print(f"\n  [{date_str}] {target_date.month}/{target_date.day}({weekday_jp[target_date.weekday()]})")
                 
                 # 既存データチェック
                 if file_exists_and_valid(filepath):
@@ -438,19 +418,41 @@ def main():
                     total_skipped += 1
                     continue
                 
-                # レース結果を取得
-                results = fetch_date_results(date_str)
+                # レースID取得
+                race_ids = get_race_ids_for_date(date_str)
                 
+                if not race_ids:
+                    print(f"    [WARN] レースIDが見つかりません")
+                    total_failed += 1
+                    time.sleep(1)
+                    continue
+                
+                print(f"    {len(race_ids)}レースを取得中...")
+                
+                # 各レースの結果を取得
+                results = []
+                for race_id in race_ids:
+                    result = fetch_race_result(race_id)
+                    if result and result.get("all_results"):
+                        results.append(result)
+                    time.sleep(REQUEST_INTERVAL)
+                
+                # 保存
                 if results:
                     save_results(results, target_date)
                     total_saved += 1
                 else:
-                    print(f"    [WARN] データなし")
+                    print(f"    [WARN] 有効なデータなし")
+                    total_failed += 1
+                
+                # 日付間の待機
+                time.sleep(1)
     
     print("\n" + "=" * 60)
     print(f"✅ 処理完了")
     print(f"   新規保存: {total_saved}日分")
-    print(f"   スキップ: {total_skipped}日分")
+    print(f"   スキップ: {total_skipped}日分（既存データあり）")
+    print(f"   失敗: {total_failed}日分")
     print("=" * 60)
 
 

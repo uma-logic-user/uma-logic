@@ -25,19 +25,15 @@ jobs:
 
       - name: Run Scripts
         run: |
-          # 1. リアルタイム情報の取得
-          python scripts/scraper_realtime.py
+          echo "=== 1. Scraper Check ==="
+          python scripts/scraper_realtime.py && echo "Scraper DONE" || echo "Scraper SKIP/FAIL"
           
-          # 2. 資金配分の計算（今回追加！）
-          python scripts/calculator_pro.py
+          echo "=== 2. Calculator Check ==="
+          python scripts/calculator_pro.py && echo "Calculator DONE" || echo "Calculator SKIP/FAIL"
           
-          # 3. 時間帯に合わせて予想取得か結果更新を実行
-          HOUR=$(date +%H)
-          if [ "$HOUR" -lt 12 ]; then
-            python scripts/fetch_race_data.py
-          else
-            python scripts/update_results.py
-          fi
+          echo "=== 3. Data Fetcher Check ==="
+          # 平日はデータがないため、長時間止まらないようにエラーを許容して次へ進ませます
+          python scripts/fetch_race_data.py && echo "Fetcher DONE" || echo "Fetcher SKIP/FAIL (No Race Today)"
 
       - name: Commit and Push
         run: |

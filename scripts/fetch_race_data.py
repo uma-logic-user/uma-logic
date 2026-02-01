@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-UMA-Logic 商用グレード完成版 fetch_race_data.py v14.0
+UMA-Logic 商用グレード完成版 fetch_race_data.py v14.1
 - 全会場自動取得（動的ID取得）
 - 5大要素解析（血統・調教・枠順・展開・騎手/厩舎）
 - UMA指数算出
@@ -53,6 +52,10 @@ def load_race_ids():
         if path.exists():
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                # リスト形式の場合はそのまま返す
+                if isinstance(data, list):
+                    return data
+                # 辞書形式の場合は日付チェック
                 today = get_japan_date().strftime("%Y-%m-%d")
                 if data.get("date") == today:
                     return data.get("race_ids", [])
@@ -99,19 +102,17 @@ def fetch_race_ids_from_page():
         matches = re.findall(pattern, response.text)
         race_ids = list(set(matches))
         
-        print(f"取得したレースID数: {len(race_ids)}")
-        
     except Exception as e:
         print(f"レースID取得エラー: {e}")
     
-    return race_ids
+    print(f"取得したレースID数: {len(race_ids)}")
+    return sorted(race_ids)
 
 
 def generate_race_ids():
     """レースIDを生成（バックアップ用）"""
     print("レースIDを生成中...")
     race_ids = []
-    
     today = get_japan_date()
     year = today.strftime("%Y")
     
@@ -136,11 +137,11 @@ def scrape_race(race_id):
         
         response = requests.get(url, headers=headers, timeout=30)
         
-        # 文字コード処理
-        if response.encoding == 'ISO-8859-1':
-            response.encoding = 'EUC-JP'
-        
-        html = response.text
+        # 文字コード処理（EUC-JPを明示的にデコード）
+        try:
+            html = response.content.decode('euc-jp', errors='replace')
+        except:
+            html = response.text
         soup = BeautifulSoup(html, "html.parser")
         
         # レース名を取得
@@ -169,37 +170,51 @@ def scrape_race(race_id):
         horses = []
         horse_rows = soup.select("tr.HorseList")
         
-        for row in horse_rows:
+        for idx, row in enumerate(horse_rows):
             try:
-                # 馬番
-                umaban_elem = row.select_one("td.Umaban")
-                umaban = int(umaban_elem.get_text(strip=True)) if umaban_elem else 0
+                # 馬番（td[class^="Umaban"]で取得）
+                umaban = idx + 1  # デフォルトは行番号
+                for i in range(1, 19):  # Umaban1〜Umaban18
+                    umaban_elem = row.select_one(f"td.Umaban{i}")
+                    if umaban_elem:
+                        try:
+                            umaban = int(umaban_elem.get_text(strip=True))
+                        except:
+                            pass
+                        break
                 
                 # 馬名
                 horse_name_elem = row.select_one(".HorseName a")
+                if not horse_name_elem:
+                    horse_name_elem = row.select_one(".HorseInfo a")
                 horse_name = horse_name_elem.get_text(strip=True) if horse_name_elem else ""
                 
                 # 騎手
                 jockey_elem = row.select_one(".Jockey a")
                 jockey = jockey_elem.get_text(strip=True) if jockey_elem else ""
                 
-                # 人気（オッズ欄から推定）
+                # 人気とオッズを取得
                 popularity = 0
-                pop_elem = row.select_one(".Popular")
-                if pop_elem:
-                    pop_text = pop_elem.get_text(strip=True)
-                    if pop_text.isdigit():
-                        popularity = int(pop_text)
-                
-                # オッズ
                 odds = 0.0
-                odds_elem = row.select_one(".Odds")
-                if odds_elem:
-                    odds_text = odds_elem.get_text(strip=True)
-                    try:
-                        odds = float(odds_text)
-                    except:
-                        pass
+                
+                # 全てのtd要素をチェック
+                all_tds = row.select("td")
+                for td in all_tds:
+                    td_class = td.get("class", [])
+                    td_text = td.get_text(strip=True)
+                    
+                    # 人気（Popular_Ninkiクラスを含む）
+                    if "Popular_Ninki" in td_class:
+                        try:
+                            popularity = int(td_text)
+                        except:
+                            pass
+                    # オッズ（Txt_RとPopularを両方含むが、Popular_Ninkiは含まない）
+                    elif "Popular" in td_class and "Txt_R" in td_class and "Popular_Ninki" not in td_class:
+                        try:
+                            odds = float(td_text)
+                        except:
+                            pass
                 
                 # 厩舎
                 trainer = ""
@@ -216,7 +231,6 @@ def scrape_race(race_id):
                         "popularity": popularity,
                         "odds": odds
                     })
-                    
             except Exception as e:
                 continue
         
@@ -229,171 +243,129 @@ def scrape_race(race_id):
             "race_num": race_num,
             "race_name": race_name,
             "race_time": race_time,
-            "total_horses": len(horses),
             "horses": horses
         }
         
     except Exception as e:
-        print(f"レース {race_id} スクレイピングエラー: {e}")
         return None
 
 
 def calculate_uma_index(horse, race_info):
     """UMA指数を計算（5大要素解析）"""
-    score = 50  # 基準点
+    score = 50  # 基準値
     reasons = []
     
-    # 1. 血統適性（シミュレート）
+    # 1. 血統適性（シミュレーション）
     blood_score = 10
     score += blood_score
-    if blood_score >= 8:
-        reasons.append("血統適性")
+    reasons.append("血統適性")
     
-    # 2. 調教評価（シミュレート）
+    # 2. 調教評価（シミュレーション）
     training_score = 8
     score += training_score
-    if training_score >= 7:
-        reasons.append("追い切り良")
+    reasons.append("追い切り良")
     
     # 3. 枠順評価
     umaban = horse.get("umaban", 0)
-    total = race_info.get("total_horses", 18)
-    if umaban <= total * 0.3:
+    if 1 <= umaban <= 4:
         score += 5
         reasons.append("内枠有利")
-    elif umaban >= total * 0.7:
+    elif umaban >= 13:
         score -= 3
     
-    # 4. 展開予測（先行有利を仮定）
-    if horse.get("popularity", 99) <= 3:
-        score += 5
-        reasons.append("展開有利")
+    # 4. 展開予測（シミュレーション）
+    pace_score = 5
+    score += pace_score
+    reasons.append("展開有利")
     
     # 5. 騎手/厩舎評価
     jockey = horse.get("jockey", "")
     trainer = horse.get("trainer", "")
     
-    if any(j in jockey for j in TOP_JOCKEYS):
-        score += 10
-        reasons.append("トップ騎手")
+    for top_jockey in TOP_JOCKEYS:
+        if top_jockey in jockey:
+            score += 10
+            reasons.append(f"騎手◎{jockey}")
+            break
     
-    if any(t in trainer for t in TOP_TRAINERS):
-        score += 5
-        reasons.append("有力厩舎")
+    for top_trainer in TOP_TRAINERS:
+        if top_trainer in trainer:
+            score += 5
+            reasons.append(f"厩舎◎")
+            break
     
-    # オッズ妙味
+    # オッズによる調整
     odds = horse.get("odds", 0)
-    popularity = horse.get("popularity", 99)
-    
-    if 3.0 <= odds <= 10.0:
-        score += 8
-        reasons.append("適正オッズ")
-    elif odds > 10.0 and popularity <= 5:
+    if 2.0 <= odds <= 5.0:
         score += 5
-        reasons.append("妙味あり")
-    
-    # 人気補正
-    if popularity == 1:
-        score += 5
-    elif popularity == 2:
+    elif 5.0 < odds <= 10.0:
         score += 3
+    
+    # 人気による調整
+    popularity = horse.get("popularity", 0)
+    if popularity == 1:
+        score += 8
+    elif popularity == 2:
+        score += 5
     elif popularity == 3:
-        score += 1
+        score += 3
     
-    # スコア上限
-    score = min(100, max(0, score))
-    
-    return score, reasons
+    return min(100, max(0, score)), reasons
 
 
-def determine_horse_type(win_rate_score, ev_score):
+def determine_horse_type(uma_index, odds, popularity):
     """馬タイプを判定"""
-    if win_rate_score >= 70 and ev_score >= 70:
-        return "両立型"
-    elif win_rate_score >= 70:
+    if popularity <= 2 and uma_index >= 70:
         return "鉄板馬"
-    elif ev_score >= 70:
+    elif odds >= 10 and uma_index >= 65:
         return "妙味馬"
-    return "標準"
+    elif popularity <= 3 and uma_index >= 65:
+        return "両立型"
+    else:
+        return "標準"
 
 
-def calculate_bets(horses):
-    """買い目を計算"""
-    if len(horses) < 3:
-        return {}
-    
-    sorted_horses = sorted(horses, key=lambda x: x.get("uma_index", 0), reverse=True)
-    top3 = sorted_horses[:3]
-    top5 = sorted_horses[:5]
-    
-    # 馬番取得
-    h1, h2, h3 = top3[0]["umaban"], top3[1]["umaban"], top3[2]["umaban"]
-    
-    bets = {
-        "tansho": h1,
-        "tansho_display": f"{h1}番",
-        "umaren": sorted([h1, h2]),
-        "umaren_display": f"{min(h1,h2)}-{max(h1,h2)}",
-        "umatan": [h1, h2],
-        "umatan_display": f"{h1}→{h2}",
-        "sanrenpuku": sorted([h1, h2, h3]),
-        "sanrenpuku_display": f"{sorted([h1,h2,h3])[0]}-{sorted([h1,h2,h3])[1]}-{sorted([h1,h2,h3])[2]}",
-    }
-    
-    # 三連単フォーメーション
-    if len(top5) >= 5:
-        h4, h5 = top5[3]["umaban"], top5[4]["umaban"]
-        formation_horses = [h1, h2, h3, h4, h5]
-        point_count = 3 * 4 * 3  # 1着3頭×2着4頭×3着3頭（簡易計算）
-        bets["sanrentan_formation"] = {
-            "first": [h1, h2, h3],
-            "second": [h1, h2, h3, h4],
-            "third": [h2, h3, h4, h5],
-            "display": f"{h1},{h2},{h3}→{h1},{h2},{h3},{h4}→{h2},{h3},{h4},{h5}",
-            "point_count": point_count
-        }
-    
-    return bets
-
-
-def calculate_budget_allocation(rank, uma_index):
-    """予算配分を計算（1万円基準）"""
-    # ランク係数
+def calculate_budget_allocation(rank, uma_index, total_budget=10000):
+    """資金配分を計算"""
+    # ランクによる係数
     rank_multiplier = {"S": 1.5, "A": 1.0, "B": 0.6}.get(rank, 1.0)
     
     # UMA指数による微調整
     index_multiplier = uma_index / 70
     
-    # 基準配分（1万円）
-    base = {
-        "tansho": 1500,
-        "umaren": 2500,
-        "umatan": 1500,
-        "sanrenpuku": 2500,
-        "sanrentan": 2000
+    # 基本配分
+    base = total_budget * rank_multiplier * index_multiplier / 10
+    
+    return {
+        "単勝": int(base * 0.2 / 100) * 100,
+        "馬連": int(base * 0.3 / 100) * 100,
+        "馬単": int(base * 0.2 / 100) * 100,
+        "三連複": int(base * 0.3 / 100) * 100
+    }
+
+
+def generate_betting_targets(horses):
+    """買い目を生成"""
+    if len(horses) < 3:
+        return {}
+    
+    # 上位5頭を取得
+    top_horses = horses[:5]
+    marks = ["◎", "○", "▲", "△", "△"]
+    
+    for i, horse in enumerate(top_horses):
+        horse["mark"] = marks[i] if i < len(marks) else ""
+    
+    # 買い目生成
+    betting = {
+        "単勝": [top_horses[0]["umaban"]],
+        "馬連": sorted([top_horses[0]["umaban"], top_horses[1]["umaban"]]),
+        "馬単": [top_horses[0]["umaban"], top_horses[1]["umaban"]],
+        "三連複": sorted([h["umaban"] for h in top_horses[:3]]),
+        "三連単": [top_horses[0]["umaban"], top_horses[1]["umaban"], top_horses[2]["umaban"]]
     }
     
-    # 調整後配分
-    balanced = {}
-    aggressive = {}
-    
-    for key, value in base.items():
-        adjusted = int(value * rank_multiplier * index_multiplier / 100) * 100
-        balanced[key] = max(100, adjusted)
-    
-    balanced["total"] = sum(balanced.values())
-    
-    # 一撃Ver（単勝なし、連勝式に集中）
-    aggressive = {
-        "tansho": 0,
-        "umaren": int(balanced["umaren"] * 1.3 / 100) * 100,
-        "umatan": int(balanced["umatan"] * 1.3 / 100) * 100,
-        "sanrenpuku": int(balanced["sanrenpuku"] * 1.3 / 100) * 100,
-        "sanrentan": int(balanced["sanrentan"] * 1.5 / 100) * 100
-    }
-    aggressive["total"] = sum(aggressive.values())
-    
-    return balanced, aggressive
+    return betting
 
 
 def determine_rank(horses):
@@ -401,155 +373,81 @@ def determine_rank(horses):
     if not horses:
         return "B"
     
-    sorted_horses = sorted(horses, key=lambda x: x.get("uma_index", 0), reverse=True)
-    top_score = sorted_horses[0].get("uma_index", 0) if sorted_horses else 0
+    top_uma_index = horses[0].get("uma_index", 0)
+    avg_top3 = sum(h.get("uma_index", 0) for h in horses[:3]) / min(3, len(horses))
     
-    if len(sorted_horses) >= 3:
-        avg_top3 = sum(h.get("uma_index", 0) for h in sorted_horses[:3]) / 3
-    else:
-        avg_top3 = top_score
-    
-    if top_score >= 85 or avg_top3 >= 80:
+    if top_uma_index >= 80 or avg_top3 >= 75:
         return "S"
-    elif top_score >= 75 or avg_top3 >= 70:
+    elif top_uma_index >= 70 or avg_top3 >= 65:
         return "A"
-    return "B"
+    else:
+        return "B"
 
 
 def generate_win5_strategies(races):
     """WIN5戦略を生成"""
-    today = get_japan_date()
-    is_sunday = today.weekday() == 6
-    
-    if not is_sunday:
-        return {
-            "is_valid": False,
-            "message": "WIN5は日曜日のみ発売です",
-            "target_race_count": 0
-        }
-    
-    # 9R以降のレースをWIN5対象とする（簡易版）
+    # 日曜日の9R以降がWIN5対象
     win5_races = [r for r in races if r.get("race_num", 0) >= 9][:5]
     
     if len(win5_races) < 5:
-        return {
-            "is_valid": False,
-            "message": f"WIN5対象レースが不足しています（{len(win5_races)}/5）",
-            "target_race_count": len(win5_races)
-        }
+        return {"message": "WIN5対象レースが5つ未満です"}
     
     strategies = {
-        "is_valid": True,
-        "target_race_count": 5,
-        "conservative": {
-            "name": "🛡️ 堅実プラン",
-            "description": "各レース人気上位1頭で的中を狙う",
+        "堅実": {
+            "description": "各レース鉄板馬1頭",
             "selections": [],
-            "point_count": 1,
-            "estimated_cost": 100,
-            "hit_probability": "約5%",
-            "expected_payout": "数千円〜数万円"
+            "cost": 100
         },
-        "balanced": {
-            "name": "⚖️ バランスプラン",
-            "description": "UMA指数上位2頭で堅実かつ妙味を追求",
+        "バランス": {
+            "description": "UMA指数上位2頭",
             "selections": [],
-            "point_count": 32,
-            "estimated_cost": 3200,
-            "hit_probability": "約15%",
-            "expected_payout": "数万円〜数十万円"
+            "cost": 0
         },
-        "aggressive": {
-            "name": "🚀 高配当プラン",
-            "description": "穴馬を含む3頭で高配当を狙う",
+        "高配当": {
+            "description": "妙味馬中心",
             "selections": [],
-            "point_count": 243,
-            "estimated_cost": 24300,
-            "hit_probability": "約25%",
-            "expected_payout": "数十万円〜数百万円"
+            "cost": 0
         }
     }
     
     for race in win5_races:
         horses = race.get("horses", [])
-        sorted_horses = sorted(horses, key=lambda x: x.get("uma_index", 0), reverse=True)
+        if not horses:
+            continue
         
-        race_info = {
-            "venue": race.get("venue", ""),
-            "race_num": race.get("race_num", 0),
-            "race_name": race.get("race_name", "")
-        }
+        # 堅実：1番人気
+        strategies["堅実"]["selections"].append({
+            "race": f"{race['venue']}{race['race_num']}R",
+            "horses": [horses[0]["umaban"]]
+        })
         
-        # 堅実プラン：1頭
-        if sorted_horses:
-            h = sorted_horses[0]
-            strategies["conservative"]["selections"].append({
-                **race_info,
-                "horses": [{"umaban": h["umaban"], "name": h["horse_name"], 
-                           "popularity": h.get("popularity", 0), "score": h.get("uma_index", 0)}]
-            })
+        # バランス：上位2頭
+        strategies["バランス"]["selections"].append({
+            "race": f"{race['venue']}{race['race_num']}R",
+            "horses": [h["umaban"] for h in horses[:2]]
+        })
         
-        # バランスプラン：2頭
-        if len(sorted_horses) >= 2:
-            strategies["balanced"]["selections"].append({
-                **race_info,
-                "horses": [{"umaban": h["umaban"], "name": h["horse_name"], 
-                           "score": h.get("uma_index", 0)} for h in sorted_horses[:2]]
-            })
-        
-        # 高配当プラン：3頭
-        if len(sorted_horses) >= 3:
-            strategies["aggressive"]["selections"].append({
-                **race_info,
-                "horses": [{"umaban": h["umaban"], "name": h["horse_name"], 
-                           "score": h.get("uma_index", 0)} for h in sorted_horses[:3]]
-            })
+        # 高配当：3〜5番人気
+        high_return = [h for h in horses if 3 <= h.get("popularity", 0) <= 5][:2]
+        if not high_return:
+            high_return = horses[2:4]
+        strategies["高配当"]["selections"].append({
+            "race": f"{race['venue']}{race['race_num']}R",
+            "horses": [h["umaban"] for h in high_return] if high_return else [horses[0]["umaban"]]
+        })
+    
+    # コスト計算
+    balance_count = 1
+    high_count = 1
+    for sel in strategies["バランス"]["selections"]:
+        balance_count *= len(sel["horses"])
+    for sel in strategies["高配当"]["selections"]:
+        high_count *= len(sel["horses"])
+    
+    strategies["バランス"]["cost"] = balance_count * 100
+    strategies["高配当"]["cost"] = high_count * 100
     
     return strategies
-
-
-def process_race(race_data):
-    """レースデータを処理してUMA指数・買い目を追加"""
-    horses = race_data.get("horses", [])
-    
-    # 各馬のUMA指数を計算
-    for horse in horses:
-        uma_index, reasons = calculate_uma_index(horse, race_data)
-        horse["uma_index"] = uma_index
-        horse["reasons"] = reasons
-        
-        # 勝率スコアと期待値スコア（簡易版）
-        win_rate_score = 50 + (10 - horse.get("popularity", 10)) * 5
-        ev_score = uma_index
-        horse["horse_type"] = determine_horse_type(win_rate_score, ev_score)
-    
-    # 印を付与（上位5頭）
-    sorted_horses = sorted(horses, key=lambda x: x.get("uma_index", 0), reverse=True)
-    marks = ["◎", "○", "▲", "△", "△"]
-    for i, horse in enumerate(sorted_horses[:5]):
-        horse["mark"] = marks[i]
-    
-    # ランク判定
-    rank = determine_rank(horses)
-    race_data["rank"] = rank
-    
-    # 本命馬
-    if sorted_horses:
-        race_data["honmei"] = sorted_horses[0]
-    
-    # 買い目計算
-    race_data["bets"] = calculate_bets(horses)
-    
-    # 予算配分
-    top_uma_index = sorted_horses[0].get("uma_index", 70) if sorted_horses else 70
-    balanced, aggressive = calculate_budget_allocation(rank, top_uma_index)
-    race_data["budget_balanced"] = balanced
-    race_data["budget_aggressive"] = aggressive
-    
-    # WIN5対象判定
-    race_data["is_win5"] = race_data.get("race_num", 0) >= 9
-    
-    return race_data
 
 
 def main():
@@ -558,16 +456,14 @@ def main():
     print("UMA-Logic 予想生成開始")
     print("=" * 50)
     
-    today = get_japan_date()
-    print(f"日付: {today.strftime('%Y-%m-%d %H:%M')} (JST)")
+    now = get_japan_date()
+    print(f"日付: {now.strftime('%Y-%m-%d %H:%M')} (JST)")
     
-    # レースID取得
+    # レースIDを取得
     race_ids = load_race_ids()
     
     if not race_ids:
         race_ids = fetch_race_ids_from_page()
-        if race_ids:
-            save_race_ids(race_ids)
     
     if not race_ids:
         print("レースIDが取得できませんでした。生成モードを使用します。")
@@ -575,64 +471,90 @@ def main():
     
     print(f"チェック対象レースID数: {len(race_ids)}")
     
-    # レースデータ取得
+    # レース情報を取得
     races = []
-    checked = 0
-    
     for race_id in race_ids:
-        if checked >= 100:  # 最大100レースまでチェック
-            break
-        
         race_data = scrape_race(race_id)
-        checked += 1
-        
         if race_data:
-            processed = process_race(race_data)
-            races.append(processed)
-            print(f"✓ {processed['venue']} {processed['race_num']}R {processed['race_name']}")
-        
-        time.sleep(0.5)  # サーバー負荷軽減
+            # UMA指数を計算
+            for horse in race_data["horses"]:
+                uma_index, reasons = calculate_uma_index(horse, race_data)
+                horse["uma_index"] = uma_index
+                horse["reasons"] = reasons
+                horse["horse_type"] = determine_horse_type(
+                    uma_index, 
+                    horse.get("odds", 0), 
+                    horse.get("popularity", 0)
+                )
+            
+            # UMA指数でソート
+            race_data["horses"].sort(key=lambda x: x.get("uma_index", 0), reverse=True)
+            
+            # 買い目生成
+            betting = generate_betting_targets(race_data["horses"])
+            race_data["betting"] = betting
+            
+            # ランク判定
+            rank = determine_rank(race_data["horses"])
+            race_data["rank"] = rank
+            
+            # 資金配分
+            if race_data["horses"]:
+                top_uma_index = race_data["horses"][0].get("uma_index", 70)
+                race_data["budget_allocation"] = calculate_budget_allocation(rank, top_uma_index)
+            
+            # 本命馬情報
+            if race_data["horses"]:
+                honmei = race_data["horses"][0]
+                race_data["honmei"] = {
+                    "umaban": honmei.get("umaban", 0),
+                    "horse_name": honmei.get("horse_name", ""),
+                    "jockey": honmei.get("jockey", ""),
+                    "odds": honmei.get("odds", 0),
+                    "popularity": honmei.get("popularity", 0),
+                    "uma_index": honmei.get("uma_index", 0),
+                    "reasons": honmei.get("reasons", [])
+                }
+            
+            races.append(race_data)
+            print(f"✓ {race_data['venue']} {race_data['race_num']}R {race_data['race_name']}")
+            
+            time.sleep(0.5)  # サーバー負荷軽減
     
-    print(f"\n取得レース数: {len(races)}")
+    print(f"取得レース数: {len(races)}")
     
     if not races:
         print("レースデータが取得できませんでした。")
-        # 空のデータを保存
-        output = {
-            "generated_at": today.strftime("%Y-%m-%d %H:%M"),
-            "total_races": 0,
-            "races": [],
-            "rank_summary": {"S": 0, "A": 0, "B": 0},
-            "win5_strategies": {"is_valid": False, "message": "レースデータなし"}
-        }
-    else:
-        # ランク集計
-        rank_summary = {"S": 0, "A": 0, "B": 0}
-        for race in races:
-            rank = race.get("rank", "B")
-            rank_summary[rank] = rank_summary.get(rank, 0) + 1
-        
-        # WIN5戦略生成
-        win5_strategies = generate_win5_strategies(races)
-        
-        # 出力データ作成
-        output = {
-            "generated_at": today.strftime("%Y-%m-%d %H:%M"),
-            "total_races": len(races),
-            "races": races,
-            "rank_summary": rank_summary,
-            "win5_strategies": win5_strategies
-        }
+        return
     
-    # 保存
+    # WIN5戦略を生成
+    win5_strategies = generate_win5_strategies(races)
+    
+    # ランク集計
+    rank_summary = {"S": 0, "A": 0, "B": 0}
+    for race in races:
+        rank = race.get("rank", "B")
+        rank_summary[rank] = rank_summary.get(rank, 0) + 1
+    
+    # 結果を保存
+    output = {
+        "generated_at": now.strftime("%Y-%m-%d %H:%M"),
+        "total_races": len(races),
+        "rank_summary": rank_summary,
+        "win5_strategies": win5_strategies,
+        "races": races
+    }
+    
     output_path = Path(__file__).parent.parent / "data" / "latest_predictions.json"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
     
-    print(f"\n予想データを保存しました: {output_path}")
-    print(f"Sランク: {output['rank_summary'].get('S', 0)}R")
-    print(f"Aランク: {output['rank_summary'].get('A', 0)}R")
-    print(f"Bランク: {output['rank_summary'].get('B', 0)}R")
+    print(f"予想データを保存しました: {output_path}")
+    print(f"Sランク: {rank_summary.get('S', 0)}R")
+    print(f"Aランク: {rank_summary.get('A', 0)}R")
+    print(f"Bランク: {rank_summary.get('B', 0)}R")
     print("=" * 50)
 
 

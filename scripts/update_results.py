@@ -1,370 +1,331 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-UMA-Logic 商用グレード完成版 update_results.py v14.0
-- レース結果の自動取得
-- 全券種の払い戻し取得
-- 的中判定と収支計算
-- 履歴・統計の自動更新
-"""
-
-import json
-import re
-import time
-from datetime import datetime, timedelta
-from pathlib import Path
+# scripts/update_results.py
+# UMA-Logic Pro - 商用グレード結果取得・的中判定スクリプト
+# レース結果と全券種の払戻金を取得し、日付別JSONに保存。予想と照合して的中履歴を更新。
 
 import requests
 from bs4 import BeautifulSoup
+import json
+import os
+import time
+import re
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+import pytz
 
-# 定数
+# --- 定数 ---
 BASE_URL = "https://race.netkeiba.com"
+RESULT_URL = "https://race.netkeiba.com/race/result.html"
 
-# 競馬場コード
-VENUE_CODES = {
-    "01": "札幌", "02": "函館", "03": "福島", "04": "新潟", "05": "東京",
-    "06": "中山", "07": "中京", "08": "京都", "09": "阪神", "10": "小倉"
+DATA_DIR = Path("data" )
+PREDICTIONS_PREFIX = "predictions_"
+RESULTS_PREFIX = "results_"
+HISTORY_FILE = "history.json"
+
+# リクエスト設定
+MAX_RETRIES = 3
+RETRY_DELAY = 2
+REQUEST_TIMEOUT = 15
+REQUEST_INTERVAL = 1.5  # リクエスト間隔（秒）
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
 }
 
+# --- ヘルパー関数 ---
 
-def get_japan_date():
-    """日本時間の日付を取得"""
-    from datetime import timezone
-    jst = timezone(timedelta(hours=9))
-    return datetime.now(jst)
-
-
-def load_predictions():
-    """予想データを読み込み"""
-    try:
-        path = Path(__file__).parent.parent / "data" / "latest_predictions.json"
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
-    except Exception as e:
-        print(f"予想データ読み込みエラー: {e}")
+def fetch_with_retry(url: str, params: dict = None) -> Optional[requests.Response]:
+    """
+    リトライ機能付きHTTPリクエスト
+    """
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.get(
+                url, params=params, headers=HEADERS, timeout=REQUEST_TIMEOUT
+            )
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            print(f"[WARN] リクエスト失敗 (試行 {attempt + 1}/{MAX_RETRIES}): {url}")
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY * (attempt + 1))
+    print(f"[ERROR] 最大リトライ回数超過: {url}")
     return None
 
 
-def load_history():
-    """履歴データを読み込み"""
+def decode_html(response: requests.Response) -> str:
+    """
+    netkeibaのHTMLをデコード（EUC-JP対応）
+    """
     try:
-        path = Path(__file__).parent.parent / "data" / "history.json"
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
-    except Exception as e:
-        print(f"履歴データ読み込みエラー: {e}")
-    return []
+        return response.content.decode("euc-jp", errors="replace")
+    except Exception:
+        return response.text
 
 
-def save_history(history):
-    """履歴データを保存"""
+def parse_payout(text: str) -> int:
+    """
+    払戻金テキスト（例: "1,230円"）を整数に変換
+    """
+    if not text:
+        return 0
     try:
-        path = Path(__file__).parent.parent / "data" / "history.json"
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(history, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print(f"履歴データ保存エラー: {e}")
+        return int(text.replace(",", "").replace("円", ""))
+    except (ValueError, TypeError):
+        return 0
 
 
-def load_stats():
-    """統計データを読み込み"""
-    try:
-        path = Path(__file__).parent.parent / "data" / "stats.json"
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
-    except Exception as e:
-        print(f"統計データ読み込みエラー: {e}")
+# --- スクレイピング関数 ---
+
+def scrape_race_result(race_id: str) -> Optional[dict]:
+    """
+    レース結果ページから着順と払戻金をスクレイピング
+    """
+    url = f"{RESULT_URL}?race_id={race_id}"
+    print(f"[INFO] 結果を取得中: {race_id}")
+    
+    response = fetch_with_retry(url)
+    if not response:
+        return None
+    
+    html = decode_html(response)
+    soup = BeautifulSoup(html, "lxml")
+    
+    # 結果テーブルから着順を取得
+    result_table = soup.select_one("table.RaceTable01")
+    if not result_table:
+        print(f"[WARN] 結果テーブルが見つかりません: {race_id}")
+        return None
+    
+    top_horses = []
+    rows = result_table.select("tr")[1:]  # ヘッダーを除外
+    for row in rows:
+        try:
+            cells = row.select("td")
+            if len(cells) < 11:
+                continue
+            
+            horse_info = {
+                "着順": int(cells[0].get_text(strip=True)),
+                "馬番": int(cells[2].get_text(strip=True)),
+                "馬名": cells[3].get_text(strip=True),
+                "騎手": cells[6].get_text(strip=True),
+                "タイム": cells[7].get_text(strip=True),
+                "上がり3F": cells[10].get_text(strip=True),
+            }
+            top_horses.append(horse_info)
+        except (ValueError, IndexError):
+            continue
+    
+    # 払戻金テーブルを取得
+    payouts = {}
+    payout_tables = soup.select(".Payback_Table_Simple, .Payback_Table_Trifecta")
+    
+    for table in payout_tables:
+        for row in table.select("tr"):
+            th = row.select_one("th")
+            td = row.select_one("td")
+            if not th or not td:
+                continue
+            
+            bet_type = th.get_text(strip=True)
+            numbers = td.select_one(".Results_Txt").get_text(strip=True) if td.select_one(".Results_Txt") else ""
+            payout_yen = parse_payout(td.select_one(".Payout").get_text(strip=True) if td.select_one(".Payout") else "")
+            
+            if bet_type == "複勝":
+                payouts["複勝"] = {}
+                num_list = numbers.split()
+                payout_list = [parse_payout(p) for p in td.select_one(".Payout").get_text().split()]
+                for i in range(len(num_list)):
+                    payouts["複勝"][num_list[i]] = payout_list[i]
+            elif bet_type == "ワイド":
+                payouts["ワイド"] = {}
+                num_list = numbers.split("\n")
+                payout_list = [parse_payout(p) for p in td.select_one(".Payout").get_text().split("\n")]
+                for i in range(len(num_list)):
+                    payouts["ワイド"][num_list[i].strip()] = payout_list[i]
+            else:
+                payouts[bet_type] = payout_yen
+
+    # レース基本情報を取得
+    race_header = soup.select_one(".RaceName")
+    race_name = race_header.get_text(strip=True) if race_header else ""
+    race_num_match = re.search(r"(\d{1,2})R", soup.select_one(".RaceNum").get_text()) if soup.select_one(".RaceNum") else None
+    race_num = int(race_num_match.group(1)) if race_num_match else 0
+    venue = soup.select_one(".RaceData02 .Active").get_text(strip=True) if soup.select_one(".RaceData02 .Active") else ""
+
     return {
-        "total_bets": 0,
-        "total_wins": 0,
-        "total_payout": 0,
-        "total_investment": 0,
-        "tansho_stats": {"bets": 0, "hits": 0, "payout": 0, "investment": 0},
-        "umaren_stats": {"bets": 0, "hits": 0, "payout": 0, "investment": 0},
-        "umatan_stats": {"bets": 0, "hits": 0, "payout": 0, "investment": 0},
-        "sanrenpuku_stats": {"bets": 0, "hits": 0, "payout": 0, "investment": 0},
-        "sanrentan_stats": {"bets": 0, "hits": 0, "payout": 0, "investment": 0}
+        "race_id": race_id,
+        "race_name": race_name,
+        "race_num": race_num,
+        "venue": venue,
+        "top3": top_horses[:3],
+        "all_results": top_horses,
+        "payouts": payouts,
     }
 
 
-def save_stats(stats):
-    """統計データを保存"""
-    try:
-        path = Path(__file__).parent.parent / "data" / "stats.json"
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(stats, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print(f"統計データ保存エラー: {e}")
+# --- データ処理・保存関数 ---
+
+def update_history(prediction_race: dict, result_race: dict, history: List[dict]):
+    """
+    予想と結果を照合し、的中履歴を更新する
+    """
+    if not prediction_race or not result_race:
+        return
+
+    # 投資額はシミュレーション（ここでは固定100円とする）
+    investment_per_bet = 100
+    
+    # 結果から着順を取得
+    top3 = result_race.get("top3", [])
+    if len(top3) < 3:
+        return
+    
+    first = top3[0].get("馬番", 0)
+    second = top3[1].get("馬番", 0)
+    third = top3[2].get("馬番", 0)
+    
+    # 予想から推奨馬を取得
+    horses = prediction_race.get("horses", [])
+    if not horses:
+        return
+    
+    honmei = next((h["馬番"] for h in horses if h.get("印") == "◎"), 0)
+    taikou = next((h["馬番"] for h in horses if h.get("印") == "○"), 0)
+    tanpana = next((h["馬番"] for h in horses if h.get("印") == "▲"), 0)
+    
+    payouts = result_race.get("payouts", {})
+    
+    # 的中判定と履歴追加
+    def add_history(bet_type, payout):
+        history.append({
+            "日付": prediction_race["date"],
+            "レース名": prediction_race["race_name"],
+            "的中券種": bet_type,
+            "投資額": investment_per_bet,
+            "的中配当金": payout,
+        })
+
+    # 単勝（◎が1着）
+    if honmei == first:
+        add_history("単勝", payouts.get("単勝", 0))
+
+    # 複勝（◎が3着以内）
+    if honmei in [first, second, third]:
+        payout = payouts.get("複勝", {}).get(str(honmei), 0)
+        add_history("複勝", payout)
+
+    # 馬連（◎○が1-2着）
+    if {honmei, taikou} == {first, second}:
+        add_history("馬連", payouts.get("馬連", 0))
+
+    # 三連複（◎○▲が1-2-3着）
+    if {honmei, taikou, tanpana} == {first, second, third}:
+        add_history("三連複", payouts.get("三連複", 0))
 
 
-def fetch_race_result(race_id):
-    """レース結果を取得"""
-    try:
-        url = f"{BASE_URL}/race/result.html?race_id={race_id}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
-        
-        response = requests.get(url, headers=headers, timeout=30)
-        
-        if response.encoding == 'ISO-8859-1':
-            response.encoding = 'EUC-JP'
-        
-        soup = BeautifulSoup(response.text, "html.parser")
-        
-        # 着順を取得
-        result = {
-            "result_1st": {},
-            "result_2nd": {},
-            "result_3rd": {},
-            "payouts": {}
-        }
-        
-        # 着順テーブルから取得
-        result_rows = soup.select("tr.HorseList")
-        
-        for i, row in enumerate(result_rows[:3]):
-            try:
-                umaban_elem = row.select_one("td.Umaban")
-                umaban = int(umaban_elem.get_text(strip=True)) if umaban_elem else 0
-                
-                name_elem = row.select_one(".HorseName a")
-                name = name_elem.get_text(strip=True) if name_elem else ""
-                
-                key = ["result_1st", "result_2nd", "result_3rd"][i]
-                result[key] = {"umaban": umaban, "name": name}
-            except:
-                continue
-        
-        # 払い戻しを取得
-        payout_table = soup.select_one(".Payout_Detail_Table")
-        if payout_table:
-            rows = payout_table.select("tr")
-            for row in rows:
-                try:
-                    type_elem = row.select_one("th")
-                    value_elem = row.select_one("td")
-                    
-                    if type_elem and value_elem:
-                        bet_type = type_elem.get_text(strip=True)
-                        value_text = value_elem.get_text(strip=True)
-                        
-                        # 金額を抽出
-                        amount_match = re.search(r'([\d,]+)円', value_text)
-                        if amount_match:
-                            amount = int(amount_match.group(1).replace(',', ''))
-                            
-                            if "単勝" in bet_type:
-                                result["payouts"]["tansho"] = amount
-                            elif "複勝" in bet_type:
-                                result["payouts"]["fukusho"] = value_text
-                            elif "馬連" in bet_type:
-                                result["payouts"]["umaren"] = amount
-                            elif "馬単" in bet_type:
-                                result["payouts"]["umatan"] = amount
-                            elif "三連複" in bet_type:
-                                result["payouts"]["sanrenpuku"] = amount
-                            elif "三連単" in bet_type:
-                                result["payouts"]["sanrentan"] = amount
-                except:
-                    continue
-        
-        return result
-        
-    except Exception as e:
-        print(f"結果取得エラー ({race_id}): {e}")
-        return None
+def save_data(results: List[dict], history: List[dict], target_date: datetime.date):
+    """
+    結果データと履歴データをJSONで保存
+    """
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    date_str = target_date.strftime("%Y%m%d")
+    
+    # 結果データの保存
+    results_data = {
+        "date": target_date.strftime("%Y-%m-%d"),
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "races": results,
+    }
+    filepath = DATA_DIR / f"{RESULTS_PREFIX}{date_str}.json"
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(results_data, f, ensure_ascii=False, indent=2)
+    print(f"[INFO] 結果を保存しました: {filepath}")
+
+    # 履歴データの保存
+    history_path = DATA_DIR / HISTORY_FILE
+    with open(history_path, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+    print(f"[INFO] 履歴を更新しました: {history_path}")
 
 
-def check_hit(prediction, result):
-    """的中判定"""
-    hits = {}
-    
-    bets = prediction.get("bets", {})
-    payouts = result.get("payouts", {})
-    
-    first = result.get("result_1st", {}).get("umaban", 0)
-    second = result.get("result_2nd", {}).get("umaban", 0)
-    third = result.get("result_3rd", {}).get("umaban", 0)
-    
-    # 単勝
-    if bets.get("tansho") == first:
-        hits["tansho"] = {
-            "is_hit": True,
-            "payout": payouts.get("tansho", 0)
-        }
-    else:
-        hits["tansho"] = {"is_hit": False, "payout": 0}
-    
-    # 馬連
-    umaren = bets.get("umaren", [])
-    if sorted(umaren) == sorted([first, second]):
-        hits["umaren"] = {
-            "is_hit": True,
-            "payout": payouts.get("umaren", 0)
-        }
-    else:
-        hits["umaren"] = {"is_hit": False, "payout": 0}
-    
-    # 馬単
-    umatan = bets.get("umatan", [])
-    if umatan == [first, second]:
-        hits["umatan"] = {
-            "is_hit": True,
-            "payout": payouts.get("umatan", 0)
-        }
-    else:
-        hits["umatan"] = {"is_hit": False, "payout": 0}
-    
-    # 三連複
-    sanrenpuku = bets.get("sanrenpuku", [])
-    if sorted(sanrenpuku) == sorted([first, second, third]):
-        hits["sanrenpuku"] = {
-            "is_hit": True,
-            "payout": payouts.get("sanrenpuku", 0)
-        }
-    else:
-        hits["sanrenpuku"] = {"is_hit": False, "payout": 0}
-    
-    # 三連単（フォーメーション）
-    formation = bets.get("sanrentan_formation", {})
-    if formation:
-        first_list = formation.get("first", [])
-        second_list = formation.get("second", [])
-        third_list = formation.get("third", [])
-        
-        if first in first_list and second in second_list and third in third_list:
-            hits["sanrentan"] = {
-                "is_hit": True,
-                "payout": payouts.get("sanrentan", 0)
-            }
-        else:
-            hits["sanrentan"] = {"is_hit": False, "payout": 0}
-    else:
-        hits["sanrentan"] = {"is_hit": False, "payout": 0}
-    
-    return hits
-
+# --- メイン処理 ---
 
 def main():
-    """メイン処理"""
-    print("=" * 50)
-    print("UMA-Logic 結果取得開始")
-    print("=" * 50)
-    
-    today = get_japan_date()
-    print(f"日付: {today.strftime('%Y-%m-%d %H:%M')} (JST)")
-    
-    # 予想データ読み込み
-    predictions = load_predictions()
-    if not predictions:
-        print("予想データがありません")
-        return
-    
-    races = predictions.get("races", [])
-    if not races:
-        print("レースデータがありません")
-        return
-    
-    print(f"対象レース数: {len(races)}")
-    
-    # 履歴・統計読み込み
-    history = load_history()
-    stats = load_stats()
-    
-    # 今日の結果を格納
-    today_results = []
-    
-    for race in races:
-        race_id = race.get("race_id", "")
-        if not race_id:
-            continue
-        
-        print(f"結果取得中: {race.get('venue', '')} {race.get('race_num', 0)}R")
-        
-        result = fetch_race_result(race_id)
-        
-        if result:
-            # 的中判定
-            hits = check_hit(race, result)
-            
-            race_result = {
-                "race_id": race_id,
-                "venue": race.get("venue", ""),
-                "race_num": race.get("race_num", 0),
-                "race_name": race.get("race_name", ""),
-                "result_1st": result.get("result_1st", {}),
-                "result_2nd": result.get("result_2nd", {}),
-                "result_3rd": result.get("result_3rd", {}),
-                "payouts": result.get("payouts", {}),
-                "hits": hits
-            }
-            
-            today_results.append(race_result)
-            
-            # 統計更新
-            for bet_type in ["tansho", "umaren", "umatan", "sanrenpuku", "sanrentan"]:
-                stats_key = f"{bet_type}_stats"
-                if stats_key not in stats:
-                    stats[stats_key] = {"bets": 0, "hits": 0, "payout": 0, "investment": 0}
-                
-                stats[stats_key]["bets"] += 1
-                stats["total_bets"] += 1
-                
-                # 投資額（仮に各100円とする）
-                stats[stats_key]["investment"] += 100
-                stats["total_investment"] += 100
-                
-                if hits.get(bet_type, {}).get("is_hit"):
-                    stats[stats_key]["hits"] += 1
-                    stats[stats_key]["payout"] += hits[bet_type].get("payout", 0)
-                    stats["total_wins"] += 1
-                    stats["total_payout"] += hits[bet_type].get("payout", 0)
-                    print(f"  ✓ {bet_type} 的中！ {hits[bet_type].get('payout', 0)}円")
-        
-        time.sleep(0.5)
-    
-    # 履歴に追加
-    today_str = today.strftime("%Y-%m-%d")
-    
-    # 既存の今日のデータを更新または新規追加
-    existing_index = None
-    for i, day in enumerate(history):
-        if day.get("date") == today_str:
-            existing_index = i
-            break
-    
-    day_data = {
-        "date": today_str,
-        "results": today_results
-    }
-    
-    if existing_index is not None:
-        history[existing_index] = day_data
+    """
+    メイン処理
+    """
+    print("=" * 60)
+    print("UMA-Logic Pro - 結果取得・的中判定スクリプト")
+    print("=" * 60)
+
+    # 対象日を決定（引数があればそれ、なければ昨日）
+    import sys
+    if len(sys.argv) > 1:
+        try:
+            target_date = datetime.strptime(sys.argv[1], "%Y%m%d").date()
+        except ValueError:
+            print("[ERROR] 日付の形式が不正です。YYYYMMDD形式で指定してください。")
+            return
     else:
-        history.append(day_data)
+        jst = pytz.timezone("Asia/Tokyo")
+        target_date = (datetime.now(jst) - timedelta(days=1)).date()
     
-    # 保存
-    save_history(history)
-    save_stats(stats)
+    print(f"[INFO] 対象日: {target_date.strftime('%Y年%m月%d日')}")
+
+    # 予想データを読み込み
+    date_str = target_date.strftime("%Y%m%d")
+    prediction_filepath = DATA_DIR / f"{PREDICTIONS_PREFIX}{date_str}.json"
+    if not prediction_filepath.exists():
+        print(f"[ERROR] 予想ファイルが見つかりません: {prediction_filepath}")
+        return
     
-    # サマリー表示
-    print("\n" + "=" * 50)
-    print("結果サマリー")
-    print("=" * 50)
-    print(f"取得レース数: {len(today_results)}")
-    print(f"累計的中数: {stats.get('total_wins', 0)}")
-    print(f"累計配当: {stats.get('total_payout', 0):,}円")
-    print(f"累計投資: {stats.get('total_investment', 0):,}円")
+    with open(prediction_filepath, "r", encoding="utf-8") as f:
+        predictions = json.load(f)
     
-    if stats.get('total_investment', 0) > 0:
-        recovery = stats['total_payout'] / stats['total_investment'] * 100
-        print(f"回収率: {recovery:.1f}%")
+    prediction_races = predictions.get("races", [])
+    if not prediction_races:
+        print("[ERROR] 予想データにレース情報が含まれていません。")
+        return
     
-    print("=" * 50)
+    # 履歴データを読み込み
+    history_path = DATA_DIR / HISTORY_FILE
+    history = []
+    if history_path.exists():
+        with open(history_path, "r", encoding="utf-8") as f:
+            try:
+                history = json.load(f)
+            except json.JSONDecodeError:
+                print("[WARN] 履歴ファイルが空か壊れています。新規作成します。")
+
+    # 各レースの結果を取得
+    all_results = []
+    race_ids = [r["race_id"] for r in prediction_races]
+    
+    for i, race_id in enumerate(race_ids):
+        print(f"\n[INFO] 処理中: {i + 1}/{len(race_ids)}")
+        result = scrape_race_result(race_id)
+        if result:
+            all_results.append(result)
+            
+            # 予想と照合して履歴を更新
+            prediction_race = next((p for p in prediction_races if p["race_id"] == race_id), None)
+            if prediction_race:
+                prediction_race["date"] = predictions["date"] # 日付情報を付与
+                update_history(prediction_race, result, history)
+        
+        if i < len(race_ids) - 1:
+            time.sleep(REQUEST_INTERVAL)
+
+    # データを保存
+    if all_results:
+        save_data(all_results, history, target_date)
+        print("\n[INFO] 全ての処理が完了しました。")
+    else:
+        print("\n[WARN] 結果を取得できたレースがありませんでした。")
 
 
 if __name__ == "__main__":

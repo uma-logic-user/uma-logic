@@ -580,3 +580,16 @@ def main():
 
 if __name__ == "__main__":
     main()
+# update_results.py の main() 関数の最後に追加
+
+def main():
+    # ... 既存のコード ...
+    
+    # === 自動アーカイブ ===
+    try:
+        from archive_manager import AutoArchiver
+        archiver = AutoArchiver()
+        archiver.archive_today_results()
+        print("[INFO] 本日の結果をアーカイブしました")
+    except Exception as e:
+        print(f"[WARN] アーカイブエラー: {e}")

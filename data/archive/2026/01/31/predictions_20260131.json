@@ -1,0 +1,1346 @@
+{
+  "date": "2026-01-31",
+  "day_of_week": "土曜日",
+  "generated_at": "2026-01-31 07:00:00",
+  "total_races": 36,
+  "rank_summary": {"S": 5, "A": 18, "B": 13},
+  "venues": ["東京", "京都", "小倉"],
+  "races": [
+    {
+      "race_id": "202605010101",
+      "venue": "東京",
+      "race_num": 1,
+      "race_name": "3歳未勝利",
+      "start_time": "10:05",
+      "course": "ダ1400m",
+      "head_count": 16,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 10,
+        "horse_name": "ケブランリ",
+        "jockey": "戸崎圭太",
+        "odds": 3.2,
+        "popularity": 1,
+        "uma_index": 78,
+        "horse_type": "鉄板馬",
+        "reasons": ["前走好内容", "騎手強化"]
+      },
+      "horses": [
+        {"umaban": 10, "horse_name": "ケブランリ", "jockey": "戸崎圭太", "odds": 3.2, "popularity": 1, "uma_index": 78},
+        {"umaban": 3, "horse_name": "グランドライン", "jockey": "横山武史", "odds": 5.1, "popularity": 2, "uma_index": 72},
+        {"umaban": 7, "horse_name": "スターライトキス", "jockey": "ルメール", "odds": 6.8, "popularity": 3, "uma_index": 68},
+        {"umaban": 14, "horse_name": "ブレイブハート", "jockey": "川田将雅", "odds": 8.5, "popularity": 4, "uma_index": 65},
+        {"umaban": 1, "horse_name": "サンライズムーン", "jockey": "福永祐一", "odds": 12.3, "popularity": 5, "uma_index": 61}
+      ],
+      "bets": {
+        "tansho_display": "10",
+        "umaren_display": "3-10",
+        "umatan_display": "10→3",
+        "sanrenpuku_display": "3-7-10",
+        "sanrentan_formation": {"display": "10→3,7→3,7,14", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2000, "umaren": 2500, "umatan": 1500, "sanrenpuku": 2000, "sanrentan": 2000},
+      "budget_aggressive": {"tansho": 0, "umaren": 3000, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 2000}
+    },
+    {
+      "race_id": "202605010102",
+      "venue": "東京",
+      "race_num": 2,
+      "race_name": "4歳以上1勝クラス",
+      "start_time": "10:35",
+      "course": "ダ2100m",
+      "head_count": 16,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 1,
+        "horse_name": "アルファシーナ",
+        "jockey": "横山和生",
+        "odds": 4.5,
+        "popularity": 2,
+        "uma_index": 71,
+        "horse_type": "妙味馬",
+        "reasons": ["距離適性", "展開有利"]
+      },
+      "horses": [
+        {"umaban": 1, "horse_name": "アルファシーナ", "jockey": "横山和生", "odds": 4.5, "popularity": 2, "uma_index": 71},
+        {"umaban": 8, "horse_name": "ゴールドラッシュ", "jockey": "田辺裕信", "odds": 3.8, "popularity": 1, "uma_index": 69},
+        {"umaban": 12, "horse_name": "シルバーウィング", "jockey": "三浦皇成", "odds": 7.2, "popularity": 3, "uma_index": 65},
+        {"umaban": 5, "horse_name": "ブロンズスター", "jockey": "石橋脩", "odds": 9.8, "popularity": 4, "uma_index": 62},
+        {"umaban": 15, "horse_name": "プラチナドリーム", "jockey": "内田博幸", "odds": 15.6, "popularity": 5, "uma_index": 58}
+      ],
+      "bets": {
+        "tansho_display": "1",
+        "umaren_display": "1-8",
+        "umatan_display": "1→8",
+        "sanrenpuku_display": "1-8-12",
+        "sanrentan_formation": {"display": "1→8,12→8,12,5", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1500, "umaren": 2000, "umatan": 1200, "sanrenpuku": 1800, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 2500, "umatan": 2000, "sanrenpuku": 2000, "sanrentan": 1500}
+    },
+    {
+      "race_id": "202605010103",
+      "venue": "東京",
+      "race_num": 3,
+      "race_name": "3歳未勝利",
+      "start_time": "11:05",
+      "course": "ダ1600m",
+      "head_count": 15,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 1,
+        "horse_name": "カスターニエ",
+        "jockey": "ルメール",
+        "odds": 2.1,
+        "popularity": 1,
+        "uma_index": 82,
+        "horse_type": "鉄板馬",
+        "reasons": ["トップジョッキー", "血統優秀"]
+      },
+      "horses": [
+        {"umaban": 1, "horse_name": "カスターニエ", "jockey": "ルメール", "odds": 2.1, "popularity": 1, "uma_index": 82},
+        {"umaban": 6, "horse_name": "ダイヤモンドキング", "jockey": "川田将雅", "odds": 4.2, "popularity": 2, "uma_index": 75},
+        {"umaban": 11, "horse_name": "エメラルドクイーン", "jockey": "戸崎圭太", "odds": 6.5, "popularity": 3, "uma_index": 70},
+        {"umaban": 4, "horse_name": "ルビーハート", "jockey": "横山武史", "odds": 8.9, "popularity": 4, "uma_index": 66},
+        {"umaban": 9, "horse_name": "サファイアスカイ", "jockey": "福永祐一", "odds": 12.1, "popularity": 5, "uma_index": 62}
+      ],
+      "bets": {
+        "tansho_display": "1",
+        "umaren_display": "1-6",
+        "umatan_display": "1→6",
+        "sanrenpuku_display": "1-6-11",
+        "sanrentan_formation": {"display": "1→6,11→6,11,4", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2500, "umaren": 2500, "umatan": 1800, "sanrenpuku": 2200, "sanrentan": 1000},
+      "budget_aggressive": {"tansho": 0, "umaren": 3500, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 1500}
+    },
+    {
+      "race_id": "202605010104",
+      "venue": "東京",
+      "race_num": 4,
+      "race_name": "3歳新馬",
+      "start_time": "11:35",
+      "course": "ダ1400m",
+      "head_count": 16,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 6,
+        "horse_name": "マックスキュー",
+        "jockey": "川田将雅",
+        "odds": 2.8,
+        "popularity": 1,
+        "uma_index": 76,
+        "horse_type": "鉄板馬",
+        "reasons": ["良血馬", "調教抜群"]
+      },
+      "horses": [
+        {"umaban": 6, "horse_name": "マックスキュー", "jockey": "川田将雅", "odds": 2.8, "popularity": 1, "uma_index": 76},
+        {"umaban": 2, "horse_name": "フューチャースター", "jockey": "ルメール", "odds": 3.5, "popularity": 2, "uma_index": 73},
+        {"umaban": 10, "horse_name": "ドリームチェイサー", "jockey": "戸崎圭太", "odds": 7.8, "popularity": 3, "uma_index": 67},
+        {"umaban": 14, "horse_name": "ホープフルキング", "jockey": "横山武史", "odds": 11.2, "popularity": 4, "uma_index": 63},
+        {"umaban": 8, "horse_name": "ビクトリーロード", "jockey": "福永祐一", "odds": 15.8, "popularity": 5, "uma_index": 59}
+      ],
+      "bets": {
+        "tansho_display": "6",
+        "umaren_display": "2-6",
+        "umatan_display": "6→2",
+        "sanrenpuku_display": "2-6-10",
+        "sanrentan_formation": {"display": "6→2,10→2,10,14", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1800, "umaren": 2200, "umatan": 1500, "sanrenpuku": 2000, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3000, "umatan": 2200, "sanrenpuku": 2300, "sanrentan": 1500}
+    },
+    {
+      "race_id": "202605010105",
+      "venue": "東京",
+      "race_num": 5,
+      "race_name": "3歳新馬",
+      "start_time": "12:25",
+      "course": "芝1800m",
+      "head_count": 16,
+      "rank": "S",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 14,
+        "horse_name": "カーブドフェザー",
+        "jockey": "ルメール",
+        "odds": 1.8,
+        "popularity": 1,
+        "uma_index": 88,
+        "horse_type": "鉄板馬",
+        "reasons": ["超良血馬", "調教A評価", "トップジョッキー"]
+      },
+      "horses": [
+        {"umaban": 14, "horse_name": "カーブドフェザー", "jockey": "ルメール", "odds": 1.8, "popularity": 1, "uma_index": 88},
+        {"umaban": 3, "horse_name": "ロイヤルプリンス", "jockey": "川田将雅", "odds": 4.5, "popularity": 2, "uma_index": 79},
+        {"umaban": 9, "horse_name": "ノーブルクイーン", "jockey": "戸崎圭太", "odds": 8.2, "popularity": 3, "uma_index": 72},
+        {"umaban": 7, "horse_name": "グレースフルナイト", "jockey": "横山武史", "odds": 12.5, "popularity": 4, "uma_index": 67},
+        {"umaban": 11, "horse_name": "エレガントスター", "jockey": "福永祐一", "odds": 18.3, "popularity": 5, "uma_index": 62}
+      ],
+      "bets": {
+        "tansho_display": "14",
+        "umaren_display": "3-14",
+        "umatan_display": "14→3",
+        "sanrenpuku_display": "3-9-14",
+        "sanrentan_formation": {"display": "14→3,9→3,9,7", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 3000, "umaren": 3000, "umatan": 2000, "sanrenpuku": 2500, "sanrentan": 2500},
+      "budget_aggressive": {"tansho": 0, "umaren": 4000, "umatan": 3000, "sanrenpuku": 3000, "sanrentan": 3000}
+    },
+    {
+      "race_id": "202605010106",
+      "venue": "東京",
+      "race_num": 6,
+      "race_name": "3歳未勝利",
+      "start_time": "13:00",
+      "course": "芝1600m",
+      "head_count": 16,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 5,
+        "horse_name": "シャイニングスター",
+        "jockey": "戸崎圭太",
+        "odds": 3.8,
+        "popularity": 1,
+        "uma_index": 77,
+        "horse_type": "両立型",
+        "reasons": ["前走2着", "コース適性"]
+      },
+      "horses": [
+        {"umaban": 5, "horse_name": "シャイニングスター", "jockey": "戸崎圭太", "odds": 3.8, "popularity": 1, "uma_index": 77},
+        {"umaban": 12, "horse_name": "ムーンライトソナタ", "jockey": "横山武史", "odds": 5.2, "popularity": 2, "uma_index": 73},
+        {"umaban": 8, "horse_name": "サンセットグロー", "jockey": "川田将雅", "odds": 6.8, "popularity": 3, "uma_index": 69},
+        {"umaban": 2, "horse_name": "オーロラドリーム", "jockey": "ルメール", "odds": 9.5, "popularity": 4, "uma_index": 65},
+        {"umaban": 15, "horse_name": "スターダストメモリー", "jockey": "福永祐一", "odds": 14.2, "popularity": 5, "uma_index": 60}
+      ],
+      "bets": {
+        "tansho_display": "5",
+        "umaren_display": "5-12",
+        "umatan_display": "5→12",
+        "sanrenpuku_display": "5-8-12",
+        "sanrentan_formation": {"display": "5→12,8→12,8,2", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2200, "umaren": 2500, "umatan": 1600, "sanrenpuku": 2200, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3200, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202605010107",
+      "venue": "東京",
+      "race_num": 7,
+      "race_name": "3歳1勝クラス",
+      "start_time": "13:30",
+      "course": "ダ1600m",
+      "head_count": 16,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 9,
+        "horse_name": "サンダーボルト",
+        "jockey": "横山武史",
+        "odds": 4.2,
+        "popularity": 2,
+        "uma_index": 75,
+        "horse_type": "妙味馬",
+        "reasons": ["前走好走", "人気妙味"]
+      },
+      "horses": [
+        {"umaban": 9, "horse_name": "サンダーボルト", "jockey": "横山武史", "odds": 4.2, "popularity": 2, "uma_index": 75},
+        {"umaban": 4, "horse_name": "ライトニングストーム", "jockey": "戸崎圭太", "odds": 3.5, "popularity": 1, "uma_index": 73},
+        {"umaban": 13, "horse_name": "トルネードキング", "jockey": "川田将雅", "odds": 6.5, "popularity": 3, "uma_index": 69},
+        {"umaban": 1, "horse_name": "ハリケーンスター", "jockey": "ルメール", "odds": 8.8, "popularity": 4, "uma_index": 65},
+        {"umaban": 7, "horse_name": "サイクロンドリーム", "jockey": "福永祐一", "odds": 12.5, "popularity": 5, "uma_index": 61}
+      ],
+      "bets": {
+        "tansho_display": "9",
+        "umaren_display": "4-9",
+        "umatan_display": "9→4",
+        "sanrenpuku_display": "4-9-13",
+        "sanrentan_formation": {"display": "9→4,13→4,13,1", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2000, "umaren": 2500, "umatan": 1500, "sanrenpuku": 2200, "sanrentan": 1800},
+      "budget_aggressive": {"tansho": 0, "umaren": 3200, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202605010108",
+      "venue": "東京",
+      "race_num": 8,
+      "race_name": "4歳以上2勝クラス",
+      "start_time": "14:01",
+      "course": "ダ1400m",
+      "head_count": 16,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 11,
+        "horse_name": "ブレイズキング",
+        "jockey": "川田将雅",
+        "odds": 3.5,
+        "popularity": 1,
+        "uma_index": 74,
+        "horse_type": "鉄板馬",
+        "reasons": ["実績上位", "騎手信頼"]
+      },
+      "horses": [
+        {"umaban": 11, "horse_name": "ブレイズキング", "jockey": "川田将雅", "odds": 3.5, "popularity": 1, "uma_index": 74},
+        {"umaban": 6, "horse_name": "フレイムスター", "jockey": "戸崎圭太", "odds": 4.8, "popularity": 2, "uma_index": 70},
+        {"umaban": 3, "horse_name": "ファイアードリーム", "jockey": "横山武史", "odds": 7.2, "popularity": 3, "uma_index": 66},
+        {"umaban": 14, "horse_name": "インフェルノナイト", "jockey": "ルメール", "odds": 9.5, "popularity": 4, "uma_index": 62},
+        {"umaban": 8, "horse_name": "バーニングソウル", "jockey": "福永祐一", "odds": 13.8, "popularity": 5, "uma_index": 58}
+      ],
+      "bets": {
+        "tansho_display": "11",
+        "umaren_display": "6-11",
+        "umatan_display": "11→6",
+        "sanrenpuku_display": "3-6-11",
+        "sanrentan_formation": {"display": "11→6,3→6,3,14", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1800, "umaren": 2200, "umatan": 1400, "sanrenpuku": 2000, "sanrentan": 1600},
+      "budget_aggressive": {"tansho": 0, "umaren": 2800, "umatan": 2200, "sanrenpuku": 2200, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202605010109",
+      "venue": "東京",
+      "race_num": 9,
+      "race_name": "白嶺S",
+      "start_time": "14:31",
+      "course": "ダ1600m",
+      "head_count": 16,
+      "rank": "S",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 7,
+        "horse_name": "スノーストーム",
+        "jockey": "ルメール",
+        "odds": 2.5,
+        "popularity": 1,
+        "uma_index": 85,
+        "horse_type": "鉄板馬",
+        "reasons": ["重賞実績", "トップジョッキー", "コース適性"]
+      },
+      "horses": [
+        {"umaban": 7, "horse_name": "スノーストーム", "jockey": "ルメール", "odds": 2.5, "popularity": 1, "uma_index": 85},
+        {"umaban": 2, "horse_name": "アイスブレイカー", "jockey": "川田将雅", "odds": 4.8, "popularity": 2, "uma_index": 78},
+        {"umaban": 12, "horse_name": "フロストキング", "jockey": "戸崎圭太", "odds": 7.5, "popularity": 3, "uma_index": 72},
+        {"umaban": 5, "horse_name": "ウィンターソルジャー", "jockey": "横山武史", "odds": 10.2, "popularity": 4, "uma_index": 68},
+        {"umaban": 15, "horse_name": "ブリザードナイト", "jockey": "福永祐一", "odds": 15.8, "popularity": 5, "uma_index": 63}
+      ],
+      "bets": {
+        "tansho_display": "7",
+        "umaren_display": "2-7",
+        "umatan_display": "7→2",
+        "sanrenpuku_display": "2-7-12",
+        "sanrentan_formation": {"display": "7→2,12→2,12,5", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 3000, "umaren": 3000, "umatan": 2000, "sanrenpuku": 2500, "sanrentan": 2500},
+      "budget_aggressive": {"tansho": 0, "umaren": 4000, "umatan": 3000, "sanrenpuku": 3000, "sanrentan": 3000}
+    },
+    {
+      "race_id": "202605010110",
+      "venue": "東京",
+      "race_num": 10,
+      "race_name": "クロッカスS",
+      "start_time": "15:05",
+      "course": "芝1400m",
+      "head_count": 15,
+      "rank": "S",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 4,
+        "horse_name": "スプリングブリーズ",
+        "jockey": "川田将雅",
+        "odds": 2.2,
+        "popularity": 1,
+        "uma_index": 86,
+        "horse_type": "鉄板馬",
+        "reasons": ["重賞2着", "スピード抜群", "騎手強化"]
+      },
+      "horses": [
+        {"umaban": 4, "horse_name": "スプリングブリーズ", "jockey": "川田将雅", "odds": 2.2, "popularity": 1, "uma_index": 86},
+        {"umaban": 9, "horse_name": "チェリーブロッサム", "jockey": "ルメール", "odds": 3.8, "popularity": 2, "uma_index": 80},
+        {"umaban": 1, "horse_name": "ピーチフラワー", "jockey": "戸崎圭太", "odds": 6.5, "popularity": 3, "uma_index": 74},
+        {"umaban": 13, "horse_name": "プラムガーデン", "jockey": "横山武史", "odds": 9.8, "popularity": 4, "uma_index": 69},
+        {"umaban": 6, "horse_name": "アプリコットドリーム", "jockey": "福永祐一", "odds": 14.5, "popularity": 5, "uma_index": 64}
+      ],
+      "bets": {
+        "tansho_display": "4",
+        "umaren_display": "4-9",
+        "umatan_display": "4→9",
+        "sanrenpuku_display": "1-4-9",
+        "sanrentan_formation": {"display": "4→9,1→9,1,13", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 3000, "umaren": 3000, "umatan": 2000, "sanrenpuku": 2500, "sanrentan": 2500},
+      "budget_aggressive": {"tansho": 0, "umaren": 4000, "umatan": 3000, "sanrenpuku": 3000, "sanrentan": 3000}
+    },
+    {
+      "race_id": "202605010111",
+      "venue": "東京",
+      "race_num": 11,
+      "race_name": "白富士S",
+      "start_time": "15:45",
+      "course": "芝2000m",
+      "head_count": 10,
+      "rank": "S",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 3,
+        "horse_name": "マウントフジ",
+        "jockey": "ルメール",
+        "odds": 1.9,
+        "popularity": 1,
+        "uma_index": 89,
+        "horse_type": "鉄板馬",
+        "reasons": ["G2勝ち馬", "絶対能力", "鉄板級"]
+      },
+      "horses": [
+        {"umaban": 3, "horse_name": "マウントフジ", "jockey": "ルメール", "odds": 1.9, "popularity": 1, "uma_index": 89},
+        {"umaban": 8, "horse_name": "サクラフブキ", "jockey": "川田将雅", "odds": 4.2, "popularity": 2, "uma_index": 81},
+        {"umaban": 1, "horse_name": "ヤマトナデシコ", "jockey": "戸崎圭太", "odds": 7.8, "popularity": 3, "uma_index": 74},
+        {"umaban": 6, "horse_name": "ニホンバレ", "jockey": "横山武史", "odds": 12.5, "popularity": 4, "uma_index": 68},
+        {"umaban": 10, "horse_name": "フジノカゼ", "jockey": "福永祐一", "odds": 18.2, "popularity": 5, "uma_index": 62}
+      ],
+      "bets": {
+        "tansho_display": "3",
+        "umaren_display": "3-8",
+        "umatan_display": "3→8",
+        "sanrenpuku_display": "1-3-8",
+        "sanrentan_formation": {"display": "3→8,1→8,1,6", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 3500, "umaren": 3500, "umatan": 2500, "sanrenpuku": 3000, "sanrentan": 3000},
+      "budget_aggressive": {"tansho": 0, "umaren": 4500, "umatan": 3500, "sanrenpuku": 3500, "sanrentan": 3500}
+    },
+    {
+      "race_id": "202605010112",
+      "venue": "東京",
+      "race_num": 12,
+      "race_name": "4歳以上1勝クラス",
+      "start_time": "16:25",
+      "course": "芝1800m",
+      "head_count": 12,
+      "rank": "A",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 2,
+        "horse_name": "ラストサムライ",
+        "jockey": "戸崎圭太",
+        "odds": 3.5,
+        "popularity": 1,
+        "uma_index": 78,
+        "horse_type": "両立型",
+        "reasons": ["前走好走", "コース適性"]
+      },
+      "horses": [
+        {"umaban": 2, "horse_name": "ラストサムライ", "jockey": "戸崎圭太", "odds": 3.5, "popularity": 1, "uma_index": 78},
+        {"umaban": 7, "horse_name": "サムライスピリット", "jockey": "横山武史", "odds": 4.8, "popularity": 2, "uma_index": 74},
+        {"umaban": 11, "horse_name": "ブシドーナイト", "jockey": "川田将雅", "odds": 6.2, "popularity": 3, "uma_index": 70},
+        {"umaban": 4, "horse_name": "カタナマスター", "jockey": "ルメール", "odds": 8.5, "popularity": 4, "uma_index": 66},
+        {"umaban": 9, "horse_name": "ショーグンドリーム", "jockey": "福永祐一", "odds": 12.8, "popularity": 5, "uma_index": 61}
+      ],
+      "bets": {
+        "tansho_display": "2",
+        "umaren_display": "2-7",
+        "umatan_display": "2→7",
+        "sanrenpuku_display": "2-7-11",
+        "sanrentan_formation": {"display": "2→7,11→7,11,4", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2500, "umaren": 2800, "umatan": 1800, "sanrenpuku": 2400, "sanrentan": 2000},
+      "budget_aggressive": {"tansho": 0, "umaren": 3500, "umatan": 2800, "sanrenpuku": 2800, "sanrentan": 2400}
+    },
+    {
+      "race_id": "202608020101",
+      "venue": "京都",
+      "race_num": 1,
+      "race_name": "3歳未勝利",
+      "start_time": "09:55",
+      "course": "ダ1200m",
+      "head_count": 16,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 8,
+        "horse_name": "エターナルビジョン",
+        "jockey": "岩田望来",
+        "odds": 4.2,
+        "popularity": 2,
+        "uma_index": 72,
+        "horse_type": "妙味馬",
+        "reasons": ["展開有利", "人気妙味"]
+      },
+      "horses": [
+        {"umaban": 8, "horse_name": "エターナルビジョン", "jockey": "岩田望来", "odds": 4.2, "popularity": 2, "uma_index": 72},
+        {"umaban": 3, "horse_name": "ミラクルドリーム", "jockey": "武豊", "odds": 3.5, "popularity": 1, "uma_index": 70},
+        {"umaban": 12, "horse_name": "ファンタジースター", "jockey": "松山弘平", "odds": 6.8, "popularity": 3, "uma_index": 66},
+        {"umaban": 5, "horse_name": "イリュージョンナイト", "jockey": "坂井瑠星", "odds": 9.2, "popularity": 4, "uma_index": 62},
+        {"umaban": 15, "horse_name": "ドリームキャッチャー", "jockey": "和田竜二", "odds": 14.5, "popularity": 5, "uma_index": 57}
+      ],
+      "bets": {
+        "tansho_display": "8",
+        "umaren_display": "3-8",
+        "umatan_display": "8→3",
+        "sanrenpuku_display": "3-8-12",
+        "sanrentan_formation": {"display": "8→3,12→3,12,5", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1500, "umaren": 2000, "umatan": 1200, "sanrenpuku": 1800, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 2500, "umatan": 2000, "sanrenpuku": 2000, "sanrentan": 1500}
+    },
+    {
+      "race_id": "202608020102",
+      "venue": "京都",
+      "race_num": 2,
+      "race_name": "3歳未勝利",
+      "start_time": "10:25",
+      "course": "ダ1800m",
+      "head_count": 9,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 5,
+        "horse_name": "ゴールデンサンライズ",
+        "jockey": "武豊",
+        "odds": 2.8,
+        "popularity": 1,
+        "uma_index": 79,
+        "horse_type": "鉄板馬",
+        "reasons": ["レジェンド騎手", "少頭数有利"]
+      },
+      "horses": [
+        {"umaban": 5, "horse_name": "ゴールデンサンライズ", "jockey": "武豊", "odds": 2.8, "popularity": 1, "uma_index": 79},
+        {"umaban": 2, "horse_name": "シルバームーン", "jockey": "松山弘平", "odds": 4.5, "popularity": 2, "uma_index": 73},
+        {"umaban": 7, "horse_name": "ブロンズスカイ", "jockey": "岩田望来", "odds": 6.2, "popularity": 3, "uma_index": 68},
+        {"umaban": 1, "horse_name": "プラチナスター", "jockey": "坂井瑠星", "odds": 8.8, "popularity": 4, "uma_index": 64},
+        {"umaban": 9, "horse_name": "ダイヤモンドナイト", "jockey": "和田竜二", "odds": 12.5, "popularity": 5, "uma_index": 59}
+      ],
+      "bets": {
+        "tansho_display": "5",
+        "umaren_display": "2-5",
+        "umatan_display": "5→2",
+        "sanrenpuku_display": "2-5-7",
+        "sanrentan_formation": {"display": "5→2,7→2,7,1", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2200, "umaren": 2500, "umatan": 1600, "sanrenpuku": 2200, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3200, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202608020103",
+      "venue": "京都",
+      "race_num": 3,
+      "race_name": "3歳未勝利",
+      "start_time": "10:55",
+      "course": "ダ1400m",
+      "head_count": 13,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 10,
+        "horse_name": "サンダーストライク",
+        "jockey": "松山弘平",
+        "odds": 3.8,
+        "popularity": 1,
+        "uma_index": 73,
+        "horse_type": "鉄板馬",
+        "reasons": ["前走好走", "コース適性"]
+      },
+      "horses": [
+        {"umaban": 10, "horse_name": "サンダーストライク", "jockey": "松山弘平", "odds": 3.8, "popularity": 1, "uma_index": 73},
+        {"umaban": 4, "horse_name": "ライトニングボルト", "jockey": "武豊", "odds": 4.5, "popularity": 2, "uma_index": 70},
+        {"umaban": 7, "horse_name": "ストームチェイサー", "jockey": "岩田望来", "odds": 7.2, "popularity": 3, "uma_index": 66},
+        {"umaban": 13, "horse_name": "トルネードキング", "jockey": "坂井瑠星", "odds": 10.5, "popularity": 4, "uma_index": 61},
+        {"umaban": 1, "horse_name": "ハリケーンドリーム", "jockey": "和田竜二", "odds": 15.8, "popularity": 5, "uma_index": 56}
+      ],
+      "bets": {
+        "tansho_display": "10",
+        "umaren_display": "4-10",
+        "umatan_display": "10→4",
+        "sanrenpuku_display": "4-7-10",
+        "sanrentan_formation": {"display": "10→4,7→4,7,13", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1800, "umaren": 2200, "umatan": 1400, "sanrenpuku": 2000, "sanrentan": 1600},
+      "budget_aggressive": {"tansho": 0, "umaren": 2800, "umatan": 2200, "sanrenpuku": 2200, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202608020104",
+      "venue": "京都",
+      "race_num": 4,
+      "race_name": "3歳未勝利",
+      "start_time": "11:25",
+      "course": "ダ1800m",
+      "head_count": 11,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 6,
+        "horse_name": "ロイヤルナイト",
+        "jockey": "岩田望来",
+        "odds": 3.2,
+        "popularity": 1,
+        "uma_index": 77,
+        "horse_type": "両立型",
+        "reasons": ["距離延長プラス", "騎手好調"]
+      },
+      "horses": [
+        {"umaban": 6, "horse_name": "ロイヤルナイト", "jockey": "岩田望来", "odds": 3.2, "popularity": 1, "uma_index": 77},
+        {"umaban": 2, "horse_name": "ノーブルプリンス", "jockey": "武豊", "odds": 4.8, "popularity": 2, "uma_index": 73},
+        {"umaban": 9, "horse_name": "キングダムスター", "jockey": "松山弘平", "odds": 6.5, "popularity": 3, "uma_index": 68},
+        {"umaban": 4, "horse_name": "エンペラードリーム", "jockey": "坂井瑠星", "odds": 9.2, "popularity": 4, "uma_index": 64},
+        {"umaban": 11, "horse_name": "モナークナイト", "jockey": "和田竜二", "odds": 14.8, "popularity": 5, "uma_index": 59}
+      ],
+      "bets": {
+        "tansho_display": "6",
+        "umaren_display": "2-6",
+        "umatan_display": "6→2",
+        "sanrenpuku_display": "2-6-9",
+        "sanrentan_formation": {"display": "6→2,9→2,9,4", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2200, "umaren": 2500, "umatan": 1600, "sanrenpuku": 2200, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3200, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202608020105",
+      "venue": "京都",
+      "race_num": 5,
+      "race_name": "3歳新馬",
+      "start_time": "12:15",
+      "course": "芝2000m",
+      "head_count": 15,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 11,
+        "horse_name": "フューチャーキング",
+        "jockey": "武豊",
+        "odds": 2.5,
+        "popularity": 1,
+        "uma_index": 81,
+        "horse_type": "鉄板馬",
+        "reasons": ["超良血馬", "調教抜群"]
+      },
+      "horses": [
+        {"umaban": 11, "horse_name": "フューチャーキング", "jockey": "武豊", "odds": 2.5, "popularity": 1, "uma_index": 81},
+        {"umaban": 5, "horse_name": "ドリームプリンス", "jockey": "松山弘平", "odds": 4.2, "popularity": 2, "uma_index": 75},
+        {"umaban": 8, "horse_name": "ホープフルスター", "jockey": "岩田望来", "odds": 6.8, "popularity": 3, "uma_index": 70},
+        {"umaban": 3, "horse_name": "ウィッシュフルナイト", "jockey": "坂井瑠星", "odds": 10.5, "popularity": 4, "uma_index": 65},
+        {"umaban": 14, "horse_name": "ファンタジードリーム", "jockey": "和田竜二", "odds": 15.2, "popularity": 5, "uma_index": 60}
+      ],
+      "bets": {
+        "tansho_display": "11",
+        "umaren_display": "5-11",
+        "umatan_display": "11→5",
+        "sanrenpuku_display": "5-8-11",
+        "sanrentan_formation": {"display": "11→5,8→5,8,3", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2500, "umaren": 2800, "umatan": 1800, "sanrenpuku": 2400, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3500, "umatan": 2800, "sanrenpuku": 2800, "sanrentan": 1900}
+    },
+    {
+      "race_id": "202608020106",
+      "venue": "京都",
+      "race_num": 6,
+      "race_name": "3歳未勝利",
+      "start_time": "12:50",
+      "course": "芝1600m",
+      "head_count": 16,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 14,
+        "horse_name": "スターライトクイーン",
+        "jockey": "松山弘平",
+        "odds": 4.5,
+        "popularity": 2,
+        "uma_index": 71,
+        "horse_type": "妙味馬",
+        "reasons": ["人気妙味", "展開有利"]
+      },
+      "horses": [
+        {"umaban": 14, "horse_name": "スターライトクイーン", "jockey": "松山弘平", "odds": 4.5, "popularity": 2, "uma_index": 71},
+        {"umaban": 7, "horse_name": "ムーンライトプリンセス", "jockey": "武豊", "odds": 3.8, "popularity": 1, "uma_index": 69},
+        {"umaban": 2, "horse_name": "サンシャインガール", "jockey": "岩田望来", "odds": 6.2, "popularity": 3, "uma_index": 65},
+        {"umaban": 10, "horse_name": "トワイライトスター", "jockey": "坂井瑠星", "odds": 9.8, "popularity": 4, "uma_index": 61},
+        {"umaban": 5, "horse_name": "オーロラドリーム", "jockey": "和田竜二", "odds": 14.2, "popularity": 5, "uma_index": 56}
+      ],
+      "bets": {
+        "tansho_display": "14",
+        "umaren_display": "7-14",
+        "umatan_display": "14→7",
+        "sanrenpuku_display": "2-7-14",
+        "sanrentan_formation": {"display": "14→7,2→7,2,10", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1500, "umaren": 2000, "umatan": 1200, "sanrenpuku": 1800, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 2500, "umatan": 2000, "sanrenpuku": 2000, "sanrentan": 1500}
+    },
+    {
+      "race_id": "202608020107",
+      "venue": "京都",
+      "race_num": 7,
+      "race_name": "3歳1勝クラス",
+      "start_time": "13:20",
+      "course": "ダ1800m",
+      "head_count": 11,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 3,
+        "horse_name": "ビクトリーロード",
+        "jockey": "武豊",
+        "odds": 3.0,
+        "popularity": 1,
+        "uma_index": 78,
+        "horse_type": "鉄板馬",
+        "reasons": ["前走圧勝", "距離適性"]
+      },
+      "horses": [
+        {"umaban": 3, "horse_name": "ビクトリーロード", "jockey": "武豊", "odds": 3.0, "popularity": 1, "uma_index": 78},
+        {"umaban": 8, "horse_name": "チャンピオンスター", "jockey": "松山弘平", "odds": 4.5, "popularity": 2, "uma_index": 73},
+        {"umaban": 1, "horse_name": "ウィナーズサークル", "jockey": "岩田望来", "odds": 6.8, "popularity": 3, "uma_index": 68},
+        {"umaban": 6, "horse_name": "グローリーナイト", "jockey": "坂井瑠星", "odds": 10.2, "popularity": 4, "uma_index": 63},
+        {"umaban": 11, "horse_name": "トライアンフキング", "jockey": "和田竜二", "odds": 15.5, "popularity": 5, "uma_index": 58}
+      ],
+      "bets": {
+        "tansho_display": "3",
+        "umaren_display": "3-8",
+        "umatan_display": "3→8",
+        "sanrenpuku_display": "1-3-8",
+        "sanrentan_formation": {"display": "3→8,1→8,1,6", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2200, "umaren": 2500, "umatan": 1600, "sanrenpuku": 2200, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3200, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202608020108",
+      "venue": "京都",
+      "race_num": 8,
+      "race_name": "4歳以上1勝クラス",
+      "start_time": "13:50",
+      "course": "ダ1900m",
+      "head_count": 10,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 7,
+        "horse_name": "ステイゴールド",
+        "jockey": "岩田望来",
+        "odds": 3.5,
+        "popularity": 1,
+        "uma_index": 74,
+        "horse_type": "鉄板馬",
+        "reasons": ["距離適性", "少頭数有利"]
+      },
+      "horses": [
+        {"umaban": 7, "horse_name": "ステイゴールド", "jockey": "岩田望来", "odds": 3.5, "popularity": 1, "uma_index": 74},
+        {"umaban": 2, "horse_name": "ゴールデンルール", "jockey": "武豊", "odds": 4.8, "popularity": 2, "uma_index": 70},
+        {"umaban": 5, "horse_name": "シルバーライン", "jockey": "松山弘平", "odds": 6.5, "popularity": 3, "uma_index": 66},
+        {"umaban": 9, "horse_name": "ブロンズメダル", "jockey": "坂井瑠星", "odds": 9.8, "popularity": 4, "uma_index": 62},
+        {"umaban": 4, "horse_name": "プラチナカード", "jockey": "和田竜二", "odds": 14.5, "popularity": 5, "uma_index": 57}
+      ],
+      "bets": {
+        "tansho_display": "7",
+        "umaren_display": "2-7",
+        "umatan_display": "7→2",
+        "sanrenpuku_display": "2-5-7",
+        "sanrentan_formation": {"display": "7→2,5→2,5,9", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1800, "umaren": 2200, "umatan": 1400, "sanrenpuku": 2000, "sanrentan": 1600},
+      "budget_aggressive": {"tansho": 0, "umaren": 2800, "umatan": 2200, "sanrenpuku": 2200, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202608020109",
+      "venue": "京都",
+      "race_num": 9,
+      "race_name": "長浜特別",
+      "start_time": "14:20",
+      "course": "ダ1400m",
+      "head_count": 13,
+      "rank": "A",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 9,
+        "horse_name": "レイクサイド",
+        "jockey": "武豊",
+        "odds": 2.8,
+        "popularity": 1,
+        "uma_index": 80,
+        "horse_type": "鉄板馬",
+        "reasons": ["特別戦実績", "コース適性"]
+      },
+      "horses": [
+        {"umaban": 9, "horse_name": "レイクサイド", "jockey": "武豊", "odds": 2.8, "popularity": 1, "uma_index": 80},
+        {"umaban": 4, "horse_name": "ウォーターフロント", "jockey": "松山弘平", "odds": 4.5, "popularity": 2, "uma_index": 75},
+        {"umaban": 12, "horse_name": "リバーサイド", "jockey": "岩田望来", "odds": 7.2, "popularity": 3, "uma_index": 70},
+        {"umaban": 1, "horse_name": "オーシャンビュー", "jockey": "坂井瑠星", "odds": 10.8, "popularity": 4, "uma_index": 65},
+        {"umaban": 7, "horse_name": "シーサイドドリーム", "jockey": "和田竜二", "odds": 16.2, "popularity": 5, "uma_index": 60}
+      ],
+      "bets": {
+        "tansho_display": "9",
+        "umaren_display": "4-9",
+        "umatan_display": "9→4",
+        "sanrenpuku_display": "4-9-12",
+        "sanrentan_formation": {"display": "9→4,12→4,12,1", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2500, "umaren": 2800, "umatan": 1800, "sanrenpuku": 2400, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3500, "umatan": 2800, "sanrenpuku": 2800, "sanrentan": 1900}
+    },
+    {
+      "race_id": "202608020110",
+      "venue": "京都",
+      "race_num": 10,
+      "race_name": "許波多特別",
+      "start_time": "14:55",
+      "course": "芝2400m",
+      "head_count": 8,
+      "rank": "A",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 3,
+        "horse_name": "ステイヤーズキング",
+        "jockey": "武豊",
+        "odds": 2.2,
+        "popularity": 1,
+        "uma_index": 83,
+        "horse_type": "鉄板馬",
+        "reasons": ["長距離適性", "少頭数有利", "騎手信頼"]
+      },
+      "horses": [
+        {"umaban": 3, "horse_name": "ステイヤーズキング", "jockey": "武豊", "odds": 2.2, "popularity": 1, "uma_index": 83},
+        {"umaban": 6, "horse_name": "マラソンランナー", "jockey": "松山弘平", "odds": 4.0, "popularity": 2, "uma_index": 77},
+        {"umaban": 1, "horse_name": "エンデュランス", "jockey": "岩田望来", "odds": 6.5, "popularity": 3, "uma_index": 71},
+        {"umaban": 8, "horse_name": "ロングディスタンス", "jockey": "坂井瑠星", "odds": 10.2, "popularity": 4, "uma_index": 66},
+        {"umaban": 5, "horse_name": "スタミナキング", "jockey": "和田竜二", "odds": 15.8, "popularity": 5, "uma_index": 60}
+      ],
+      "bets": {
+        "tansho_display": "3",
+        "umaren_display": "3-6",
+        "umatan_display": "3→6",
+        "sanrenpuku_display": "1-3-6",
+        "sanrentan_formation": {"display": "3→6,1→6,1,8", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2500, "umaren": 2800, "umatan": 1800, "sanrenpuku": 2400, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3500, "umatan": 2800, "sanrenpuku": 2800, "sanrentan": 1900}
+    },
+    {
+      "race_id": "202608020111",
+      "venue": "京都",
+      "race_num": 11,
+      "race_name": "舞鶴S",
+      "start_time": "15:30",
+      "course": "ダ1800m",
+      "head_count": 13,
+      "rank": "S",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 5,
+        "horse_name": "マイヅルスター",
+        "jockey": "武豊",
+        "odds": 2.0,
+        "popularity": 1,
+        "uma_index": 87,
+        "horse_type": "鉄板馬",
+        "reasons": ["重賞級実力", "絶対能力", "鉄板級"]
+      },
+      "horses": [
+        {"umaban": 5, "horse_name": "マイヅルスター", "jockey": "武豊", "odds": 2.0, "popularity": 1, "uma_index": 87},
+        {"umaban": 10, "horse_name": "ハーバービュー", "jockey": "松山弘平", "odds": 4.2, "popularity": 2, "uma_index": 80},
+        {"umaban": 2, "horse_name": "ポートサイド", "jockey": "岩田望来", "odds": 7.5, "popularity": 3, "uma_index": 73},
+        {"umaban": 8, "horse_name": "シーブリーズ", "jockey": "坂井瑠星", "odds": 12.0, "popularity": 4, "uma_index": 67},
+        {"umaban": 13, "horse_name": "オーシャンドリーム", "jockey": "和田竜二", "odds": 18.5, "popularity": 5, "uma_index": 61}
+      ],
+      "bets": {
+        "tansho_display": "5",
+        "umaren_display": "5-10",
+        "umatan_display": "5→10",
+        "sanrenpuku_display": "2-5-10",
+        "sanrentan_formation": {"display": "5→10,2→10,2,8", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 3500, "umaren": 3500, "umatan": 2500, "sanrenpuku": 3000, "sanrentan": 3000},
+      "budget_aggressive": {"tansho": 0, "umaren": 4500, "umatan": 3500, "sanrenpuku": 3500, "sanrentan": 3500}
+    },
+    {
+      "race_id": "202608020112",
+      "venue": "京都",
+      "race_num": 12,
+      "race_name": "4歳以上1勝クラス",
+      "start_time": "16:10",
+      "course": "芝1600m",
+      "head_count": 17,
+      "rank": "B",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 12,
+        "horse_name": "ファイナルラップ",
+        "jockey": "松山弘平",
+        "odds": 4.0,
+        "popularity": 2,
+        "uma_index": 73,
+        "horse_type": "妙味馬",
+        "reasons": ["人気妙味", "展開有利"]
+      },
+      "horses": [
+        {"umaban": 12, "horse_name": "ファイナルラップ", "jockey": "松山弘平", "odds": 4.0, "popularity": 2, "uma_index": 73},
+        {"umaban": 6, "horse_name": "ラストスパート", "jockey": "武豊", "odds": 3.5, "popularity": 1, "uma_index": 71},
+        {"umaban": 3, "horse_name": "フィニッシュライン", "jockey": "岩田望来", "odds": 6.8, "popularity": 3, "uma_index": 67},
+        {"umaban": 15, "horse_name": "ゴールドラッシュ", "jockey": "坂井瑠星", "odds": 10.5, "popularity": 4, "uma_index": 62},
+        {"umaban": 9, "horse_name": "ウィニングポスト", "jockey": "和田竜二", "odds": 15.2, "popularity": 5, "uma_index": 57}
+      ],
+      "bets": {
+        "tansho_display": "12",
+        "umaren_display": "6-12",
+        "umatan_display": "12→6",
+        "sanrenpuku_display": "3-6-12",
+        "sanrentan_formation": {"display": "12→6,3→6,3,15", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1500, "umaren": 2000, "umatan": 1200, "sanrenpuku": 1800, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 2500, "umatan": 2000, "sanrenpuku": 2000, "sanrentan": 1500}
+    },
+    {
+      "race_id": "202610010301",
+      "venue": "小倉",
+      "race_num": 1,
+      "race_name": "3歳未勝利",
+      "start_time": "09:45",
+      "course": "ダ1000m",
+      "head_count": 14,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 7,
+        "horse_name": "スプリントスター",
+        "jockey": "浜中俊",
+        "odds": 3.8,
+        "popularity": 1,
+        "uma_index": 72,
+        "horse_type": "鉄板馬",
+        "reasons": ["短距離適性", "先行有利"]
+      },
+      "horses": [
+        {"umaban": 7, "horse_name": "スプリントスター", "jockey": "浜中俊", "odds": 3.8, "popularity": 1, "uma_index": 72},
+        {"umaban": 3, "horse_name": "ダッシュキング", "jockey": "幸英明", "odds": 4.5, "popularity": 2, "uma_index": 68},
+        {"umaban": 11, "horse_name": "ロケットスタート", "jockey": "西村淳也", "odds": 7.2, "popularity": 3, "uma_index": 64},
+        {"umaban": 5, "horse_name": "フラッシュランナー", "jockey": "藤岡佑介", "odds": 10.5, "popularity": 4, "uma_index": 60},
+        {"umaban": 14, "horse_name": "スピードデーモン", "jockey": "鮫島克駿", "odds": 15.8, "popularity": 5, "uma_index": 55}
+      ],
+      "bets": {
+        "tansho_display": "7",
+        "umaren_display": "3-7",
+        "umatan_display": "7→3",
+        "sanrenpuku_display": "3-7-11",
+        "sanrentan_formation": {"display": "7→3,11→3,11,5", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1500, "umaren": 2000, "umatan": 1200, "sanrenpuku": 1800, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 2500, "umatan": 2000, "sanrenpuku": 2000, "sanrentan": 1500}
+    },
+    {
+      "race_id": "202610010302",
+      "venue": "小倉",
+      "race_num": 2,
+      "race_name": "3歳未勝利",
+      "start_time": "10:15",
+      "course": "芝2000m",
+      "head_count": 18,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 15,
+        "horse_name": "ステイヤーズホープ",
+        "jockey": "浜中俊",
+        "odds": 3.2,
+        "popularity": 1,
+        "uma_index": 76,
+        "horse_type": "鉄板馬",
+        "reasons": ["距離適性", "血統背景"]
+      },
+      "horses": [
+        {"umaban": 15, "horse_name": "ステイヤーズホープ", "jockey": "浜中俊", "odds": 3.2, "popularity": 1, "uma_index": 76},
+        {"umaban": 8, "horse_name": "ロングランナー", "jockey": "幸英明", "odds": 4.8, "popularity": 2, "uma_index": 71},
+        {"umaban": 3, "horse_name": "マラソンスター", "jockey": "西村淳也", "odds": 6.5, "popularity": 3, "uma_index": 67},
+        {"umaban": 12, "horse_name": "エンデュランスキング", "jockey": "藤岡佑介", "odds": 9.8, "popularity": 4, "uma_index": 63},
+        {"umaban": 6, "horse_name": "スタミナドリーム", "jockey": "鮫島克駿", "odds": 14.2, "popularity": 5, "uma_index": 58}
+      ],
+      "bets": {
+        "tansho_display": "15",
+        "umaren_display": "8-15",
+        "umatan_display": "15→8",
+        "sanrenpuku_display": "3-8-15",
+        "sanrentan_formation": {"display": "15→8,3→8,3,12", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2000, "umaren": 2500, "umatan": 1500, "sanrenpuku": 2200, "sanrentan": 1800},
+      "budget_aggressive": {"tansho": 0, "umaren": 3200, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202610010303",
+      "venue": "小倉",
+      "race_num": 3,
+      "race_name": "4歳以上1勝クラス",
+      "start_time": "10:45",
+      "course": "ダ1700m",
+      "head_count": 16,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 9,
+        "horse_name": "ダートキング",
+        "jockey": "幸英明",
+        "odds": 4.0,
+        "popularity": 1,
+        "uma_index": 73,
+        "horse_type": "鉄板馬",
+        "reasons": ["ダート適性", "コース実績"]
+      },
+      "horses": [
+        {"umaban": 9, "horse_name": "ダートキング", "jockey": "幸英明", "odds": 4.0, "popularity": 1, "uma_index": 73},
+        {"umaban": 4, "horse_name": "サンドストーム", "jockey": "浜中俊", "odds": 4.8, "popularity": 2, "uma_index": 69},
+        {"umaban": 13, "horse_name": "デザートランナー", "jockey": "西村淳也", "odds": 7.5, "popularity": 3, "uma_index": 65},
+        {"umaban": 1, "horse_name": "ダストデビル", "jockey": "藤岡佑介", "odds": 11.2, "popularity": 4, "uma_index": 60},
+        {"umaban": 16, "horse_name": "サハラドリーム", "jockey": "鮫島克駿", "odds": 16.5, "popularity": 5, "uma_index": 55}
+      ],
+      "bets": {
+        "tansho_display": "9",
+        "umaren_display": "4-9",
+        "umatan_display": "9→4",
+        "sanrenpuku_display": "4-9-13",
+        "sanrentan_formation": {"display": "9→4,13→4,13,1", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1800, "umaren": 2200, "umatan": 1400, "sanrenpuku": 2000, "sanrentan": 1600},
+      "budget_aggressive": {"tansho": 0, "umaren": 2800, "umatan": 2200, "sanrenpuku": 2200, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202610010304",
+      "venue": "小倉",
+      "race_num": 4,
+      "race_name": "4歳以上障害OP",
+      "start_time": "11:15",
+      "course": "障2860m",
+      "head_count": 12,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 6,
+        "horse_name": "ジャンプマスター",
+        "jockey": "石神深一",
+        "odds": 3.5,
+        "popularity": 1,
+        "uma_index": 74,
+        "horse_type": "鉄板馬",
+        "reasons": ["障害実績", "コース適性"]
+      },
+      "horses": [
+        {"umaban": 6, "horse_name": "ジャンプマスター", "jockey": "石神深一", "odds": 3.5, "popularity": 1, "uma_index": 74},
+        {"umaban": 2, "horse_name": "ハードルキング", "jockey": "黒岩悠", "odds": 4.8, "popularity": 2, "uma_index": 70},
+        {"umaban": 10, "horse_name": "スティープルチェイサー", "jockey": "平沢健治", "odds": 7.2, "popularity": 3, "uma_index": 65},
+        {"umaban": 4, "horse_name": "バリアブレイカー", "jockey": "草野太郎", "odds": 10.5, "popularity": 4, "uma_index": 60},
+        {"umaban": 12, "horse_name": "オーバーカマー", "jockey": "上野翔", "odds": 15.8, "popularity": 5, "uma_index": 55}
+      ],
+      "bets": {
+        "tansho_display": "6",
+        "umaren_display": "2-6",
+        "umatan_display": "6→2",
+        "sanrenpuku_display": "2-6-10",
+        "sanrentan_formation": {"display": "6→2,10→2,10,4", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1800, "umaren": 2200, "umatan": 1400, "sanrenpuku": 2000, "sanrentan": 1600},
+      "budget_aggressive": {"tansho": 0, "umaren": 2800, "umatan": 2200, "sanrenpuku": 2200, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202610010305",
+      "venue": "小倉",
+      "race_num": 5,
+      "race_name": "4歳以上障害未勝利",
+      "start_time": "12:05",
+      "course": "障2860m",
+      "head_count": 11,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 8,
+        "horse_name": "ファーストジャンプ",
+        "jockey": "黒岩悠",
+        "odds": 3.8,
+        "popularity": 1,
+        "uma_index": 72,
+        "horse_type": "鉄板馬",
+        "reasons": ["障害適性", "調教良好"]
+      },
+      "horses": [
+        {"umaban": 8, "horse_name": "ファーストジャンプ", "jockey": "黒岩悠", "odds": 3.8, "popularity": 1, "uma_index": 72},
+        {"umaban": 3, "horse_name": "ニュービギナー", "jockey": "石神深一", "odds": 4.5, "popularity": 2, "uma_index": 68},
+        {"umaban": 11, "horse_name": "フレッシュスタート", "jockey": "平沢健治", "odds": 6.8, "popularity": 3, "uma_index": 64},
+        {"umaban": 5, "horse_name": "ルーキーホープ", "jockey": "草野太郎", "odds": 10.2, "popularity": 4, "uma_index": 59},
+        {"umaban": 1, "horse_name": "デビュースター", "jockey": "上野翔", "odds": 15.5, "popularity": 5, "uma_index": 54}
+      ],
+      "bets": {
+        "tansho_display": "8",
+        "umaren_display": "3-8",
+        "umatan_display": "8→3",
+        "sanrenpuku_display": "3-8-11",
+        "sanrentan_formation": {"display": "8→3,11→3,11,5", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1500, "umaren": 2000, "umatan": 1200, "sanrenpuku": 1800, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 2500, "umatan": 2000, "sanrenpuku": 2000, "sanrentan": 1500}
+    },
+    {
+      "race_id": "202610010306",
+      "venue": "小倉",
+      "race_num": 6,
+      "race_name": "3歳未勝利",
+      "start_time": "12:40",
+      "course": "芝1800m",
+      "head_count": 13,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 4,
+        "horse_name": "グリーンフィールド",
+        "jockey": "浜中俊",
+        "odds": 2.8,
+        "popularity": 1,
+        "uma_index": 78,
+        "horse_type": "鉄板馬",
+        "reasons": ["前走好走", "コース適性"]
+      },
+      "horses": [
+        {"umaban": 4, "horse_name": "グリーンフィールド", "jockey": "浜中俊", "odds": 2.8, "popularity": 1, "uma_index": 78},
+        {"umaban": 10, "horse_name": "メドウランナー", "jockey": "幸英明", "odds": 4.2, "popularity": 2, "uma_index": 73},
+        {"umaban": 7, "horse_name": "パストゥーラ", "jockey": "西村淳也", "odds": 6.5, "popularity": 3, "uma_index": 68},
+        {"umaban": 1, "horse_name": "グラスランド", "jockey": "藤岡佑介", "odds": 9.8, "popularity": 4, "uma_index": 63},
+        {"umaban": 13, "horse_name": "プレーリードリーム", "jockey": "鮫島克駿", "odds": 14.5, "popularity": 5, "uma_index": 58}
+      ],
+      "bets": {
+        "tansho_display": "4",
+        "umaren_display": "4-10",
+        "umatan_display": "4→10",
+        "sanrenpuku_display": "4-7-10",
+        "sanrentan_formation": {"display": "4→10,7→10,7,1", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2200, "umaren": 2500, "umatan": 1600, "sanrenpuku": 2200, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3200, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202610010307",
+      "venue": "小倉",
+      "race_num": 7,
+      "race_name": "3歳1勝クラス",
+      "start_time": "13:10",
+      "course": "ダ1800m",
+      "head_count": 10,
+      "rank": "A",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 2,
+        "horse_name": "ダートチャンピオン",
+        "jockey": "幸英明",
+        "odds": 3.0,
+        "popularity": 1,
+        "uma_index": 77,
+        "horse_type": "鉄板馬",
+        "reasons": ["前走圧勝", "少頭数有利"]
+      },
+      "horses": [
+        {"umaban": 2, "horse_name": "ダートチャンピオン", "jockey": "幸英明", "odds": 3.0, "popularity": 1, "uma_index": 77},
+        {"umaban": 6, "horse_name": "サンドマスター", "jockey": "浜中俊", "odds": 4.5, "popularity": 2, "uma_index": 72},
+        {"umaban": 9, "horse_name": "デザートキング", "jockey": "西村淳也", "odds": 6.8, "popularity": 3, "uma_index": 67},
+        {"umaban": 4, "horse_name": "ダストストーム", "jockey": "藤岡佑介", "odds": 10.2, "popularity": 4, "uma_index": 62},
+        {"umaban": 10, "horse_name": "サハラウィンド", "jockey": "鮫島克駿", "odds": 15.5, "popularity": 5, "uma_index": 57}
+      ],
+      "bets": {
+        "tansho_display": "2",
+        "umaren_display": "2-6",
+        "umatan_display": "2→6",
+        "sanrenpuku_display": "2-6-9",
+        "sanrentan_formation": {"display": "2→6,9→6,9,4", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2200, "umaren": 2500, "umatan": 1600, "sanrenpuku": 2200, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3200, "umatan": 2500, "sanrenpuku": 2500, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202610010308",
+      "venue": "小倉",
+      "race_num": 8,
+      "race_name": "4歳以上1勝クラス",
+      "start_time": "13:40",
+      "course": "ダ1200m",
+      "head_count": 14,
+      "rank": "B",
+      "is_win5": false,
+      "honmei": {
+        "umaban": 11,
+        "horse_name": "スピードキング",
+        "jockey": "西村淳也",
+        "odds": 3.8,
+        "popularity": 1,
+        "uma_index": 73,
+        "horse_type": "鉄板馬",
+        "reasons": ["短距離適性", "先行有利"]
+      },
+      "horses": [
+        {"umaban": 11, "horse_name": "スピードキング", "jockey": "西村淳也", "odds": 3.8, "popularity": 1, "uma_index": 73},
+        {"umaban": 5, "horse_name": "ダッシュマスター", "jockey": "浜中俊", "odds": 4.5, "popularity": 2, "uma_index": 69},
+        {"umaban": 8, "horse_name": "ロケットランナー", "jockey": "幸英明", "odds": 7.2, "popularity": 3, "uma_index": 65},
+        {"umaban": 2, "horse_name": "フラッシュスター", "jockey": "藤岡佑介", "odds": 10.8, "popularity": 4, "uma_index": 60},
+        {"umaban": 14, "horse_name": "スプリントドリーム", "jockey": "鮫島克駿", "odds": 16.2, "popularity": 5, "uma_index": 55}
+      ],
+      "bets": {
+        "tansho_display": "11",
+        "umaren_display": "5-11",
+        "umatan_display": "11→5",
+        "sanrenpuku_display": "5-8-11",
+        "sanrentan_formation": {"display": "11→5,8→5,8,2", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1800, "umaren": 2200, "umatan": 1400, "sanrenpuku": 2000, "sanrentan": 1600},
+      "budget_aggressive": {"tansho": 0, "umaren": 2800, "umatan": 2200, "sanrenpuku": 2200, "sanrentan": 1800}
+    },
+    {
+      "race_id": "202610010309",
+      "venue": "小倉",
+      "race_num": 9,
+      "race_name": "有田特別",
+      "start_time": "14:10",
+      "course": "ダ2400m",
+      "head_count": 10,
+      "rank": "A",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 3,
+        "horse_name": "ロングディスタンス",
+        "jockey": "浜中俊",
+        "odds": 2.5,
+        "popularity": 1,
+        "uma_index": 80,
+        "horse_type": "鉄板馬",
+        "reasons": ["長距離適性", "特別戦実績"]
+      },
+      "horses": [
+        {"umaban": 3, "horse_name": "ロングディスタンス", "jockey": "浜中俊", "odds": 2.5, "popularity": 1, "uma_index": 80},
+        {"umaban": 7, "horse_name": "マラソンキング", "jockey": "幸英明", "odds": 4.2, "popularity": 2, "uma_index": 75},
+        {"umaban": 1, "horse_name": "エンデュランスマスター", "jockey": "西村淳也", "odds": 6.8, "popularity": 3, "uma_index": 70},
+        {"umaban": 9, "horse_name": "スタミナスター", "jockey": "藤岡佑介", "odds": 10.5, "popularity": 4, "uma_index": 65},
+        {"umaban": 5, "horse_name": "ステイヤードリーム", "jockey": "鮫島克駿", "odds": 15.8, "popularity": 5, "uma_index": 60}
+      ],
+      "bets": {
+        "tansho_display": "3",
+        "umaren_display": "3-7",
+        "umatan_display": "3→7",
+        "sanrenpuku_display": "1-3-7",
+        "sanrentan_formation": {"display": "3→7,1→7,1,9", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2500, "umaren": 2800, "umatan": 1800, "sanrenpuku": 2400, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3500, "umatan": 2800, "sanrenpuku": 2800, "sanrentan": 1900}
+    },
+    {
+      "race_id": "202610010310",
+      "venue": "小倉",
+      "race_num": 10,
+      "race_name": "平尾台特別",
+      "start_time": "14:45",
+      "course": "芝1200m",
+      "head_count": 12,
+      "rank": "A",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 5,
+        "horse_name": "スプリントクイーン",
+        "jockey": "浜中俊",
+        "odds": 2.8,
+        "popularity": 1,
+        "uma_index": 79,
+        "horse_type": "鉄板馬",
+        "reasons": ["スピード抜群", "コース適性"]
+      },
+      "horses": [
+        {"umaban": 5, "horse_name": "スプリントクイーン", "jockey": "浜中俊", "odds": 2.8, "popularity": 1, "uma_index": 79},
+        {"umaban": 10, "horse_name": "ダッシュプリンセス", "jockey": "幸英明", "odds": 4.5, "popularity": 2, "uma_index": 74},
+        {"umaban": 2, "horse_name": "ロケットガール", "jockey": "西村淳也", "odds": 6.8, "popularity": 3, "uma_index": 69},
+        {"umaban": 8, "horse_name": "フラッシュレディ", "jockey": "藤岡佑介", "odds": 10.2, "popularity": 4, "uma_index": 64},
+        {"umaban": 12, "horse_name": "スピードスター", "jockey": "鮫島克駿", "odds": 15.5, "popularity": 5, "uma_index": 59}
+      ],
+      "bets": {
+        "tansho_display": "5",
+        "umaren_display": "5-10",
+        "umatan_display": "5→10",
+        "sanrenpuku_display": "2-5-10",
+        "sanrentan_formation": {"display": "5→10,2→10,2,8", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 2500, "umaren": 2800, "umatan": 1800, "sanrenpuku": 2400, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 3500, "umatan": 2800, "sanrenpuku": 2800, "sanrentan": 1900}
+    },
+    {
+      "race_id": "202610010311",
+      "venue": "小倉",
+      "race_num": 11,
+      "race_name": "巌流島S",
+      "start_time": "15:20",
+      "course": "芝1200m",
+      "head_count": 14,
+      "rank": "S",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 8,
+        "horse_name": "ムサシノカゼ",
+        "jockey": "浜中俊",
+        "odds": 2.2,
+        "popularity": 1,
+        "uma_index": 85,
+        "horse_type": "鉄板馬",
+        "reasons": ["重賞級実力", "スピード抜群", "鉄板級"]
+      },
+      "horses": [
+        {"umaban": 8, "horse_name": "ムサシノカゼ", "jockey": "浜中俊", "odds": 2.2, "popularity": 1, "uma_index": 85},
+        {"umaban": 3, "horse_name": "サムライスピリット", "jockey": "幸英明", "odds": 4.5, "popularity": 2, "uma_index": 78},
+        {"umaban": 12, "horse_name": "ブシドーナイト", "jockey": "西村淳也", "odds": 7.2, "popularity": 3, "uma_index": 72},
+        {"umaban": 6, "horse_name": "カタナマスター", "jockey": "藤岡佑介", "odds": 11.5, "popularity": 4, "uma_index": 66},
+        {"umaban": 14, "horse_name": "ショーグンドリーム", "jockey": "鮫島克駿", "odds": 18.2, "popularity": 5, "uma_index": 60}
+      ],
+      "bets": {
+        "tansho_display": "8",
+        "umaren_display": "3-8",
+        "umatan_display": "8→3",
+        "sanrenpuku_display": "3-8-12",
+        "sanrentan_formation": {"display": "8→3,12→3,12,6", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 3000, "umaren": 3000, "umatan": 2000, "sanrenpuku": 2500, "sanrentan": 2500},
+      "budget_aggressive": {"tansho": 0, "umaren": 4000, "umatan": 3000, "sanrenpuku": 3000, "sanrentan": 3000}
+    },
+    {
+      "race_id": "202610010312",
+      "venue": "小倉",
+      "race_num": 12,
+      "race_name": "4歳以上1勝クラス",
+      "start_time": "16:01",
+      "course": "芝2000m",
+      "head_count": 16,
+      "rank": "B",
+      "is_win5": true,
+      "honmei": {
+        "umaban": 13,
+        "horse_name": "ラストチャンス",
+        "jockey": "幸英明",
+        "odds": 4.2,
+        "popularity": 2,
+        "uma_index": 72,
+        "horse_type": "妙味馬",
+        "reasons": ["人気妙味", "展開有利"]
+      },
+      "horses": [
+        {"umaban": 13, "horse_name": "ラストチャンス", "jockey": "幸英明", "odds": 4.2, "popularity": 2, "uma_index": 72},
+        {"umaban": 7, "horse_name": "ファイナルホープ", "jockey": "浜中俊", "odds": 3.8, "popularity": 1, "uma_index": 70},
+        {"umaban": 2, "horse_name": "ラストドリーム", "jockey": "西村淳也", "odds": 6.5, "popularity": 3, "uma_index": 66},
+        {"umaban": 10, "horse_name": "エンドゲーム", "jockey": "藤岡佑介", "odds": 10.8, "popularity": 4, "uma_index": 61},
+        {"umaban": 5, "horse_name": "フィナーレスター", "jockey": "鮫島克駿", "odds": 16.2, "popularity": 5, "uma_index": 56}
+      ],
+      "bets": {
+        "tansho_display": "13",
+        "umaren_display": "7-13",
+        "umatan_display": "13→7",
+        "sanrenpuku_display": "2-7-13",
+        "sanrentan_formation": {"display": "13→7,2→7,2,10", "point_count": 6}
+      },
+      "budget_balanced": {"tansho": 1500, "umaren": 2000, "umatan": 1200, "sanrenpuku": 1800, "sanrentan": 1500},
+      "budget_aggressive": {"tansho": 0, "umaren": 2500, "umatan": 2000, "sanrenpuku": 2000, "sanrentan": 1500}
+    }
+  ],
+  "win5_strategies": {
+    "is_valid": false,
+    "message": "WIN5は日曜日のみ発売です"
+  }
+}

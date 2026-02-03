@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # scripts/notifier.py
-# UMA-Logic PRO - 通知機能スクリプト（Discord/LINE/Slack対応）
-# 完全版（Full Code）- そのままコピー＆ペーストで動作
+# UMA-Logic PRO - 通知機能スクリプト（Discord/Slack対応）
+# 修正完全版（Full Code）- そのままコピー＆ペーストで動作
 # 環境変数が未設定でもエラーにならずスキップして正常終了
 
 import os
@@ -22,22 +22,19 @@ ALERTS_FILE = DATA_DIR / "insider_alerts.json"
 class Notifier:
     """
     通知送信クラス
-    Discord, LINE Notify, Slack に対応
+    Discord, Slack に対応
     環境変数が未設定の場合はスキップして正常終了
     """
 
     def __init__(self):
         # 環境変数から取得（未設定の場合は空文字）
         self.discord_webhook = os.environ.get("DISCORD_WEBHOOK", "").strip()
-        self.line_token = os.environ.get("LINE_NOTIFY_TOKEN", "").strip()
         self.slack_webhook = os.environ.get("SLACK_WEBHOOK", "").strip()
 
         # 利用可能な通知サービスをチェック
         self.available_services = []
         if self.discord_webhook:
             self.available_services.append("Discord")
-        if self.line_token:
-            self.available_services.append("LINE")
         if self.slack_webhook:
             self.available_services.append("Slack")
 
@@ -80,36 +77,6 @@ class Notifier:
 
         except Exception as e:
             print(f"[WARN] Discord: エラー - {e}")
-            return False
-
-    def send_line(self, message: str) -> bool:
-        """LINE Notifyに通知を送信"""
-        if not self.line_token:
-            print("[SKIP] LINE: トークンが未設定")
-            return False
-
-        try:
-            headers = {
-                "Authorization": f"Bearer {self.line_token}",
-                "Content-Type": "application/x-www-form-urlencoded"
-            }
-
-            response = requests.post(
-                "https://notify-api.line.me/api/notify",
-                headers=headers,
-                data={"message": message},
-                timeout=10
-            )
-
-            if response.status_code == 200:
-                print("[OK] LINE: 通知送信成功")
-                return True
-            else:
-                print(f"[WARN] LINE: 送信失敗 (HTTP {response.status_code})")
-                return False
-
-        except Exception as e:
-            print(f"[WARN] LINE: エラー - {e}")
             return False
 
     def send_slack(self, title: str, message: str) -> bool:
@@ -164,13 +131,11 @@ class Notifier:
             print(f"[WARN] Slack: エラー - {e}")
             return False
 
-    def send_all(self, title: str, message: str) -> int:
+    def send_all(self, title: str, message: str, color: int = 0x4ade80) -> int:
         """全ての利用可能なサービスに通知を送信"""
         success_count = 0
 
-        if self.send_discord(title, message):
-            success_count += 1
-        if self.send_line(f"\n{title}\n{message}"):
+        if self.send_discord(title, message, color):
             success_count += 1
         if self.send_slack(title, message):
             success_count += 1
@@ -179,47 +144,66 @@ class Notifier:
 
     def notify_optimize_result(self, status: str = "success") -> None:
         """AI学習結果を通知"""
-        # weights.json から結果を読み込み
         hit_rate = 0.0
         roi = 0.0
         weights = {}
+        total_races = 0
+        total_investment = 0
+        total_return = 0
 
         if WEIGHTS_FILE.exists():
             try:
                 with open(WEIGHTS_FILE, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    metrics = data.get("optimization_metrics", {})
-                    hit_rate = metrics.get("hit_rate", 0.0)
-                    roi = metrics.get("roi", 0.0)
+                    # metrics または optimization_metrics を探す
+                    metrics = data.get("metrics", data.get("optimization_metrics", {}))
+                    
+                    # hit_rate: 0-1形式なら100倍、既に%形式ならそのまま
+                    raw_hit_rate = metrics.get("hit_rate", 0.0)
+                    hit_rate = raw_hit_rate * 100 if raw_hit_rate <= 1 else raw_hit_rate
+                    
+                    # recovery_rate または roi
+                    raw_roi = metrics.get("recovery_rate", metrics.get("roi", 0.0))
+                    roi = raw_roi * 100 if raw_roi <= 10 else raw_roi
+                    
+                    # その他の統計
+                    total_races = metrics.get("total_races", 0)
+                    total_investment = metrics.get("total_investment", 0)
+                    total_return = metrics.get("total_return", 0)
+                    
                     weights = data.get("weights", {})
             except Exception as e:
                 print(f"[WARN] weights.json 読み込みエラー: {e}")
 
         if status == "success":
             title = "🧠 AI学習完了"
-            emoji = "✅"
             color = 0x4ade80  # 緑
         else:
             title = "❌ AI学習失敗"
-            emoji = "❌"
             color = 0xef4444  # 赤
 
-        message = f"""
-{emoji} **ステータス**: {status.upper()}
+        # 重みのキー名を正規化（両方の形式に対応）
+        speed = weights.get("SpeedAgent", weights.get("speed_agent", 0))
+        adapt = weights.get("AdaptabilityAgent", weights.get("adaptability_agent", 0))
+        pedigree = weights.get("PedigreeFormAgent", weights.get("pedigree_agent", 0))
+
+        message = f"""✅ **ステータス**: {status.upper()}
 
 📊 **学習結果**
+・対象レース数: {total_races:,}レース
 ・的中率: {hit_rate:.2f}%
 ・回収率: {roi:.2f}%
+・総投資額: ¥{total_investment:,}
+・総払戻額: ¥{total_return:,.0f}
 
 ⚖️ **エージェント重み**
-・Speed: {weights.get('speed_agent', 0)*100:.1f}%
-・Adaptability: {weights.get('adaptability_agent', 0)*100:.1f}%
-・Pedigree: {weights.get('pedigree_agent', 0)*100:.1f}%
+・Speed: {speed*100:.1f}%
+・Adaptability: {adapt*100:.1f}%
+・Pedigree: {pedigree*100:.1f}%
 
-🕐 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-"""
+🕐 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
 
-        self.send_all(title, message)
+        self.send_all(title, message, color)
 
     def notify_prediction(self, predictions: Optional[Dict] = None) -> None:
         """予想結果を通知"""
@@ -227,15 +211,19 @@ class Notifier:
 
         if predictions:
             races = predictions.get("races", [])
-            message_lines = [f"📅 {predictions.get('date', '不明')}", ""]
+            date_str = predictions.get("date", "不明")
+            
+            message_lines = [f"📅 {date_str}", f"🏇 全{len(races)}レース", ""]
 
             for race in races[:5]:  # 最大5レースまで
                 venue = race.get("venue", "")
                 race_num = race.get("race_num", 0)
                 race_name = race.get("race_name", "")
-                top_pick = race.get("top_picks", ["不明"])[0] if race.get("top_picks") else "不明"
-                message_lines.append(f"🏇 {venue}{race_num}R {race_name}")
-                message_lines.append(f"   ◎ {top_pick}")
+                top_picks = race.get("top_picks", [])
+                top_pick = top_picks[0] if top_picks else "不明"
+                
+                message_lines.append(f"**{venue}{race_num}R** {race_name}")
+                message_lines.append(f"◎ {top_pick}")
                 message_lines.append("")
 
             if len(races) > 5:
@@ -250,14 +238,15 @@ class Notifier:
     def notify_insider_alert(self) -> None:
         """インサイダーアラートを通知"""
         if not ALERTS_FILE.exists():
-            print("[INFO] インサイダーアラートなし")
+            print("[INFO] インサイダーアラートファイルなし")
             return
 
         try:
             with open(ALERTS_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 alerts = data.get("alerts", [])
-        except Exception:
+        except Exception as e:
+            print(f"[WARN] アラートファイル読み込みエラー: {e}")
             alerts = []
 
         if not alerts:
@@ -265,45 +254,62 @@ class Notifier:
             return
 
         title = "🚨 インサイダーアラート検知"
-        message_lines = []
+        message_lines = [f"⚠️ {len(alerts)}件のアラートを検知", ""]
 
         for alert in alerts[:5]:
             venue = alert.get("venue", "")
             race_num = alert.get("race_num", 0)
             horse_name = alert.get("horse_name", "")
+            umaban = alert.get("umaban", "")
             odds_before = alert.get("odds_before", 0)
             odds_after = alert.get("odds_after", 0)
             drop_rate = alert.get("drop_rate", 0)
 
-            message_lines.append(f"⚠️ {venue}{race_num}R {horse_name}")
-            message_lines.append(f"   オッズ: {odds_before:.1f} → {odds_after:.1f} ({drop_rate*100:.1f}%低下)")
+            message_lines.append(f"**{venue}{race_num}R** {umaban}番 {horse_name}")
+            message_lines.append(f"オッズ: {odds_before:.1f} → {odds_after:.1f} ({drop_rate*100:.1f}%↓)")
             message_lines.append("")
 
+        if len(alerts) > 5:
+            message_lines.append(f"...他 {len(alerts) - 5} 件")
+
         message = "\n".join(message_lines)
-        self.send_all(title, message)
+        self.send_all(title, message, color=0xfbbf24)  # 黄色
 
     def notify_results(self, results: Optional[Dict] = None) -> None:
         """レース結果を通知"""
         title = "📊 本日のレース結果"
 
         if results:
-            date = results.get("date", "不明")
+            date_str = results.get("date", "不明")
             races = results.get("races", [])
 
-            hit_count = 0
-            total_count = len(races)
+            message_lines = [f"📅 {date_str}", f"🏇 全{len(races)}レース完了", ""]
 
-            message = f"📅 {date}\n\n"
-            message += f"🏇 全{total_count}レース完了\n"
-            message += f"🎯 的中: {hit_count}レース\n"
+            # 上位3レースの結果を表示
+            for race in races[:3]:
+                venue = race.get("venue", "")
+                race_num = race.get("race_num", 0)
+                race_name = race.get("race_name", "")
+                top3 = race.get("top3", [])
+                
+                message_lines.append(f"**{venue}{race_num}R** {race_name}")
+                for i, horse in enumerate(top3[:3], 1):
+                    horse_name = horse.get("馬名", horse.get("horse_name", ""))
+                    message_lines.append(f"  {i}着: {horse_name}")
+                message_lines.append("")
+
+            if len(races) > 3:
+                message_lines.append(f"...他 {len(races) - 3} レース")
+
+            message = "\n".join(message_lines)
         else:
             message = "結果データがありません。"
 
         self.send_all(title, message)
 
-    def notify_custom(self, title: str, message: str) -> None:
+    def notify_custom(self, title: str, message: str, color: int = 0x4ade80) -> None:
         """カスタムメッセージを通知"""
-        self.send_all(title, message)
+        self.send_all(title, message, color)
 
 
 def main():
@@ -359,7 +365,6 @@ def main():
 
     elif notify_type == "prediction":
         print("\n[INFO] 予想結果を通知します...")
-        # 最新の予想ファイルを読み込み
         pred_files = sorted(DATA_DIR.glob("predictions_*.json"), reverse=True)
         if pred_files:
             try:
@@ -378,7 +383,6 @@ def main():
 
     elif notify_type == "results":
         print("\n[INFO] レース結果を通知します...")
-        # 最新の結果ファイルを読み込み
         result_files = sorted(DATA_DIR.glob("results_*.json"), reverse=True)
         if result_files:
             try:
@@ -396,7 +400,8 @@ def main():
         notifier.notify_custom(
             "🧪 テスト通知",
             "UMA-Logic PRO の通知システムが正常に動作しています。\n\n"
-            f"🕐 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            f"🕐 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            color=0x3b82f6  # 青
         )
 
     else:

@@ -1,10 +1,10 @@
 {
   "weights": {
-    "SpeedAgent": 0.3476943284866634,
-    "AdaptabilityAgent": 0.3566798998360512,
-    "PedigreeFormAgent": 0.2956257716772854
+    "SpeedAgent": 0.3604030456565657,
+    "AdaptabilityAgent": 0.34945614937111497,
+    "PedigreeFormAgent": 0.29014080497231914
   },
-  "updated_at": "2026-02-03 23:40:29",
+  "updated_at": "2026-02-03 23:57:04",
   "train_metrics": {
     "years": [
       2024

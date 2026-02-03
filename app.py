@@ -399,6 +399,66 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 # ========================================
 # タブ1: 本日の予想
 # ========================================
+# app_commercial.py のタブ1（予想）に追加
+
+# インサイダーアラート表示
+def show_insider_alerts():
+    """インサイダーアラートを表示"""
+    alerts_file = DATA_DIR / "insider_alerts.json"
+    
+    if not alerts_file.exists():
+        return
+    
+    try:
+        with open(alerts_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        alerts = data.get("alerts", [])
+        
+        if alerts:
+            st.markdown("### 🚨 インサイダーアラート")
+            
+            for alert in alerts:
+                severity_color = {
+                    "HIGH": "🔴",
+                    "MEDIUM": "🟡",
+                    "LOW": "🟢"
+                }.get(alert.get("severity", "LOW"), "⚪")
+                
+                with st.expander(
+                    f"{severity_color} {alert.get('venue', '')} {alert.get('race_name', '')} - "
+                    f"{alert.get('umaban', '')}番 {alert.get('horse_name', '')}"
+                ):
+                    col1, col2, col3 = st.columns(3)
+                    
+                    col1.metric(
+                        "オッズ変動",
+                        f"{alert.get('current_odds', 0):.1f}",
+                        f"{-alert.get('drop_rate', 0)*100:.1f}%"
+                    )
+                    col2.metric(
+                        "信頼度",
+                        f"{alert.get('confidence', 0)*100:.0f}%"
+                    )
+                    col3.metric(
+                        "期待値ブースト",
+                        f"{alert.get('expected_value_boost', 1.0):.2f}x"
+                    )
+                    
+                    if alert.get("aggressive_mode"):
+                        st.success("⚡ **Aggressiveモード有効** - ケリー基準が自動調整されています")
+                    
+                    st.caption(f"検出時刻: {alert.get('detected_at', '')}")
+    
+    except Exception as e:
+        pass
+
+# タブ1の先頭で呼び出し
+with tab1:
+    st.header("🎯 本日の予想")
+    
+    # インサイダーアラート表示
+    show_insider_alerts()
 with tab1:
     st.markdown(f"## 🎯 {selected_date.strftime('%Y年%m月%d日')} の予想")
     

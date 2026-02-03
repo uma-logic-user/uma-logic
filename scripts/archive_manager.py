@@ -1,530 +1,572 @@
 # scripts/archive_manager.py
-# UMA-Logic PRO - 鉄壁アーカイブマネージャー（完全自動化版）
-# 階層構造保存 + 高速インデックス機能
+# UMA-Logic PRO - 過去データアーカイブマネージャー
+# 完全版（Full Code）- そのままコピー＆ペーストで動作
 
 import json
-import hashlib
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
+import sys
 import re
 
 # --- 定数 ---
 DATA_DIR = Path("data")
 ARCHIVE_DIR = DATA_DIR / "archive"
 INDEX_FILE = ARCHIVE_DIR / "index.json"
-CACHE_FILE = ARCHIVE_DIR / "cache.json"
 RESULTS_PREFIX = "results_"
+PREDICTIONS_PREFIX = "predictions_"
 
 
-# --- アーカイブインデックス ---
+# --- アーカイブマネージャークラス ---
 
-class ArchiveIndex:
+class ArchiveManager:
     """
-    高速検索のためのインデックス管理
-    年 > 月 > 日 > 競馬場 の階層構造でデータを管理
+    過去データアーカイブマネージャー
+    data/archive/YYYY/MM/DD/ 形式でデータを管理
     """
-    
+
     def __init__(self):
-        self.index: Dict = {
-            "version": "2.0",
-            "updated_at": "",
-            "years": {},  # {year: {months: {month: {days: [...]}}}}
-            "dates": {},  # {date_str: {path, race_count, venues, checksum, locked}}
-            "venues": {},  # {venue: [date_str, ...]}
-            "stats": {
-                "total_dates": 0,
-                "total_races": 0,
-                "date_range": {"start": "", "end": ""}
-            }
-        }
-        self.load()
-    
-    def load(self):
-        """インデックスを読み込み"""
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
         ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
-        
+        self.index = self._load_index()
+
+    def _load_index(self) -> Dict:
+        """インデックスを読み込み"""
         if INDEX_FILE.exists():
             try:
                 with open(INDEX_FILE, 'r', encoding='utf-8') as f:
-                    loaded = json.load(f)
-                    if loaded.get("version") == "2.0":
-                        self.index = loaded
-                    else:
-                        # 旧バージョンからマイグレーション
-                        self._migrate_from_v1(loaded)
+                    return json.load(f)
             except Exception as e:
                 print(f"[WARN] インデックス読み込みエラー: {e}")
-    
-    def _migrate_from_v1(self, old_index: Dict):
-        """v1インデックスからマイグレーション"""
-        print("[INFO] インデックスをv2にマイグレーション中...")
-        
-        for date_str, info in old_index.items():
-            if isinstance(info, dict) and "locked" in info:
-                self.index["dates"][date_str] = info
-        
-        self._rebuild_hierarchy()
-        self.save()
-    
-    def _rebuild_hierarchy(self):
-        """階層構造を再構築"""
-        self.index["years"] = {}
-        self.index["venues"] = {}
-        
-        for date_str in self.index["dates"].keys():
-            self._add_to_hierarchy(date_str)
-        
-        self._update_stats()
-    
-    def _add_to_hierarchy(self, date_str: str):
-        """日付を階層構造に追加"""
-        try:
-            year = date_str[:4]
-            month = date_str[4:6]
-            day = date_str[6:8]
-            
-            # 年 > 月 > 日 の階層
-            if year not in self.index["years"]:
-                self.index["years"][year] = {"months": {}}
-            
-            if month not in self.index["years"][year]["months"]:
-                self.index["years"][year]["months"][month] = {"days": []}
-            
-            if day not in self.index["years"][year]["months"][month]["days"]:
-                self.index["years"][year]["months"][month]["days"].append(day)
-                self.index["years"][year]["months"][month]["days"].sort()
-            
-            # 競馬場インデックス
-            date_info = self.index["dates"].get(date_str, {})
-            venues = date_info.get("venues", [])
-            for venue in venues:
-                if venue not in self.index["venues"]:
-                    self.index["venues"][venue] = []
-                if date_str not in self.index["venues"][venue]:
-                    self.index["venues"][venue].append(date_str)
-        except Exception:
-            pass
-    
-    def _update_stats(self):
-        """統計情報を更新"""
-        dates = list(self.index["dates"].keys())
-        
-        self.index["stats"]["total_dates"] = len(dates)
-        self.index["stats"]["total_races"] = sum(
-            info.get("race_count", 0) for info in self.index["dates"].values()
-        )
-        
-        if dates:
-            dates.sort()
-            self.index["stats"]["date_range"]["start"] = dates[0]
-            self.index["stats"]["date_range"]["end"] = dates[-1]
-    
-    def save(self):
+        return {
+            "updated_at": "",
+            "total_dates": 0,
+            "total_races": 0,
+            "years": {},
+            "venues": {},
+            "date_index": {}
+        }
+
+    def _save_index(self):
         """インデックスを保存"""
         self.index["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
         with open(INDEX_FILE, 'w', encoding='utf-8') as f:
             json.dump(self.index, f, ensure_ascii=False, indent=2)
-    
-    def is_archived(self, date_str: str) -> bool:
-        """指定日付がアーカイブ済みか確認"""
-        return date_str in self.index["dates"] and self.index["dates"][date_str].get("locked", False)
-    
-    def add_entry(self, date_str: str, path: str, race_count: int, venues: List[str], checksum: str):
-        """エントリを追加"""
-        self.index["dates"][date_str] = {
-            "path": str(path),
-            "race_count": race_count,
-            "venues": venues,
-            "checksum": checksum,
-            "locked": True,
-            "archived_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-        
-        self._add_to_hierarchy(date_str)
-        self._update_stats()
-        self.save()
-    
-    def get_years(self) -> List[str]:
-        """利用可能な年のリストを取得"""
-        return sorted(self.index["years"].keys(), reverse=True)
-    
-    def get_months(self, year: str) -> List[str]:
-        """指定年の月リストを取得"""
-        year_data = self.index["years"].get(year, {})
-        return sorted(year_data.get("months", {}).keys())
-    
-    def get_days(self, year: str, month: str) -> List[str]:
-        """指定年月の日リストを取得"""
-        year_data = self.index["years"].get(year, {})
-        month_data = year_data.get("months", {}).get(month, {})
-        return sorted(month_data.get("days", []))
-    
-    def get_venues_for_date(self, date_str: str) -> List[str]:
-        """指定日の競馬場リストを取得"""
-        return self.index["dates"].get(date_str, {}).get("venues", [])
-    
-    def get_dates_for_venue(self, venue: str) -> List[str]:
-        """指定競馬場の開催日リストを取得"""
-        return sorted(self.index["venues"].get(venue, []), reverse=True)
-    
-    def get_path(self, date_str: str) -> Optional[str]:
-        """指定日のファイルパスを取得"""
-        return self.index["dates"].get(date_str, {}).get("path")
 
-
-# --- アーカイブストレージ ---
-
-class ArchiveStorage:
-    """
-    階層型アーカイブストレージ
-    data/archive/YYYY/MM/DD/ 形式で保存
-    """
-    
-    def __init__(self):
-        self.index = ArchiveIndex()
-        ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
-    
-    def get_archive_path(self, date_str: str) -> Path:
-        """アーカイブパスを取得"""
+    def _get_archive_path(self, date_str: str) -> Path:
+        """
+        日付文字列からアーカイブパスを取得
+        date_str: YYYYMMDD形式
+        returns: data/archive/YYYY/MM/DD/
+        """
         year = date_str[:4]
         month = date_str[4:6]
         day = date_str[6:8]
         return ARCHIVE_DIR / year / month / day
-    
-    def archive_results(self, date_str: str, data: Dict) -> Tuple[Path, str]:
-        """
-        結果データをアーカイブに保存
-        Returns: (保存パス, チェックサム)
-        """
-        # 既にアーカイブ済みの場合はスキップ
-        if self.index.is_archived(date_str):
-            print(f"[SKIP] {date_str} は既にアーカイブ済みです")
-            existing_path = self.index.get_path(date_str)
-            return Path(existing_path) if existing_path else None, ""
-        
-        archive_path = self.get_archive_path(date_str)
-        archive_path.mkdir(parents=True, exist_ok=True)
-        
-        filepath = archive_path / f"results_{date_str}.json"
-        
-        # チェックサム計算
-        data_for_checksum = {k: v for k, v in data.items() if k != "_meta"}
-        data_str = json.dumps(data_for_checksum, ensure_ascii=False, sort_keys=True)
-        checksum = hashlib.md5(data_str.encode()).hexdigest()
-        
-        # メタデータ追加
-        races = data.get("races", [])
-        venues = list(set(r.get("venue", "不明") for r in races))
-        
-        data["_meta"] = {
-            "archived_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "checksum": checksum,
-            "race_count": len(races),
-            "venues": venues,
-            "immutable": True
-        }
-        
-        # 保存
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        
-        # 読み取り専用に設定
+
+    def _parse_date(self, date_str: str) -> Optional[datetime]:
+        """日付文字列をパース"""
         try:
-            filepath.chmod(0o444)
-        except:
-            pass
-        
-        # インデックスに追加
-        self.index.add_entry(date_str, str(filepath), len(races), venues, checksum)
-        
-        print(f"[ARCHIVED] {date_str} → {filepath} ({len(races)}レース)")
-        
-        return filepath, checksum
-    
-    def load_from_archive(self, date_str: str) -> Optional[Dict]:
-        """アーカイブからデータを読み込み"""
-        # インデックスからパスを取得
-        path_str = self.index.get_path(date_str)
-        
-        if path_str:
-            filepath = Path(path_str)
-            if filepath.exists():
-                try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        return json.load(f)
-                except Exception as e:
-                    print(f"[ERROR] 読み込みエラー ({date_str}): {e}")
-        
-        # フォールバック: 直接パスを探索
-        archive_path = self.get_archive_path(date_str)
-        filepath = archive_path / f"results_{date_str}.json"
-        
-        if filepath.exists():
+            return datetime.strptime(date_str, "%Y%m%d")
+        except ValueError:
             try:
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception:
-                pass
-        
-        return None
-    
-    def sync_to_data_dir(self, date_str: str):
-        """アーカイブからdata/ディレクトリにコピー"""
-        archive_data = self.load_from_archive(date_str)
-        if not archive_data:
-            return
-        
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
-        target_path = DATA_DIR / f"results_{date_str}.json"
-        
-        if target_path.exists():
-            return
-        
-        with open(target_path, 'w', encoding='utf-8') as f:
-            json.dump(archive_data, f, ensure_ascii=False, indent=2)
-    
-    def verify_integrity(self, date_str: str) -> bool:
-        """データ整合性を検証"""
-        data = self.load_from_archive(date_str)
-        if not data:
-            return False
-        
-        meta = data.get("_meta", {})
-        stored_checksum = meta.get("checksum", "")
-        
-        data_for_checksum = {k: v for k, v in data.items() if k != "_meta"}
-        data_str = json.dumps(data_for_checksum, ensure_ascii=False, sort_keys=True)
-        current_checksum = hashlib.md5(data_str.encode()).hexdigest()
-        
-        return stored_checksum == current_checksum
+                return datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                return None
 
-
-# --- 自動アーカイブ機能 ---
-
-class AutoArchiver:
-    """
-    update_results.py から呼び出される自動アーカイブ機能
-    """
-    
-    def __init__(self):
-        self.storage = ArchiveStorage()
-    
-    def archive_today_results(self):
-        """本日の結果を自動アーカイブ"""
-        today = datetime.now().strftime("%Y%m%d")
-        return self.archive_date_results(today)
-    
-    def archive_date_results(self, date_str: str) -> bool:
-        """指定日の結果をアーカイブ"""
-        # data/ ディレクトリから結果ファイルを探す
-        source_file = DATA_DIR / f"results_{date_str}.json"
-        
+    def archive_file(self, source_file: Path, date_str: str) -> bool:
+        """
+        ファイルをアーカイブディレクトリに移動/コピー
+        一度保存したデータは上書きしない（不変データ化）
+        """
         if not source_file.exists():
-            print(f"[WARN] 結果ファイルが見つかりません: {source_file}")
+            print(f"[WARN] ソースファイルが存在しません: {source_file}")
             return False
-        
+
+        archive_path = self._get_archive_path(date_str)
+        archive_path.mkdir(parents=True, exist_ok=True)
+
+        dest_file = archive_path / source_file.name
+
+        # 既存ファイルがある場合はスキップ（不変データ化）
+        if dest_file.exists():
+            print(f"[SKIP] 既にアーカイブ済み: {dest_file}")
+            return True
+
         try:
-            with open(source_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            # アーカイブに保存
-            filepath, checksum = self.storage.archive_results(date_str, data)
-            
-            return filepath is not None
-        
+            # コピー（元ファイルは残す）
+            shutil.copy2(source_file, dest_file)
+            print(f"[ARCHIVED] {source_file.name} → {archive_path}")
+            return True
         except Exception as e:
-            print(f"[ERROR] アーカイブエラー ({date_str}): {e}")
+            print(f"[ERROR] アーカイブ失敗: {e}")
             return False
-    
-    def archive_all_existing(self):
-        """data/ ディレクトリの全結果ファイルをアーカイブ"""
+
+    def archive_all_results(self) -> Dict:
+        """
+        data/ 内の全results_*.jsonをアーカイブ
+        """
+        print("\n" + "=" * 60)
+        print("📚 全結果ファイルをアーカイブ")
         print("=" * 60)
-        print("📦 既存データの一括アーカイブ")
-        print("=" * 60)
-        
-        archived = 0
-        skipped = 0
-        
-        for filepath in DATA_DIR.glob(f"{RESULTS_PREFIX}*.json"):
-            date_str = filepath.stem.replace(RESULTS_PREFIX, "")[:8]
-            
-            if self.storage.index.is_archived(date_str):
-                skipped += 1
+
+        archived_count = 0
+        skipped_count = 0
+        failed_count = 0
+
+        # results_*.json を検索
+        for result_file in DATA_DIR.glob(f"{RESULTS_PREFIX}*.json"):
+            # ファイル名から日付を抽出
+            match = re.search(r'results_(\d{8})', result_file.name)
+            if not match:
                 continue
-            
-            if self.archive_date_results(date_str):
-                archived += 1
-        
-        print(f"\n✅ 完了: {archived}件アーカイブ, {skipped}件スキップ")
-        return archived
-    
-    def rebuild_index(self):
-        """インデックスを再構築"""
-        print("=" * 60)
+
+            date_str = match.group(1)
+
+            if self.archive_file(result_file, date_str):
+                # インデックスを更新
+                self._update_index_for_file(result_file, date_str)
+                archived_count += 1
+            else:
+                failed_count += 1
+
+        # predictions_*.json も同様にアーカイブ
+        for pred_file in DATA_DIR.glob(f"{PREDICTIONS_PREFIX}*.json"):
+            match = re.search(r'predictions_(\d{8})', pred_file.name)
+            if not match:
+                continue
+
+            date_str = match.group(1)
+            self.archive_file(pred_file, date_str)
+
+        # インデックスを保存
+        self._save_index()
+
+        print("\n" + "-" * 40)
+        print(f"✅ アーカイブ完了")
+        print(f"   新規: {archived_count}件")
+        print(f"   スキップ: {skipped_count}件")
+        print(f"   失敗: {failed_count}件")
+
+        return {
+            "archived": archived_count,
+            "skipped": skipped_count,
+            "failed": failed_count
+        }
+
+    def _update_index_for_file(self, file_path: Path, date_str: str):
+        """ファイルの内容をインデックスに追加"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception as e:
+            print(f"[WARN] ファイル読み込みエラー: {e}")
+            return
+
+        year = date_str[:4]
+        month = date_str[4:6]
+        day = date_str[6:8]
+        date_key = f"{year}-{month}-{day}"
+
+        # 年別インデックス
+        if year not in self.index["years"]:
+            self.index["years"][year] = {
+                "months": {},
+                "total_dates": 0,
+                "total_races": 0
+            }
+
+        # 月別インデックス
+        if month not in self.index["years"][year]["months"]:
+            self.index["years"][year]["months"][month] = {
+                "days": [],
+                "total_races": 0
+            }
+
+        if day not in self.index["years"][year]["months"][month]["days"]:
+            self.index["years"][year]["months"][month]["days"].append(day)
+            self.index["years"][year]["total_dates"] += 1
+
+        # レース情報を抽出
+        races = data.get("races", [])
+        race_count = len(races)
+
+        self.index["years"][year]["months"][month]["total_races"] += race_count
+        self.index["years"][year]["total_races"] += race_count
+
+        # 日付インデックス
+        if date_key not in self.index["date_index"]:
+            self.index["date_index"][date_key] = {
+                "file_path": str(self._get_archive_path(date_str) / file_path.name),
+                "race_count": race_count,
+                "venues": []
+            }
+
+        # 競馬場情報を抽出
+        venues = set()
+        for race in races:
+            venue = race.get("venue", "")
+            if venue:
+                venues.add(venue)
+
+                # 競馬場別インデックス
+                if venue not in self.index["venues"]:
+                    self.index["venues"][venue] = {
+                        "dates": [],
+                        "total_races": 0
+                    }
+                if date_key not in self.index["venues"][venue]["dates"]:
+                    self.index["venues"][venue]["dates"].append(date_key)
+                self.index["venues"][venue]["total_races"] += 1
+
+        self.index["date_index"][date_key]["venues"] = list(venues)
+
+        # 総計を更新
+        self.index["total_dates"] = len(self.index["date_index"])
+        self.index["total_races"] = sum(
+            self.index["years"][y]["total_races"]
+            for y in self.index["years"]
+        )
+
+    def rebuild_index(self) -> Dict:
+        """
+        インデックスを完全に再構築
+        アーカイブディレクトリ内の全ファイルをスキャン
+        """
+        print("\n" + "=" * 60)
         print("🔄 インデックス再構築")
         print("=" * 60)
-        
-        # 既存のインデックスをクリア
-        self.storage.index.index["dates"] = {}
-        self.storage.index.index["years"] = {}
-        self.storage.index.index["venues"] = {}
-        
-        # アーカイブディレクトリを走査
-        count = 0
-        for json_file in ARCHIVE_DIR.glob("**/*.json"):
-            if json_file.name in ["index.json", "cache.json"]:
+
+        # インデックスをリセット
+        self.index = {
+            "updated_at": "",
+            "total_dates": 0,
+            "total_races": 0,
+            "years": {},
+            "venues": {},
+            "date_index": {}
+        }
+
+        file_count = 0
+
+        # アーカイブディレクトリを再帰的にスキャン
+        for year_dir in sorted(ARCHIVE_DIR.iterdir()):
+            if not year_dir.is_dir() or not year_dir.name.isdigit():
                 continue
-            
-            try:
-                with open(json_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                
-                # 日付を抽出
-                date_match = re.search(r'results_(\d{8})', json_file.name)
-                if not date_match:
+
+            year = year_dir.name
+            print(f"\n[INFO] {year}年をスキャン中...")
+
+            for month_dir in sorted(year_dir.iterdir()):
+                if not month_dir.is_dir() or not month_dir.name.isdigit():
                     continue
-                
-                date_str = date_match.group(1)
-                races = data.get("races", [])
-                venues = list(set(r.get("venue", "不明") for r in races))
-                
-                # チェックサム計算
-                data_for_checksum = {k: v for k, v in data.items() if k != "_meta"}
-                data_str = json.dumps(data_for_checksum, ensure_ascii=False, sort_keys=True)
-                checksum = hashlib.md5(data_str.encode()).hexdigest()
-                
-                # インデックスに追加
-                self.storage.index.add_entry(date_str, str(json_file), len(races), venues, checksum)
-                count += 1
-                
-            except Exception as e:
-                print(f"[WARN] {json_file}: {e}")
-                continue
-        
-        print(f"\n✅ {count}件のエントリを再構築しました")
-        return count
 
+                month = month_dir.name
 
-# --- UI用データローダー ---
+                for day_dir in sorted(month_dir.iterdir()):
+                    if not day_dir.is_dir() or not day_dir.name.isdigit():
+                        continue
 
-class ArchiveDataLoader:
-    """
-    app_commercial.py から呼び出されるデータローダー
-    高速な階層検索を提供
-    """
-    
-    def __init__(self):
-        self.storage = ArchiveStorage()
-        self._cache: Dict[str, Dict] = {}
-    
-    def get_available_years(self) -> List[int]:
+                    day = day_dir.name
+                    date_str = f"{year}{month}{day}"
+
+                    # results_*.json を検索
+                    for result_file in day_dir.glob(f"{RESULTS_PREFIX}*.json"):
+                        self._update_index_for_file(result_file, date_str)
+                        file_count += 1
+
+        # インデックスを保存
+        self._save_index()
+
+        print("\n" + "-" * 40)
+        print(f"✅ インデックス再構築完了")
+        print(f"   スキャンファイル: {file_count}件")
+        print(f"   登録日数: {self.index['total_dates']}日")
+        print(f"   登録レース: {self.index['total_races']}件")
+
+        return {
+            "files_scanned": file_count,
+            "total_dates": self.index["total_dates"],
+            "total_races": self.index["total_races"]
+        }
+
+    def get_available_years(self) -> List[str]:
         """利用可能な年のリストを取得"""
-        years = self.storage.index.get_years()
-        return [int(y) for y in years]
-    
-    def get_available_months(self, year: int) -> List[int]:
-        """指定年の月リストを取得"""
-        months = self.storage.index.get_months(str(year))
-        return [int(m) for m in months]
-    
-    def get_available_days(self, year: int, month: int) -> List[int]:
-        """指定年月の日リストを取得"""
-        days = self.storage.index.get_days(str(year), f"{month:02d}")
-        return [int(d) for d in days]
-    
-    def get_venues_for_date(self, year: int, month: int, day: int) -> List[str]:
-        """指定日の競馬場リストを取得"""
-        date_str = f"{year}{month:02d}{day:02d}"
-        return self.storage.index.get_venues_for_date(date_str)
-    
-    def load_races_for_date(self, year: int, month: int, day: int) -> List[Dict]:
-        """指定日のレースデータを取得"""
-        date_str = f"{year}{month:02d}{day:02d}"
-        
-        # キャッシュチェック
-        if date_str in self._cache:
-            return self._cache[date_str].get("races", [])
-        
-        # アーカイブから読み込み
-        data = self.storage.load_from_archive(date_str)
-        
+        return sorted(self.index.get("years", {}).keys(), reverse=True)
+
+    def get_available_months(self, year: str) -> List[str]:
+        """指定年の利用可能な月のリストを取得"""
+        year_data = self.index.get("years", {}).get(year, {})
+        return sorted(year_data.get("months", {}).keys())
+
+    def get_available_days(self, year: str, month: str) -> List[str]:
+        """指定年月の利用可能な日のリストを取得"""
+        year_data = self.index.get("years", {}).get(year, {})
+        month_data = year_data.get("months", {}).get(month, {})
+        return sorted(month_data.get("days", []))
+
+    def get_available_venues(self, date_str: str) -> List[str]:
+        """指定日の利用可能な競馬場のリストを取得"""
+        if "-" in date_str:
+            date_key = date_str
+        else:
+            date_key = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
+
+        date_data = self.index.get("date_index", {}).get(date_key, {})
+        return date_data.get("venues", [])
+
+    def get_races_by_date(self, date_str: str) -> Optional[Dict]:
+        """
+        指定日のレースデータを取得
+        アーカイブから高速に読み込み
+        """
+        if "-" in date_str:
+            date_str = date_str.replace("-", "")
+
+        archive_path = self._get_archive_path(date_str)
+        result_file = archive_path / f"{RESULTS_PREFIX}{date_str}.json"
+
+        # アーカイブにない場合はdata/から読み込み
+        if not result_file.exists():
+            result_file = DATA_DIR / f"{RESULTS_PREFIX}{date_str}.json"
+
+        if not result_file.exists():
+            return None
+
+        try:
+            with open(result_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"[ERROR] ファイル読み込みエラー: {e}")
+            return None
+
+    def get_races_by_date_and_venue(self, date_str: str, venue: str) -> List[Dict]:
+        """指定日・指定競馬場のレースデータを取得"""
+        data = self.get_races_by_date(date_str)
         if not data:
-            # data/ ディレクトリからフォールバック
-            filepath = DATA_DIR / f"results_{date_str}.json"
-            if filepath.exists():
-                try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                except:
-                    return []
-        
-        if data:
-            self._cache[date_str] = data
-            return data.get("races", [])
-        
-        return []
-    
-    def load_races_for_venue(self, year: int, month: int, day: int, venue: str) -> List[Dict]:
-        """指定日・競馬場のレースデータを取得"""
-        all_races = self.load_races_for_date(year, month, day)
-        return [r for r in all_races if r.get("venue") == venue]
-    
-    def get_stats(self) -> Dict:
-        """統計情報を取得"""
-        return self.storage.index.index.get("stats", {})
-    
-    def clear_cache(self):
-        """キャッシュをクリア"""
-        self._cache = {}
+            return []
+
+        races = data.get("races", [])
+        return [r for r in races if r.get("venue", "") == venue]
+
+    def get_statistics(self) -> Dict:
+        """アーカイブ統計情報を取得"""
+        stats = {
+            "updated_at": self.index.get("updated_at", ""),
+            "total_dates": self.index.get("total_dates", 0),
+            "total_races": self.index.get("total_races", 0),
+            "years": {},
+            "venues": {}
+        }
+
+        # 年別統計
+        for year, year_data in self.index.get("years", {}).items():
+            stats["years"][year] = {
+                "total_dates": year_data.get("total_dates", 0),
+                "total_races": year_data.get("total_races", 0),
+                "months": list(year_data.get("months", {}).keys())
+            }
+
+        # 競馬場別統計
+        for venue, venue_data in self.index.get("venues", {}).items():
+            stats["venues"][venue] = {
+                "total_dates": len(venue_data.get("dates", [])),
+                "total_races": venue_data.get("total_races", 0)
+            }
+
+        return stats
+
+    def archive_today_results(self) -> bool:
+        """本日の結果をアーカイブ"""
+        today_str = datetime.now().strftime("%Y%m%d")
+        result_file = DATA_DIR / f"{RESULTS_PREFIX}{today_str}.json"
+
+        if result_file.exists():
+            success = self.archive_file(result_file, today_str)
+            if success:
+                self._update_index_for_file(result_file, today_str)
+                self._save_index()
+            return success
+        else:
+            print(f"[INFO] 本日の結果ファイルがありません: {result_file}")
+            return False
+
+    def check_archived(self, date_str: str) -> bool:
+        """指定日のデータがアーカイブ済みかチェック"""
+        archive_path = self._get_archive_path(date_str)
+        result_file = archive_path / f"{RESULTS_PREFIX}{date_str}.json"
+        return result_file.exists()
+
+
+# --- UI用高速検索クラス ---
+
+class ArchiveSearcher:
+    """UIからの高速検索用クラス"""
+
+    def __init__(self):
+        self.manager = ArchiveManager()
+
+    def get_hierarchical_data(self) -> Dict:
+        """階層型検索用のデータ構造を取得"""
+        result = {"years": []}
+
+        for year in self.manager.get_available_years():
+            year_data = {"year": year, "months": []}
+
+            for month in self.manager.get_available_months(year):
+                month_data = {"month": month, "days": []}
+
+                for day in self.manager.get_available_days(year, month):
+                    date_str = f"{year}{month}{day}"
+                    venues = self.manager.get_available_venues(date_str)
+
+                    day_data = {
+                        "day": day,
+                        "date_str": date_str,
+                        "venues": venues
+                    }
+                    month_data["days"].append(day_data)
+
+                year_data["months"].append(month_data)
+
+            result["years"].append(year_data)
+
+        return result
+
+    def search_races(
+        self,
+        year: str = None,
+        month: str = None,
+        day: str = None,
+        venue: str = None
+    ) -> List[Dict]:
+        """条件に基づいてレースを検索"""
+        results = []
+
+        if year and month and day:
+            date_str = f"{year}{month}{day}"
+
+            if venue:
+                races = self.manager.get_races_by_date_and_venue(date_str, venue)
+            else:
+                data = self.manager.get_races_by_date(date_str)
+                races = data.get("races", []) if data else []
+
+            return races
+
+        if year and month:
+            days = self.manager.get_available_days(year, month)
+            for d in days:
+                date_str = f"{year}{month}{d}"
+                data = self.manager.get_races_by_date(date_str)
+                if data:
+                    for race in data.get("races", []):
+                        if venue is None or race.get("venue") == venue:
+                            race["date"] = date_str
+                            results.append(race)
+            return results
+
+        if year:
+            months = self.manager.get_available_months(year)
+            for m in months:
+                days = self.manager.get_available_days(year, m)
+                for d in days:
+                    date_str = f"{year}{m}{d}"
+                    data = self.manager.get_races_by_date(date_str)
+                    if data:
+                        for race in data.get("races", []):
+                            if venue is None or race.get("venue") == venue:
+                                race["date"] = date_str
+                                results.append(race)
+            return results
+
+        return results
 
 
 # --- メイン処理 ---
 
 def main():
-    import sys
-    
     print("=" * 60)
-    print("📦 UMA-Logic PRO - アーカイブマネージャー")
+    print("📚 UMA-Logic PRO - アーカイブマネージャー")
     print("=" * 60)
-    
-    archiver = AutoArchiver()
-    
+
+    manager = ArchiveManager()
+
     if len(sys.argv) > 1:
         command = sys.argv[1]
-        
+
         if command == "--archive-all":
-            archiver.archive_all_existing()
-        
+            result = manager.archive_all_results()
+            print(f"\n結果: {result}")
+
         elif command == "--rebuild-index":
-            archiver.rebuild_index()
-        
-        elif command == "--archive-date" and len(sys.argv) > 2:
-            date_str = sys.argv[2]
-            archiver.archive_date_results(date_str)
-        
+            result = manager.rebuild_index()
+            print(f"\n結果: {result}")
+
         elif command == "--stats":
-            loader = ArchiveDataLoader()
-            stats = loader.get_stats()
-            print(f"\n📊 アーカイブ統計:")
-            print(f"  総日数: {stats.get('total_dates', 0)}")
-            print(f"  総レース数: {stats.get('total_races', 0)}")
-            date_range = stats.get('date_range', {})
-            print(f"  期間: {date_range.get('start', '-')} 〜 {date_range.get('end', '-')}")
-        
+            stats = manager.get_statistics()
+            print("\n📊 アーカイブ統計")
+            print("-" * 40)
+            print(f"最終更新: {stats['updated_at']}")
+            print(f"総日数: {stats['total_dates']}日")
+            print(f"総レース: {stats['total_races']}件")
+
+            print("\n📅 年別統計:")
+            for year, data in sorted(stats["years"].items(), reverse=True):
+                print(f"  {year}年: {data['total_dates']}日 / {data['total_races']}レース")
+                print(f"    月: {', '.join(data['months'])}")
+
+            print("\n🏟️ 競馬場別統計:")
+            for venue, data in sorted(stats["venues"].items(), key=lambda x: x[1]["total_races"], reverse=True):
+                print(f"  {venue}: {data['total_dates']}日 / {data['total_races']}レース")
+
+        elif command == "--archive-date":
+            if len(sys.argv) > 2:
+                date_str = sys.argv[2]
+                result_file = DATA_DIR / f"{RESULTS_PREFIX}{date_str}.json"
+                if result_file.exists():
+                    manager.archive_file(result_file, date_str)
+                    manager._update_index_for_file(result_file, date_str)
+                    manager._save_index()
+                else:
+                    print(f"[ERROR] ファイルが見つかりません: {result_file}")
+            else:
+                print("[ERROR] 日付を指定してください (例: --archive-date 20240106)")
+
+        elif command == "--search":
+            searcher = ArchiveSearcher()
+            hierarchical = searcher.get_hierarchical_data()
+            print("\n📂 階層型データ構造:")
+            for year_data in hierarchical["years"][:2]:
+                print(f"\n  {year_data['year']}年:")
+                for month_data in year_data["months"][:3]:
+                    print(f"    {month_data['month']}月: {len(month_data['days'])}日")
+
+        elif command == "--check":
+            if len(sys.argv) > 2:
+                date_str = sys.argv[2]
+                if manager.check_archived(date_str):
+                    print(f"✅ {date_str} はアーカイブ済みです")
+                else:
+                    print(f"❌ {date_str} はアーカイブされていません")
+            else:
+                print("[ERROR] 日付を指定してください (例: --check 20240106)")
+
         else:
-            print("使用方法:")
-            print("  --archive-all      : 全既存データをアーカイブ")
+            print(f"[ERROR] 不明なコマンド: {command}")
+            print("\n使用方法:")
+            print("  --archive-all      : 全結果ファイルをアーカイブ")
             print("  --rebuild-index    : インデックスを再構築")
-            print("  --archive-date DATE: 指定日をアーカイブ")
             print("  --stats            : 統計情報を表示")
-    
+            print("  --archive-date DATE: 指定日をアーカイブ (例: 20240106)")
+            print("  --search           : 検索テスト")
+            print("  --check DATE       : アーカイブ状態を確認")
+
     else:
-        # デフォルト: 本日の結果をアーカイブ
-        archiver.archive_today_results()
-    
+        print("\n[INFO] 本日の結果をアーカイブします...")
+        manager.archive_today_results()
+
     print("\n✅ 処理完了")
 
 

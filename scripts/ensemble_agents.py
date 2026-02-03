@@ -605,7 +605,7 @@ class WeightOptimizer:
             json.dump(logs, f, ensure_ascii=False, indent=2)
 
 
-# --- 統合計算クラス ---
+# ensemble_agents.py の IntegratedCalculator クラスに追加
 
 class IntegratedCalculator:
     """3つのエージェントを統合してUMA指数と期待値を算出"""
@@ -617,56 +617,83 @@ class IntegratedCalculator:
             AdaptabilityAgent(self.weight_manager),
             PedigreeFormAgent(self.weight_manager)
         ]
+        
+        # インサイダー検知連携
+        try:
+            from scraper_realtime import RealtimeIntegration
+            self.realtime = RealtimeIntegration()
+            self.realtime_enabled = True
+        except ImportError:
+            self.realtime = None
+            self.realtime_enabled = False
     
-    def reload_weights(self):
-        """重みを再読み込み"""
-        self.weight_manager = WeightManager()
-        for agent in self.agents:
-            agent.weight_manager = self.weight_manager
-        print("[INFO] 重みを再読み込みしました")
+    def calculate_with_realtime(
+        self,
+        horse: HorseData,
+        condition: RaceCondition,
+        race_id: str,
+        bankroll: float = 100000
+    ) -> IntegratedPrediction:
+        """
+        リアルタイムインサイダー検知を考慮した計算
+        """
+        # 基本計算
+        result = self.calculate(horse, condition)
+        
+        # リアルタイム連携が有効な場合
+        if self.realtime_enabled and self.realtime:
+            params = self.realtime.get_adjusted_parameters(
+                race_id=race_id,
+                umaban=horse.umaban,
+                base_odds=horse.odds
+            )
+            
+            # インサイダーアラートがある場合
+            if params["aggressive_mode"]:
+                # 期待値をブースト
+                result.expected_value *= params["expected_value_boost"]
+                
+                # インサイダーフラグを設定
+                result.insider_alert = True
+                
+                # ケリー基準を再計算（Aggressiveモード）
+                kelly_result = self.realtime.calculate_adjusted_kelly(
+                    win_probability=result.win_probability,
+                    odds=horse.odds,
+                    race_id=race_id,
+                    umaban=horse.umaban,
+                    bankroll=bankroll
+                )
+                
+                result.kelly_fraction = kelly_result["kelly_fraction"]
+                
+                # ランクを再評価
+                if result.expected_value >= 1.5:
+                    result.rank = "S+"
+                elif result.expected_value >= 1.2:
+                    result.rank = "S"
+        
+        return result
     
-    def calculate(self, horse: HorseData, condition: RaceCondition) -> IntegratedPrediction:
-        predictions = [agent.predict(horse, condition) for agent in self.agents]
+    def calculate_batch_with_realtime(
+        self,
+        horses: List[HorseData],
+        condition: RaceCondition,
+        race_id: str,
+        bankroll: float = 100000
+    ) -> List[IntegratedPrediction]:
+        """
+        複数馬をまとめて計算（リアルタイム連携付き）
+        """
+        results = []
+        for horse in horses:
+            result = self.calculate_with_realtime(horse, condition, race_id, bankroll)
+            results.append(result)
         
-        # 加重平均で勝率を算出
-        total_weight = sum(agent.weight for agent in self.agents)
-        weighted_prob = sum(
-            pred.win_probability * agent.weight
-            for pred, agent in zip(predictions, self.agents)
-        ) / total_weight
+        # UMA指数でソート
+        results.sort(key=lambda x: x.uma_index, reverse=True)
         
-        # UMA指数（0-100）
-        uma_index = min(100, max(0, weighted_prob * 100 * 3))
-        
-        # 期待値
-        expected_value = weighted_prob * horse.odds if horse.odds > 0 else 0
-        
-        # ランク判定
-        if uma_index >= 75 and expected_value >= 1.2:
-            rank = "S"
-        elif uma_index >= 60 and expected_value >= 1.0:
-            rank = "A"
-        elif uma_index >= 45:
-            rank = "B"
-        else:
-            rank = "C"
-        
-        # ケリー基準
-        kelly = 0.0
-        if horse.odds > 1 and weighted_prob > 0:
-            b = horse.odds - 1
-            kelly = max(0, (b * weighted_prob - (1 - weighted_prob)) / b)
-        
-        return IntegratedPrediction(
-            umaban=horse.umaban,
-            horse_name=horse.horse_name,
-            uma_index=uma_index,
-            expected_value=expected_value,
-            win_probability=weighted_prob,
-            rank=rank,
-            agent_predictions=predictions,
-            kelly_fraction=kelly * 0.5
-        )
+        return results
 
 
 # --- メイン処理 ---

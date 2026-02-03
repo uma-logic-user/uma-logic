@@ -3,6 +3,9 @@ name: 💹 リアルタイムオッズ取得
 on:
   workflow_dispatch:
 
+env:
+  TZ: Asia/Tokyo
+
 jobs:
   fetch-odds:
     runs-on: ubuntu-latest
@@ -25,20 +28,38 @@ jobs:
           pip install -r requirements.txt
 
       - name: 📁 データディレクトリを作成
-        run: mkdir -p data
+        run: |
+          mkdir -p data
+          mkdir -p data/archive
+          mkdir -p data/models
 
       - name: 💹 リアルタイムオッズを取得
-        run: python scripts/scraper_realtime.py
+        run: python scripts/scraper_realtime.py || echo "Odds fetch skipped"
 
-      - name: 💾 変更をコミット＆プッシュ
+      - name: 💾 変更をコミット＆プッシュ（コンフリクト回避）
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
-          git pull --rebase origin main || git pull origin main
-          git add data/
-          if git diff --staged --quiet; then
-            echo "📭 変更なし"
+          
+          # 変更をステージング
+          git add data/ || true
+          
+          # 変更がある場合のみコミット
+          if ! git diff --staged --quiet; then
+            # 一時的にstashして最新を取得
+            git stash push -m "temp-changes" || true
+            
+            # 最新を取得（コンフリクト回避）
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # stashを戻す
+            git stash pop || git checkout stash -- . || true
+            
+            # 再度ステージングしてコミット
+            git add data/ || true
+            git commit -m "💹 オッズ更新: $(date +'%Y-%m-%d %H:%M')" || true
+            git push origin main || true
           else
-            git commit -m "💹 オッズ更新: $(TZ=Asia/Tokyo date +'%Y-%m-%d %H:%M')"
-            git push
+            echo "📭 変更なし"
           fi

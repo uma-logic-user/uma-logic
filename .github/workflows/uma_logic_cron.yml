@@ -6,38 +6,70 @@ on:
     - cron: '0 10 * * 6,0'
   workflow_dispatch:
 
+env:
+  TZ: Asia/Tokyo
+
 jobs:
   update-data:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install streamlit pandas numpy plotly streamlit-aggrid beautifulsoup4 lxml requests pytz
+          pip install -r requirements.txt
+
+      - name: Create directories
+        run: |
+          mkdir -p data
+          mkdir -p data/archive
+          mkdir -p data/models
 
       - name: Run Scripts
         run: |
           echo "Starting Scraper..."
-          python scripts/scraper_realtime.py || true
+          python scripts/scraper_realtime.py || echo "Scraper skipped"
           
           echo "Starting Calculator..."
-          python scripts/calculator_pro.py || true
+          python scripts/calculator_pro.py || echo "Calculator skipped"
           
           echo "Starting Fetcher (Skipping if no race)..."
-          python scripts/fetch_race_data.py || true
+          python scripts/fetch_race_data.py || echo "Fetcher skipped"
 
-      - name: Commit and Push
+      - name: Commit and Push (Conflict-Safe)
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data/*.json
-          git commit -m "Auto-update: $(date +'%Y-%m-%d')" || echo "No changes"
-          git push
+          
+          # 変更をステージング
+          git add data/ || true
+          
+          # 変更がある場合のみコミット
+          if ! git diff --staged --quiet; then
+            # 一時的にstashして最新を取得
+            git stash push -m "temp-changes" || true
+            
+            # 最新を取得（コンフリクト回避）
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # stashを戻す
+            git stash pop || git checkout stash -- . || true
+            
+            # 再度ステージングしてコミット
+            git add data/ || true
+            git commit -m "Auto-update: $(date +'%Y-%m-%d %H:%M')" || true
+            git push origin main || true
+          else
+            echo "No changes to commit"
+          fi

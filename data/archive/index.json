@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-02-03 19:51:30",
+  "updated_at": "2026-02-03 22:44:17",
   "total_dates": 226,
   "total_races": 8063,
   "years": {
@@ -1038,60 +1038,60 @@
       "file_path": "data/archive/2024/01/06/results_20240106.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2024-01-07": {
       "file_path": "data/archive/2024/01/07/results_20240107.json",
       "race_count": 34,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2024-01-08": {
       "file_path": "data/archive/2024/01/08/results_20240108.json",
       "race_count": 33,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2024-01-13": {
       "file_path": "data/archive/2024/01/13/results_20240113.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "京都",
-        "小倉"
+        "中山"
       ]
     },
     "2024-01-14": {
       "file_path": "data/archive/2024/01/14/results_20240114.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "京都",
-        "小倉"
+        "中山"
       ]
     },
     "2024-01-20": {
       "file_path": "data/archive/2024/01/20/results_20240120.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "京都",
-        "小倉"
+        "中山"
       ]
     },
     "2024-01-21": {
       "file_path": "data/archive/2024/01/21/results_20240121.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "京都",
-        "小倉"
+        "中山"
       ]
     },
     "2024-01-27": {
@@ -1170,150 +1170,150 @@
       "file_path": "data/archive/2024/02/24/results_20240224.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "阪神",
-        "小倉"
+        "中山"
       ]
     },
     "2024-02-25": {
       "file_path": "data/archive/2024/02/25/results_20240225.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "阪神",
-        "小倉"
+        "中山"
       ]
     },
     "2024-03-02": {
       "file_path": "data/archive/2024/03/02/results_20240302.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "阪神",
-        "小倉"
+        "中山"
       ]
     },
     "2024-03-03": {
       "file_path": "data/archive/2024/03/03/results_20240303.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "阪神",
-        "小倉"
+        "中山"
       ]
     },
     "2024-03-09": {
       "file_path": "data/archive/2024/03/09/results_20240309.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2024-03-10": {
       "file_path": "data/archive/2024/03/10/results_20240310.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2024-03-16": {
       "file_path": "data/archive/2024/03/16/results_20240316.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2024-03-17": {
       "file_path": "data/archive/2024/03/17/results_20240317.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2024-03-23": {
       "file_path": "data/archive/2024/03/23/results_20240323.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2024-03-24": {
       "file_path": "data/archive/2024/03/24/results_20240324.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2024-03-30": {
       "file_path": "data/archive/2024/03/30/results_20240330.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2024-03-31": {
       "file_path": "data/archive/2024/03/31/results_20240331.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2024-04-06": {
       "file_path": "data/archive/2024/04/06/results_20240406.json",
       "race_count": 36,
       "venues": [
-        "中山",
         "福島",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2024-04-07": {
       "file_path": "data/archive/2024/04/07/results_20240407.json",
       "race_count": 36,
       "venues": [
-        "中山",
         "福島",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2024-04-13": {
       "file_path": "data/archive/2024/04/13/results_20240413.json",
       "race_count": 36,
       "venues": [
-        "中山",
         "福島",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2024-04-14": {
       "file_path": "data/archive/2024/04/14/results_20240414.json",
       "race_count": 36,
       "venues": [
-        "中山",
         "福島",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2024-04-20": {
       "file_path": "data/archive/2024/04/20/results_20240420.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -1321,8 +1321,8 @@
       "file_path": "data/archive/2024/04/21/results_20240421.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -1330,72 +1330,72 @@
       "file_path": "data/archive/2024/04/27/results_20240427.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-04-28": {
       "file_path": "data/archive/2024/04/28/results_20240428.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-05-04": {
       "file_path": "data/archive/2024/05/04/results_20240504.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-05-05": {
       "file_path": "data/archive/2024/05/05/results_20240505.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-05-11": {
       "file_path": "data/archive/2024/05/11/results_20240511.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-05-12": {
       "file_path": "data/archive/2024/05/12/results_20240512.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-05-18": {
       "file_path": "data/archive/2024/05/18/results_20240518.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-05-19": {
       "file_path": "data/archive/2024/05/19/results_20240519.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-05-25": {
@@ -1434,62 +1434,62 @@
       "file_path": "data/archive/2024/06/08/results_20240608.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "函館",
-        "京都"
+        "函館"
       ]
     },
     "2024-06-09": {
       "file_path": "data/archive/2024/06/09/results_20240609.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "函館",
-        "京都"
+        "函館"
       ]
     },
     "2024-06-15": {
       "file_path": "data/archive/2024/06/15/results_20240615.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "函館",
-        "京都"
+        "函館"
       ]
     },
     "2024-06-16": {
       "file_path": "data/archive/2024/06/16/results_20240616.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "函館",
-        "京都"
+        "函館"
       ]
     },
     "2024-06-22": {
       "file_path": "data/archive/2024/06/22/results_20240622.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "函館",
-        "京都"
+        "函館"
       ]
     },
     "2024-06-23": {
       "file_path": "data/archive/2024/06/23/results_20240623.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "函館",
-        "京都"
+        "函館"
       ]
     },
     "2024-06-29": {
       "file_path": "data/archive/2024/06/29/results_20240629.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -1497,8 +1497,8 @@
       "file_path": "data/archive/2024/06/30/results_20240630.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -1506,8 +1506,8 @@
       "file_path": "data/archive/2024/07/06/results_20240706.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -1515,8 +1515,8 @@
       "file_path": "data/archive/2024/07/07/results_20240707.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -1524,8 +1524,8 @@
       "file_path": "data/archive/2024/07/13/results_20240713.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -1533,8 +1533,8 @@
       "file_path": "data/archive/2024/07/14/results_20240714.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -1542,18 +1542,18 @@
       "file_path": "data/archive/2024/07/20/results_20240720.json",
       "race_count": 36,
       "venues": [
-        "福島",
+        "札幌",
         "小倉",
-        "札幌"
+        "福島"
       ]
     },
     "2024-07-21": {
       "file_path": "data/archive/2024/07/21/results_20240721.json",
       "race_count": 36,
       "venues": [
-        "福島",
-        "小倉",
         "札幌",
+        "小倉",
+        "福島",
         "中京"
       ]
     },
@@ -1561,113 +1561,113 @@
       "file_path": "data/archive/2024/07/27/results_20240727.json",
       "race_count": 35,
       "venues": [
-        "新潟",
-        "札幌"
+        "札幌",
+        "新潟"
       ]
     },
     "2024-07-28": {
       "file_path": "data/archive/2024/07/28/results_20240728.json",
       "race_count": 36,
       "venues": [
-        "新潟",
-        "札幌"
+        "札幌",
+        "新潟"
       ]
     },
     "2024-08-03": {
       "file_path": "data/archive/2024/08/03/results_20240803.json",
       "race_count": 36,
       "venues": [
-        "新潟",
-        "札幌"
+        "札幌",
+        "新潟"
       ]
     },
     "2024-08-04": {
       "file_path": "data/archive/2024/08/04/results_20240804.json",
       "race_count": 32,
       "venues": [
-        "新潟",
-        "札幌"
+        "札幌",
+        "新潟"
       ]
     },
     "2024-08-10": {
       "file_path": "data/archive/2024/08/10/results_20240810.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2024-08-11": {
       "file_path": "data/archive/2024/08/11/results_20240811.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2024-08-17": {
       "file_path": "data/archive/2024/08/17/results_20240817.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2024-08-18": {
       "file_path": "data/archive/2024/08/18/results_20240818.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2024-08-24": {
       "file_path": "data/archive/2024/08/24/results_20240824.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2024-08-25": {
       "file_path": "data/archive/2024/08/25/results_20240825.json",
       "race_count": 35,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2024-08-31": {
       "file_path": "data/archive/2024/08/31/results_20240831.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2024-09-01": {
       "file_path": "data/archive/2024/09/01/results_20240901.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2024-09-07": {
       "file_path": "data/archive/2024/09/07/results_20240907.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "中山",
-        "中京",
-        "京都"
+        "中京"
       ]
     },
     "2024-09-08": {
@@ -1682,9 +1682,9 @@
       "file_path": "data/archive/2024/09/14/results_20240914.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2024-09-15": {
@@ -1739,18 +1739,18 @@
       "file_path": "data/archive/2024/10/05/results_20241005.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-10-06": {
       "file_path": "data/archive/2024/10/06/results_20241006.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-10-12": {
@@ -1781,44 +1781,44 @@
       "file_path": "data/archive/2024/10/19/results_20241019.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-10-20": {
       "file_path": "data/archive/2024/10/20/results_20241020.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-10-26": {
       "file_path": "data/archive/2024/10/26/results_20241026.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-10-27": {
       "file_path": "data/archive/2024/10/27/results_20241027.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2024-11-02": {
       "file_path": "data/archive/2024/11/02/results_20241102.json",
       "race_count": 35,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -1826,8 +1826,8 @@
       "file_path": "data/archive/2024/11/03/results_20241103.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -1835,8 +1835,8 @@
       "file_path": "data/archive/2024/11/09/results_20241109.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -1844,8 +1844,8 @@
       "file_path": "data/archive/2024/11/10/results_20241110.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -1853,8 +1853,8 @@
       "file_path": "data/archive/2024/11/16/results_20241116.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -1862,8 +1862,8 @@
       "file_path": "data/archive/2024/11/17/results_20241117.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -1887,89 +1887,89 @@
       "file_path": "data/archive/2024/11/30/results_20241130.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "中山",
-        "中京",
-        "京都"
+        "中京"
       ]
     },
     "2024-12-01": {
       "file_path": "data/archive/2024/12/01/results_20241201.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "中山",
-        "中京",
-        "京都"
+        "中京"
       ]
     },
     "2024-12-07": {
       "file_path": "data/archive/2024/12/07/results_20241207.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "中山",
-        "中京",
-        "京都"
+        "中京"
       ]
     },
     "2024-12-08": {
       "file_path": "data/archive/2024/12/08/results_20241208.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "中京",
+        "阪神",
         "京都",
-        "阪神"
+        "中山",
+        "中京"
       ]
     },
     "2024-12-14": {
       "file_path": "data/archive/2024/12/14/results_20241214.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "中山",
-        "中京",
-        "京都"
+        "中京"
       ]
     },
     "2024-12-15": {
       "file_path": "data/archive/2024/12/15/results_20241215.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "中山",
-        "中京",
-        "京都"
+        "中京"
       ]
     },
     "2024-12-21": {
       "file_path": "data/archive/2024/12/21/results_20241221.json",
       "race_count": 35,
       "venues": [
+        "京都",
         "中山",
-        "阪神",
-        "京都"
+        "阪神"
       ]
     },
     "2024-12-22": {
       "file_path": "data/archive/2024/12/22/results_20241222.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2024-12-28": {
       "file_path": "data/archive/2024/12/28/results_20241228.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2025-01-05": {
       "file_path": "data/archive/2025/01/05/results_20250105.json",
       "race_count": 34,
       "venues": [
+        "京都",
         "中山",
-        "中京",
-        "京都"
+        "中京"
       ]
     },
     "2025-01-06": {
@@ -2024,18 +2024,18 @@
       "file_path": "data/archive/2025/01/25/results_20250125.json",
       "race_count": 36,
       "venues": [
+        "小倉",
         "中山",
-        "中京",
-        "小倉"
+        "中京"
       ]
     },
     "2025-01-26": {
       "file_path": "data/archive/2025/01/26/results_20250126.json",
       "race_count": 36,
       "venues": [
+        "小倉",
         "中山",
-        "中京",
-        "小倉"
+        "中京"
       ]
     },
     "2025-02-01": {
@@ -2120,148 +2120,148 @@
       "file_path": "data/archive/2025/03/01/results_20250301.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "阪神",
-        "小倉"
+        "中山"
       ]
     },
     "2025-03-02": {
       "file_path": "data/archive/2025/03/02/results_20250302.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "阪神",
-        "小倉"
+        "中山"
       ]
     },
     "2025-03-08": {
       "file_path": "data/archive/2025/03/08/results_20250308.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-03-09": {
       "file_path": "data/archive/2025/03/09/results_20250309.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-03-15": {
       "file_path": "data/archive/2025/03/15/results_20250315.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-03-16": {
       "file_path": "data/archive/2025/03/16/results_20250316.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-03-22": {
       "file_path": "data/archive/2025/03/22/results_20250322.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-03-23": {
       "file_path": "data/archive/2025/03/23/results_20250323.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-03-29": {
       "file_path": "data/archive/2025/03/29/results_20250329.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-03-30": {
       "file_path": "data/archive/2025/03/30/results_20250330.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-04-05": {
       "file_path": "data/archive/2025/04/05/results_20250405.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-04-06": {
       "file_path": "data/archive/2025/04/06/results_20250406.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-04-12": {
       "file_path": "data/archive/2025/04/12/results_20250412.json",
       "race_count": 36,
       "venues": [
-        "中山",
         "福島",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-04-13": {
       "file_path": "data/archive/2025/04/13/results_20250413.json",
       "race_count": 36,
       "venues": [
-        "中山",
         "福島",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-04-19": {
       "file_path": "data/archive/2025/04/19/results_20250419.json",
       "race_count": 36,
       "venues": [
-        "中山",
         "福島",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-04-20": {
       "file_path": "data/archive/2025/04/20/results_20250420.json",
       "race_count": 36,
       "venues": [
-        "中山",
         "福島",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-04-26": {
       "file_path": "data/archive/2025/04/26/results_20250426.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -2269,8 +2269,8 @@
       "file_path": "data/archive/2025/04/27/results_20250427.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -2278,72 +2278,72 @@
       "file_path": "data/archive/2025/05/03/results_20250503.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-05-04": {
       "file_path": "data/archive/2025/05/04/results_20250504.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-05-10": {
       "file_path": "data/archive/2025/05/10/results_20250510.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-05-11": {
       "file_path": "data/archive/2025/05/11/results_20250511.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-05-17": {
       "file_path": "data/archive/2025/05/17/results_20250517.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-05-18": {
       "file_path": "data/archive/2025/05/18/results_20250518.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-05-24": {
       "file_path": "data/archive/2025/05/24/results_20250524.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-05-25": {
       "file_path": "data/archive/2025/05/25/results_20250525.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-05-31": {
@@ -2366,60 +2366,60 @@
       "file_path": "data/archive/2025/06/07/results_20250607.json",
       "race_count": 34,
       "venues": [
-        "阪神",
-        "東京"
+        "東京",
+        "阪神"
       ]
     },
     "2025-06-08": {
       "file_path": "data/archive/2025/06/08/results_20250608.json",
       "race_count": 35,
       "venues": [
-        "阪神",
-        "東京"
+        "東京",
+        "阪神"
       ]
     },
     "2025-06-14": {
       "file_path": "data/archive/2025/06/14/results_20250614.json",
       "race_count": 36,
       "venues": [
-        "阪神",
         "東京",
-        "函館"
+        "函館",
+        "阪神"
       ]
     },
     "2025-06-15": {
       "file_path": "data/archive/2025/06/15/results_20250615.json",
       "race_count": 36,
       "venues": [
-        "阪神",
         "東京",
-        "函館"
+        "函館",
+        "阪神"
       ]
     },
     "2025-06-21": {
       "file_path": "data/archive/2025/06/21/results_20250621.json",
       "race_count": 36,
       "venues": [
-        "阪神",
         "東京",
-        "函館"
+        "函館",
+        "阪神"
       ]
     },
     "2025-06-22": {
       "file_path": "data/archive/2025/06/22/results_20250622.json",
       "race_count": 36,
       "venues": [
-        "阪神",
         "東京",
-        "函館"
+        "函館",
+        "阪神"
       ]
     },
     "2025-06-28": {
       "file_path": "data/archive/2025/06/28/results_20250628.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -2427,8 +2427,8 @@
       "file_path": "data/archive/2025/06/29/results_20250629.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -2436,8 +2436,8 @@
       "file_path": "data/archive/2025/07/05/results_20250705.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -2445,8 +2445,8 @@
       "file_path": "data/archive/2025/07/06/results_20250706.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -2454,8 +2454,8 @@
       "file_path": "data/archive/2025/07/12/results_20250712.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -2463,8 +2463,8 @@
       "file_path": "data/archive/2025/07/13/results_20250713.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -2472,8 +2472,8 @@
       "file_path": "data/archive/2025/07/19/results_20250719.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -2481,8 +2481,8 @@
       "file_path": "data/archive/2025/07/20/results_20250720.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "小倉",
+        "福島",
         "函館"
       ]
     },
@@ -2490,182 +2490,182 @@
       "file_path": "data/archive/2025/07/26/results_20250726.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-07-27": {
       "file_path": "data/archive/2025/07/27/results_20250727.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-02": {
       "file_path": "data/archive/2025/08/02/results_20250802.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-03": {
       "file_path": "data/archive/2025/08/03/results_20250803.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-09": {
       "file_path": "data/archive/2025/08/09/results_20250809.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-10": {
       "file_path": "data/archive/2025/08/10/results_20250810.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-16": {
       "file_path": "data/archive/2025/08/16/results_20250816.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-17": {
       "file_path": "data/archive/2025/08/17/results_20250817.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-23": {
       "file_path": "data/archive/2025/08/23/results_20250823.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-24": {
       "file_path": "data/archive/2025/08/24/results_20250824.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-30": {
       "file_path": "data/archive/2025/08/30/results_20250830.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-08-31": {
       "file_path": "data/archive/2025/08/31/results_20250831.json",
       "race_count": 36,
       "venues": [
+        "札幌",
         "新潟",
-        "中京",
-        "札幌"
+        "中京"
       ]
     },
     "2025-09-06": {
       "file_path": "data/archive/2025/09/06/results_20250906.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "札幌",
         "阪神",
-        "札幌"
+        "中山"
       ]
     },
     "2025-09-07": {
       "file_path": "data/archive/2025/09/07/results_20250907.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "札幌",
         "阪神",
-        "札幌"
+        "中山"
       ]
     },
     "2025-09-13": {
       "file_path": "data/archive/2025/09/13/results_20250913.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-09-14": {
       "file_path": "data/archive/2025/09/14/results_20250914.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-09-15": {
       "file_path": "data/archive/2025/09/15/results_20250915.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-09-20": {
       "file_path": "data/archive/2025/09/20/results_20250920.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-09-21": {
       "file_path": "data/archive/2025/09/21/results_20250921.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-09-27": {
       "file_path": "data/archive/2025/09/27/results_20250927.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-09-28": {
       "file_path": "data/archive/2025/09/28/results_20250928.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-10-04": {
@@ -2712,36 +2712,36 @@
       "file_path": "data/archive/2025/10/18/results_20251018.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-10-19": {
       "file_path": "data/archive/2025/10/19/results_20251019.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-10-25": {
       "file_path": "data/archive/2025/10/25/results_20251025.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-10-26": {
       "file_path": "data/archive/2025/10/26/results_20251026.json",
       "race_count": 36,
       "venues": [
+        "京都",
         "東京",
-        "新潟",
-        "京都"
+        "新潟"
       ]
     },
     "2025-11-01": {
@@ -2764,8 +2764,8 @@
       "file_path": "data/archive/2025/11/08/results_20251108.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -2773,8 +2773,8 @@
       "file_path": "data/archive/2025/11/09/results_20251109.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -2782,8 +2782,8 @@
       "file_path": "data/archive/2025/11/15/results_20251115.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -2791,8 +2791,8 @@
       "file_path": "data/archive/2025/11/16/results_20251116.json",
       "race_count": 36,
       "venues": [
-        "福島",
         "東京",
+        "福島",
         "京都"
       ]
     },
@@ -2816,8 +2816,8 @@
       "file_path": "data/archive/2025/11/24/results_20251124.json",
       "race_count": 36,
       "venues": [
-        "福島",
-        "東京"
+        "東京",
+        "福島"
       ]
     },
     "2025-11-29": {
@@ -2840,144 +2840,144 @@
       "file_path": "data/archive/2025/12/06/results_20251206.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-12-07": {
       "file_path": "data/archive/2025/12/07/results_20251207.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-12-13": {
       "file_path": "data/archive/2025/12/13/results_20251213.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-12-14": {
       "file_path": "data/archive/2025/12/14/results_20251214.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-12-20": {
       "file_path": "data/archive/2025/12/20/results_20251220.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-12-21": {
       "file_path": "data/archive/2025/12/21/results_20251221.json",
       "race_count": 36,
       "venues": [
+        "阪神",
         "中山",
-        "中京",
-        "阪神"
+        "中京"
       ]
     },
     "2025-12-27": {
       "file_path": "data/archive/2025/12/27/results_20251227.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2025-12-28": {
       "file_path": "data/archive/2025/12/28/results_20251228.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "阪神"
+        "阪神",
+        "中山"
       ]
     },
     "2026-01-04": {
       "file_path": "data/archive/2026/01/04/results_20260104.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2026-01-05": {
       "file_path": "data/archive/2026/01/05/results_20260105.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2026-01-10": {
       "file_path": "data/archive/2026/01/10/results_20260110.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2026-01-11": {
       "file_path": "data/archive/2026/01/11/results_20260111.json",
       "race_count": 35,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2026-01-12": {
       "file_path": "data/archive/2026/01/12/results_20260112.json",
       "race_count": 36,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2026-01-17": {
       "file_path": "data/archive/2026/01/17/results_20260117.json",
       "race_count": 34,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2026-01-18": {
       "file_path": "data/archive/2026/01/18/results_20260118.json",
       "race_count": 34,
       "venues": [
-        "中山",
-        "京都"
+        "京都",
+        "中山"
       ]
     },
     "2026-01-24": {
       "file_path": "data/archive/2026/01/24/results_20260124.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "京都",
-        "小倉"
+        "中山"
       ]
     },
     "2026-01-25": {
       "file_path": "data/archive/2026/01/25/results_20260125.json",
       "race_count": 36,
       "venues": [
-        "中山",
+        "小倉",
         "京都",
-        "小倉"
+        "中山"
       ]
     },
     "2026-01-31": {

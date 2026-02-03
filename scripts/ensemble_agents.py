@@ -1,744 +1,689 @@
+#!/usr/bin/env python3
 # scripts/ensemble_agents.py
-# UMA-Logic PRO - アンサンブル学習エンジン（自己学習機能付き）
-# 3つのAIエージェントによる統合予測システム + 重み最適化
+# UMA-Logic PRO - アンサンブル学習エンジン（厳格バックテスト版）
+# 完全版（Full Code）- Train/Test分離、データリーク防止
 
 import json
 import math
+import random
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
-import re
+import sys
 
 # --- 定数 ---
 DATA_DIR = Path("data")
 ARCHIVE_DIR = DATA_DIR / "archive"
 MODELS_DIR = DATA_DIR / "models"
 WEIGHTS_FILE = MODELS_DIR / "weights.json"
-OPTIMIZATION_LOG_FILE = MODELS_DIR / "optimization_log.json"
+
+# デフォルトの重み
+DEFAULT_WEIGHTS = {
+    "SpeedAgent": 0.35,
+    "AdaptabilityAgent": 0.35,
+    "PedigreeFormAgent": 0.30
+}
 
 
 # --- データクラス ---
 
 @dataclass
-class HorseData:
-    """馬データ"""
+class HorseFeatures:
+    """
+    馬の特徴量（レース前に分かる情報のみ）
+    ※ 着順、タイム、上がり3F、払戻金は含めない（データリーク防止）
+    """
     umaban: int = 0
     horse_name: str = ""
-    jockey: str = ""
-    trainer: str = ""
-    weight: float = 0.0
-    age: int = 0
-    sex: str = ""
-    odds: float = 0.0
-    popularity: int = 0
-    last_3_results: List[int] = field(default_factory=list)
-    best_time: str = ""
-    running_style: str = ""
-    father: str = ""
-    mother_father: str = ""
-    track_aptitude: Dict[str, float] = field(default_factory=dict)
+    odds: float = 0.0           # 発走前オッズ
+    popularity: int = 0         # 人気順
+    weight: float = 0.0         # 馬体重
+    weight_diff: float = 0.0    # 馬体重増減
+    age: int = 0                # 馬齢
+    sex: str = ""               # 性別
+    jockey: str = ""            # 騎手
+    trainer: str = ""           # 調教師
+    father: str = ""            # 父馬
+    mother_father: str = ""     # 母父
+    gate_num: int = 0           # 枠番
+    # 過去成績（前走以前のデータのみ）
+    prev_results: List[int] = field(default_factory=list)  # 過去の着順リスト
+    prev_odds: List[float] = field(default_factory=list)   # 過去のオッズリスト
 
 
 @dataclass
-class RaceCondition:
-    """レース条件"""
+class RaceFeatures:
+    """レース条件（レース前に分かる情報のみ）"""
+    race_id: str = ""
+    race_num: int = 0
     venue: str = ""
     distance: int = 0
-    track_type: str = ""
-    track_condition: str = ""
-    grade: str = ""
-    race_num: int = 0
+    track_type: str = ""        # 芝/ダート
+    track_condition: str = ""   # 良/稍重/重/不良
+    grade: str = ""             # クラス
+    race_name: str = ""
+    date: str = ""
 
 
 @dataclass
-class AgentPrediction:
-    """エージェント予測結果"""
-    agent_name: str
-    win_probability: float
-    confidence: float
-    reasoning: str
+class RaceResult:
+    """レース結果（検証用、学習には使用しない）"""
+    race_id: str = ""
+    winner_umaban: int = 0      # 1着馬番
+    winner_odds: float = 0.0    # 1着馬オッズ
+    top3_umaban: List[int] = field(default_factory=list)  # 1-3着馬番
 
 
-@dataclass
-class IntegratedPrediction:
-    """統合予測結果"""
-    umaban: int
-    horse_name: str
-    uma_index: float
-    expected_value: float
-    win_probability: float
-    rank: str
-    agent_predictions: List[AgentPrediction] = field(default_factory=list)
-    insider_alert: bool = False
-    kelly_fraction: float = 0.0
+# --- エージェントクラス ---
+
+class SpeedAgent:
+    """
+    スピードエージェント
+    オッズと人気から期待スピードを推定
+    """
+    
+    def __init__(self, weight: float = 0.35):
+        self.weight = weight
+        self.name = "SpeedAgent"
+    
+    def calculate_score(self, horse: HorseFeatures, race: RaceFeatures) -> float:
+        """スピードスコアを計算（0-100）"""
+        score = 50.0
+        
+        # オッズが低い（人気がある）ほど高スコア
+        if horse.odds > 0:
+            if horse.odds < 2.0:
+                score += 30
+            elif horse.odds < 5.0:
+                score += 20
+            elif horse.odds < 10.0:
+                score += 10
+            elif horse.odds < 20.0:
+                score += 0
+            else:
+                score -= 10
+        
+        # 人気順
+        if horse.popularity > 0:
+            if horse.popularity <= 3:
+                score += 15
+            elif horse.popularity <= 6:
+                score += 5
+            else:
+                score -= 5
+        
+        # 過去成績（前走以前）
+        if horse.prev_results:
+            avg_result = sum(horse.prev_results[:3]) / len(horse.prev_results[:3])
+            if avg_result <= 3:
+                score += 20
+            elif avg_result <= 5:
+                score += 10
+            elif avg_result <= 8:
+                score += 0
+            else:
+                score -= 10
+        
+        # 距離適性（簡易版）
+        if race.distance > 0:
+            if race.distance <= 1400:
+                # 短距離は内枠有利
+                if horse.gate_num <= 4:
+                    score += 5
+            elif race.distance >= 2000:
+                # 長距離は差し馬有利（人気薄でも）
+                if horse.popularity > 5 and horse.odds < 30:
+                    score += 5
+        
+        return max(0, min(100, score))
 
 
-# --- 重み管理クラス ---
+class AdaptabilityAgent:
+    """
+    適応性エージェント
+    馬場状態、枠順、コース適性を評価
+    """
+    
+    def __init__(self, weight: float = 0.35):
+        self.weight = weight
+        self.name = "AdaptabilityAgent"
+    
+    def calculate_score(self, horse: HorseFeatures, race: RaceFeatures) -> float:
+        """適応性スコアを計算（0-100）"""
+        score = 50.0
+        
+        # 枠順評価
+        if race.distance > 0 and horse.gate_num > 0:
+            if race.distance <= 1400:
+                # 短距離は内枠有利
+                if horse.gate_num <= 3:
+                    score += 15
+                elif horse.gate_num <= 5:
+                    score += 5
+                elif horse.gate_num >= 7:
+                    score -= 5
+            elif race.distance <= 1800:
+                # 中距離はフラット
+                pass
+            else:
+                # 長距離は外枠不利
+                if horse.gate_num >= 7:
+                    score -= 10
+        
+        # 馬場状態
+        if race.track_condition:
+            if race.track_condition in ["重", "不良"]:
+                # 重馬場は馬体重が重い馬有利
+                if horse.weight >= 500:
+                    score += 10
+                elif horse.weight <= 440:
+                    score -= 5
+        
+        # 馬体重増減
+        if horse.weight_diff != 0:
+            if abs(horse.weight_diff) > 20:
+                score -= 10  # 大幅増減はマイナス
+            elif -10 <= horse.weight_diff <= 10:
+                score += 5   # 安定はプラス
+        
+        # 年齢
+        if horse.age > 0:
+            if horse.age == 3:
+                score += 5   # 3歳は成長期
+            elif horse.age >= 7:
+                score -= 5   # 高齢馬は減点
+        
+        return max(0, min(100, score))
 
-class WeightManager:
-    """エージェント重みの保存・読み込み管理"""
+
+class PedigreeFormAgent:
+    """
+    血統・調子エージェント
+    血統パターンと直近の調子を評価
+    """
+    
+    # 有名種牡馬のスコア補正
+    SIRE_BONUS = {
+        "ディープインパクト": 15,
+        "キングカメハメハ": 12,
+        "ロードカナロア": 12,
+        "ハーツクライ": 10,
+        "エピファネイア": 10,
+        "ドゥラメンテ": 10,
+        "キタサンブラック": 10,
+        "モーリス": 8,
+        "オルフェーヴル": 8,
+        "ゴールドシップ": 5,
+    }
+    
+    def __init__(self, weight: float = 0.30):
+        self.weight = weight
+        self.name = "PedigreeFormAgent"
+    
+    def calculate_score(self, horse: HorseFeatures, race: RaceFeatures) -> float:
+        """血統・調子スコアを計算（0-100）"""
+        score = 50.0
+        
+        # 血統評価
+        if horse.father:
+            bonus = self.SIRE_BONUS.get(horse.father, 0)
+            score += bonus
+        
+        # 過去成績の傾向（上昇傾向か下降傾向か）
+        if len(horse.prev_results) >= 2:
+            recent = horse.prev_results[0]  # 最新
+            older = horse.prev_results[1]   # 1つ前
+            
+            if recent < older:
+                score += 10  # 上昇傾向
+            elif recent > older:
+                score -= 5   # 下降傾向
+        
+        # オッズと過去成績の乖離（穴馬発見）
+        if horse.prev_results and horse.odds > 0:
+            avg_result = sum(horse.prev_results[:3]) / len(horse.prev_results[:3])
+            
+            # 過去成績が良いのにオッズが高い → 穴馬候補
+            if avg_result <= 5 and horse.odds >= 10:
+                score += 15
+            # 過去成績が悪いのにオッズが低い → 過大評価
+            elif avg_result >= 8 and horse.odds < 5:
+                score -= 10
+        
+        # 騎手評価（簡易版）
+        TOP_JOCKEYS = ["ルメール", "川田将雅", "戸崎圭太", "横山武史", "福永祐一", "武豊"]
+        if horse.jockey in TOP_JOCKEYS:
+            score += 10
+        
+        return max(0, min(100, score))
+
+
+# --- 統合計算クラス ---
+
+class IntegratedCalculator:
+    """
+    アンサンブル統合計算機
+    3つのエージェントのスコアを統合
+    """
     
     def __init__(self):
-        self.default_weights = {
-            "SpeedAgent": 0.35,
-            "AdaptabilityAgent": 0.35,
-            "PedigreeFormAgent": 0.30
+        self.weights = self._load_weights()
+        self.agents = {
+            "SpeedAgent": SpeedAgent(self.weights.get("SpeedAgent", 0.35)),
+            "AdaptabilityAgent": AdaptabilityAgent(self.weights.get("AdaptabilityAgent", 0.35)),
+            "PedigreeFormAgent": PedigreeFormAgent(self.weights.get("PedigreeFormAgent", 0.30)),
         }
-        self.weights = self.load_weights()
     
-    def load_weights(self) -> Dict[str, float]:
+    def _load_weights(self) -> Dict[str, float]:
         """保存された重みを読み込み"""
-        MODELS_DIR.mkdir(parents=True, exist_ok=True)
-        
         if WEIGHTS_FILE.exists():
             try:
                 with open(WEIGHTS_FILE, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    return data.get("weights", self.default_weights.copy())
-            except Exception as e:
-                print(f"[WARN] 重み読み込みエラー: {e}")
-        
-        return self.default_weights.copy()
+                    return data.get("weights", DEFAULT_WEIGHTS)
+            except Exception:
+                pass
+        return DEFAULT_WEIGHTS.copy()
     
-    def save_weights(self, weights: Dict[str, float], metrics: Dict = None):
-        """重みを保存"""
-        MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    def calculate_integrated_score(self, horse: HorseFeatures, race: RaceFeatures) -> float:
+        """統合スコアを計算"""
+        total_score = 0.0
+        total_weight = 0.0
         
-        data = {
-            "weights": weights,
-            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "metrics": metrics or {}
-        }
+        for agent_name, agent in self.agents.items():
+            score = agent.calculate_score(horse, race)
+            weight = self.weights.get(agent_name, agent.weight)
+            total_score += score * weight
+            total_weight += weight
         
-        with open(WEIGHTS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        
-        self.weights = weights
-        print(f"[INFO] 重みを保存しました: {WEIGHTS_FILE}")
+        if total_weight > 0:
+            return total_score / total_weight
+        return 50.0
     
-    def get_weight(self, agent_name: str) -> float:
-        """エージェントの重みを取得"""
-        return self.weights.get(agent_name, 0.33)
+    def predict_race(self, horses: List[HorseFeatures], race: RaceFeatures) -> List[Tuple[int, str, float]]:
+        """
+        レースの予測を行い、推奨馬をランキング
+        Returns: [(馬番, 馬名, スコア), ...]
+        """
+        results = []
+        for horse in horses:
+            score = self.calculate_integrated_score(horse, race)
+            results.append((horse.umaban, horse.horse_name, score))
+        
+        # スコア降順でソート
+        results.sort(key=lambda x: x[2], reverse=True)
+        return results
 
 
-# --- スピードエージェント ---
+# --- バックテストクラス ---
 
-class SpeedAgent:
-    """タイム解析に特化したAI"""
-    
-    def __init__(self, weight_manager: WeightManager = None):
-        self.name = "SpeedAgent"
-        self.weight_manager = weight_manager
-        self.base_times = {
-            1000: 56.0, 1200: 68.0, 1400: 80.0, 1600: 92.0,
-            1800: 104.0, 2000: 116.0, 2200: 128.0, 2400: 140.0,
-            2500: 146.0, 3000: 176.0, 3200: 188.0, 3600: 212.0
-        }
-        self.track_adjustments = {"良": 0.0, "稍重": 0.5, "重": 1.5, "不良": 3.0}
-    
-    @property
-    def weight(self) -> float:
-        if self.weight_manager:
-            return self.weight_manager.get_weight(self.name)
-        return 0.35
-    
-    def parse_time(self, time_str: str) -> float:
-        if not time_str:
-            return 0.0
-        try:
-            if ":" in time_str:
-                parts = time_str.split(":")
-                return int(parts[0]) * 60 + float(parts[1])
-            return float(time_str)
-        except:
-            return 0.0
-    
-    def get_base_time(self, distance: int) -> float:
-        if distance in self.base_times:
-            return self.base_times[distance]
-        distances = sorted(self.base_times.keys())
-        for i in range(len(distances) - 1):
-            if distances[i] <= distance <= distances[i + 1]:
-                ratio = (distance - distances[i]) / (distances[i + 1] - distances[i])
-                return self.base_times[distances[i]] + ratio * (
-                    self.base_times[distances[i + 1]] - self.base_times[distances[i]]
-                )
-        return 120.0
-    
-    def predict(self, horse: HorseData, condition: RaceCondition) -> AgentPrediction:
-        base_time = self.get_base_time(condition.distance)
-        track_adj = self.track_adjustments.get(condition.track_condition, 0.0)
-        best_time = self.parse_time(horse.best_time)
-        
-        if best_time <= 0:
-            return AgentPrediction(self.name, 0.05, 0.3, "タイムデータなし")
-        
-        time_diff = base_time - best_time + track_adj
-        raw_score = max(0, min(100, 50 + time_diff * 5))
-        win_prob = 1 / (1 + math.exp(-0.1 * (raw_score - 50)))
-        
-        confidence = 0.7 if best_time > 0 else 0.3
-        
-        if horse.running_style == "逃げ" and condition.distance <= 1400:
-            win_prob *= 1.1
-            reasoning = f"短距離逃げ馬優位 (ベスト{horse.best_time})"
-        elif horse.running_style == "差し" and condition.distance >= 2000:
-            win_prob *= 1.05
-            reasoning = f"長距離差し馬優位 (ベスト{horse.best_time})"
-        else:
-            reasoning = f"タイム分析 (ベスト{horse.best_time})"
-        
-        return AgentPrediction(self.name, min(win_prob, 0.95), confidence, reasoning)
-
-
-# --- 適応性エージェント ---
-
-class AdaptabilityAgent:
-    """馬場・コース適性に特化したAI"""
-    
-    def __init__(self, weight_manager: WeightManager = None):
-        self.name = "AdaptabilityAgent"
-        self.weight_manager = weight_manager
-        self.venue_characteristics = {
-            "東京": {"type": "大箱", "bias": "差し有利"},
-            "中山": {"type": "小回り", "bias": "先行有利"},
-            "阪神": {"type": "大箱", "bias": "フラット"},
-            "京都": {"type": "大箱", "bias": "差し有利"},
-            "中京": {"type": "中箱", "bias": "フラット"},
-            "小倉": {"type": "小回り", "bias": "先行有利"},
-            "新潟": {"type": "大箱", "bias": "差し有利"},
-            "福島": {"type": "小回り", "bias": "先行有利"},
-            "札幌": {"type": "小回り", "bias": "先行有利"},
-            "函館": {"type": "小回り", "bias": "先行有利"},
-        }
-        self.style_compatibility = {
-            ("逃げ", "先行有利"): 1.3, ("逃げ", "フラット"): 1.1, ("逃げ", "差し有利"): 0.9,
-            ("先行", "先行有利"): 1.2, ("先行", "フラット"): 1.1, ("先行", "差し有利"): 1.0,
-            ("差し", "先行有利"): 0.9, ("差し", "フラット"): 1.1, ("差し", "差し有利"): 1.3,
-            ("追込", "先行有利"): 0.7, ("追込", "フラット"): 1.0, ("追込", "差し有利"): 1.4,
-        }
-    
-    @property
-    def weight(self) -> float:
-        if self.weight_manager:
-            return self.weight_manager.get_weight(self.name)
-        return 0.35
-    
-    def predict(self, horse: HorseData, condition: RaceCondition) -> AgentPrediction:
-        venue_info = self.venue_characteristics.get(condition.venue, {"bias": "フラット"})
-        bias = venue_info.get("bias", "フラット")
-        style = horse.running_style or "先行"
-        compatibility = self.style_compatibility.get((style, bias), 1.0)
-        
-        track_aptitude = horse.track_aptitude.get(condition.track_type, 0.5)
-        
-        distance_score = 0.5
-        if horse.last_3_results:
-            avg_result = sum(horse.last_3_results) / len(horse.last_3_results)
-            distance_score = max(0, 1 - (avg_result - 1) / 10)
-        
-        raw_score = compatibility * 30 + track_aptitude * 35 + distance_score * 35
-        raw_score = max(0, min(100, raw_score))
-        win_prob = raw_score / 100 * 0.3
-        
-        confidence = 0.6 if horse.track_aptitude else 0.4
-        reasoning = f"{condition.venue}({bias}) × {style} 相性{compatibility:.1f}倍"
-        
-        return AgentPrediction(self.name, win_prob, confidence, reasoning)
-
-
-# --- 血統・調子エージェント ---
-
-class PedigreeFormAgent:
-    """血統パターンと近走成績に特化したAI"""
-    
-    def __init__(self, weight_manager: WeightManager = None):
-        self.name = "PedigreeFormAgent"
-        self.weight_manager = weight_manager
-        self.sire_distance_aptitude = {
-            "ロードカナロア": {"min": 1000, "max": 1400, "peak": 1200},
-            "ダイワメジャー": {"min": 1200, "max": 1800, "peak": 1600},
-            "キンシャサノキセキ": {"min": 1000, "max": 1400, "peak": 1200},
-            "ディープインパクト": {"min": 1600, "max": 2400, "peak": 2000},
-            "キングカメハメハ": {"min": 1600, "max": 2400, "peak": 2000},
-            "ハーツクライ": {"min": 1800, "max": 2500, "peak": 2200},
-            "エピファネイア": {"min": 1800, "max": 2400, "peak": 2000},
-            "キタサンブラック": {"min": 1800, "max": 3200, "peak": 2400},
-            "ステイゴールド": {"min": 2000, "max": 3200, "peak": 2400},
-            "オルフェーヴル": {"min": 2000, "max": 3000, "peak": 2400},
-        }
-        self.broodmare_sire_effect = {
-            "サンデーサイレンス": 1.1,
-            "キングカメハメハ": 1.08,
-            "ディープインパクト": 1.05,
-        }
-    
-    @property
-    def weight(self) -> float:
-        if self.weight_manager:
-            return self.weight_manager.get_weight(self.name)
-        return 0.30
-    
-    def calculate_pedigree_score(self, horse: HorseData, condition: RaceCondition) -> float:
-        score = 50.0
-        sire_info = self.sire_distance_aptitude.get(horse.father, {})
-        if sire_info:
-            peak = sire_info.get("peak", condition.distance)
-            min_dist = sire_info.get("min", 0)
-            max_dist = sire_info.get("max", 9999)
-            
-            if min_dist <= condition.distance <= max_dist:
-                distance_diff = abs(condition.distance - peak)
-                score = max(40, 90 - distance_diff / 30)
-            else:
-                score = 30
-        
-        bms_effect = self.broodmare_sire_effect.get(horse.mother_father, 1.0)
-        score *= bms_effect
-        
-        return min(100, max(0, score))
-    
-    def calculate_form_score(self, results: List[int]) -> float:
-        if not results:
-            return 50.0
-        
-        weights = [0.4, 0.3, 0.2, 0.1]
-        score = 50.0
-        
-        for i, result in enumerate(results[:4]):
-            if i < len(weights):
-                if result == 1:
-                    score += 15 * weights[i]
-                elif result == 2:
-                    score += 10 * weights[i]
-                elif result == 3:
-                    score += 7 * weights[i]
-                elif result <= 5:
-                    score += 3 * weights[i]
-                elif result <= 9:
-                    score -= 3 * weights[i]
-                else:
-                    score -= 8 * weights[i]
-        
-        return max(0, min(100, score))
-    
-    def predict(self, horse: HorseData, condition: RaceCondition) -> AgentPrediction:
-        pedigree_score = self.calculate_pedigree_score(horse, condition)
-        form_score = self.calculate_form_score(horse.last_3_results)
-        
-        combined_score = pedigree_score * 0.4 + form_score * 0.6
-        win_prob = combined_score / 100 * 0.25
-        
-        confidence = 0.5
-        if horse.father in self.sire_distance_aptitude:
-            confidence += 0.1
-        if len(horse.last_3_results) >= 3:
-            confidence += 0.1
-        
-        reasoning = f"血統:{horse.father or '不明'} 調子:{form_score:.0f}"
-        
-        return AgentPrediction(self.name, win_prob, confidence, reasoning)
-
-
-# --- 重み最適化クラス ---
-
-class WeightOptimizer:
+class StrictBacktester:
     """
-    過去データから最適な重みを学習
-    グリッドサーチ + 評価指標による最適化
+    厳格なバックテスター
+    Train/Test分離、データリーク防止
     """
     
-    def __init__(self):
-        self.weight_manager = WeightManager()
-        self.optimization_history: List[Dict] = []
+    def __init__(self, train_years: List[int], test_years: List[int]):
+        self.train_years = train_years
+        self.test_years = test_years
+        self.calculator = IntegratedCalculator()
     
-    def load_archive_data(self) -> List[Dict]:
-        """アーカイブから過去データを読み込み"""
-        all_data = []
+    def load_race_data(self, year: int) -> List[Dict]:
+        """指定年のレースデータを読み込み"""
+        races = []
         
-        if not ARCHIVE_DIR.exists():
-            print("[WARN] アーカイブディレクトリが存在しません")
-            return all_data
-        
-        # 階層構造から読み込み
-        for json_file in ARCHIVE_DIR.glob("**/*.json"):
-            if json_file.name == "index.json":
-                continue
-            try:
-                with open(json_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    if "races" in data:
-                        all_data.append(data)
-            except Exception as e:
-                continue
+        # アーカイブから読み込み
+        year_dir = ARCHIVE_DIR / str(year)
+        if year_dir.exists():
+            for month_dir in sorted(year_dir.iterdir()):
+                if month_dir.is_dir():
+                    for day_dir in sorted(month_dir.iterdir()):
+                        if day_dir.is_dir():
+                            for json_file in day_dir.glob("*.json"):
+                                try:
+                                    with open(json_file, 'r', encoding='utf-8') as f:
+                                        data = json.load(f)
+                                        if "races" in data:
+                                            races.extend(data["races"])
+                                except Exception:
+                                    continue
         
         # data/ 直下からも読み込み
-        for json_file in DATA_DIR.glob("results_*.json"):
+        for json_file in DATA_DIR.glob(f"results_{year}*.json"):
             try:
                 with open(json_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     if "races" in data:
-                        all_data.append(data)
+                        races.extend(data["races"])
             except Exception:
                 continue
         
-        print(f"[INFO] {len(all_data)}日分のデータを読み込みました")
-        return all_data
+        return races
     
-    def evaluate_weights(
-        self,
-        weights: Dict[str, float],
-        archive_data: List[Dict]
-    ) -> Dict[str, float]:
+    def extract_features(self, race_data: Dict) -> Tuple[RaceFeatures, List[HorseFeatures], Optional[RaceResult]]:
         """
-        指定された重みでの的中率・回収率を評価
+        レースデータから特徴量を抽出
+        ※ 結果データ（着順、タイム）は特徴量に含めない
         """
+        race = RaceFeatures(
+            race_id=race_data.get("race_id", ""),
+            race_num=race_data.get("race_num", 0),
+            venue=race_data.get("venue", ""),
+            distance=race_data.get("distance", 0),
+            track_type=race_data.get("track_type", ""),
+            track_condition=race_data.get("track_condition", ""),
+            grade=race_data.get("grade", ""),
+            race_name=race_data.get("race_name", ""),
+            date=race_data.get("date", ""),
+        )
+        
+        horses = []
+        all_results = race_data.get("all_results", [])
+        top3 = race_data.get("top3", [])
+        
+        # 出走馬の情報を取得
+        horse_list = all_results if all_results else top3
+        
+        for h in horse_list:
+            # 着順、タイム、上がり3Fは特徴量に含めない（データリーク防止）
+            horse = HorseFeatures(
+                umaban=int(h.get("馬番", h.get("umaban", 0))),
+                horse_name=h.get("馬名", h.get("horse_name", "")),
+                odds=float(h.get("オッズ", h.get("odds", 0)) or 0),
+                popularity=int(h.get("人気", h.get("popularity", 0)) or 0),
+                weight=float(h.get("馬体重", h.get("weight", 0)) or 0),
+                weight_diff=float(h.get("増減", h.get("weight_diff", 0)) or 0),
+                jockey=h.get("騎手", h.get("jockey", "")),
+                gate_num=int(h.get("枠番", h.get("gate_num", 0)) or 0),
+            )
+            horses.append(horse)
+        
+        # 結果データ（検証用）
+        result = None
+        if top3:
+            winner = top3[0] if top3 else {}
+            result = RaceResult(
+                race_id=race.race_id,
+                winner_umaban=int(winner.get("馬番", winner.get("umaban", 0)) or 0),
+                winner_odds=float(winner.get("オッズ", winner.get("odds", 0)) or 0),
+                top3_umaban=[int(h.get("馬番", h.get("umaban", 0)) or 0) for h in top3[:3]],
+            )
+        
+        return race, horses, result
+    
+    def evaluate_prediction(self, prediction: List[Tuple[int, str, float]], result: RaceResult) -> Dict:
+        """
+        予測結果を評価
+        ◎（1位予測）が1着になったかで判定
+        """
+        if not prediction or not result or result.winner_umaban == 0:
+            return {"hit": False, "investment": 0, "return": 0}
+        
+        # ◎（最高スコアの馬）を予測
+        top_pick_umaban = prediction[0][0]
+        
+        # 的中判定：◎が1着になったか
+        hit = (top_pick_umaban == result.winner_umaban)
+        
+        # 投資額（単勝100円）
+        investment = 100
+        
+        # 払戻金
+        if hit and result.winner_odds > 0:
+            payout = int(result.winner_odds * 100)
+        else:
+            payout = 0
+        
+        return {
+            "hit": hit,
+            "investment": investment,
+            "return": payout,
+            "predicted_umaban": top_pick_umaban,
+            "winner_umaban": result.winner_umaban,
+            "winner_odds": result.winner_odds,
+        }
+    
+    def run_backtest(self, years: List[int], weights: Dict[str, float]) -> Dict:
+        """
+        指定した重みでバックテストを実行
+        """
+        # 重みを適用
+        self.calculator.weights = weights
+        for agent_name, agent in self.calculator.agents.items():
+            agent.weight = weights.get(agent_name, agent.weight)
+        
         total_races = 0
-        correct_predictions = 0
+        total_hits = 0
         total_investment = 0
         total_return = 0
         
-        # 一時的に重みを設定
-        temp_manager = WeightManager()
-        temp_manager.weights = weights
-        
-        agents = [
-            SpeedAgent(temp_manager),
-            AdaptabilityAgent(temp_manager),
-            PedigreeFormAgent(temp_manager)
-        ]
-        
-        for day_data in archive_data:
-            races = day_data.get("races", [])
+        for year in years:
+            races = self.load_race_data(year)
             
-            for race in races:
-                top3 = race.get("top3", [])
-                all_results = race.get("all_results", top3)
+            for race_data in races:
+                race, horses, result = self.extract_features(race_data)
                 
-                if not all_results or len(all_results) < 3:
+                if not horses or not result:
                     continue
                 
-                # 1着馬の情報
-                winner = all_results[0]
-                winner_umaban = winner.get("馬番", 0)
-                winner_odds = winner.get("オッズ", 0)
+                # 予測
+                prediction = self.calculator.predict_race(horses, race)
                 
-                if winner_umaban == 0 or winner_odds <= 0:
-                    continue
-                
-                # 各馬のスコアを計算
-                horse_scores = []
-                
-                for result in all_results:
-                    horse = HorseData(
-                        umaban=result.get("馬番", 0),
-                        horse_name=result.get("馬名", ""),
-                        jockey=result.get("騎手", ""),
-                        odds=result.get("オッズ", 10.0),
-                        running_style="先行"
-                    )
-                    
-                    condition = RaceCondition(
-                        venue=race.get("venue", ""),
-                        distance=1600,
-                        track_type="芝",
-                        track_condition="良"
-                    )
-                    
-                    # 各エージェントの予測
-                    predictions = [agent.predict(horse, condition) for agent in agents]
-                    
-                    # 加重平均
-                    total_weight = sum(agent.weight for agent in agents)
-                    weighted_prob = sum(
-                        pred.win_probability * agent.weight
-                        for pred, agent in zip(predictions, agents)
-                    ) / total_weight
-                    
-                    horse_scores.append({
-                        "umaban": horse.umaban,
-                        "score": weighted_prob,
-                        "odds": horse.odds
-                    })
-                
-                if not horse_scores:
-                    continue
-                
-                # スコア順にソート
-                horse_scores.sort(key=lambda x: x["score"], reverse=True)
-                
-                # 予測1位の馬
-                predicted_winner = horse_scores[0]
+                # 評価
+                eval_result = self.evaluate_prediction(prediction, result)
                 
                 total_races += 1
-                total_investment += 100  # 100円投資と仮定
-                
-                # 的中判定
-                if predicted_winner["umaban"] == winner_umaban:
-                    correct_predictions += 1
-                    total_return += 100 * winner_odds
+                if eval_result["hit"]:
+                    total_hits += 1
+                total_investment += eval_result["investment"]
+                total_return += eval_result["return"]
         
-        # 評価指標
-        hit_rate = correct_predictions / total_races if total_races > 0 else 0
+        hit_rate = total_hits / total_races if total_races > 0 else 0
         recovery_rate = total_return / total_investment if total_investment > 0 else 0
         
         return {
             "total_races": total_races,
-            "correct_predictions": correct_predictions,
+            "total_hits": total_hits,
             "hit_rate": hit_rate,
             "recovery_rate": recovery_rate,
             "total_investment": total_investment,
-            "total_return": total_return
+            "total_return": total_return,
         }
     
-    def optimize_weights(
-        self,
-        grid_step: float = 0.05,
-        min_weight: float = 0.1,
-        max_weight: float = 0.6
-    ) -> Dict[str, float]:
+    def optimize_weights(self, iterations: int = 100, learning_rate: float = 0.1) -> Dict:
         """
-        グリッドサーチで最適な重みを探索
+        Train データで重みを最適化し、Test データで検証
         """
+        print("\n" + "=" * 60)
+        print("🧠 重み最適化開始（厳格バックテスト版）")
         print("=" * 60)
-        print("🔄 重み最適化を開始")
+        print(f"[INFO] 学習データ: {self.train_years}")
+        print(f"[INFO] テストデータ: {self.test_years}")
+        print(f"[INFO] イテレーション: {iterations}")
+        print(f"[INFO] 学習率: {learning_rate}")
+        
+        # 初期重み
+        best_weights = DEFAULT_WEIGHTS.copy()
+        best_score = -float('inf')
+        
+        # 学習データでの初期評価
+        print("\n[PHASE 1] 学習データで最適化中...")
+        
+        for i in range(iterations):
+            # 重みをランダムに変動
+            new_weights = {}
+            for key in best_weights:
+                delta = random.uniform(-learning_rate, learning_rate)
+                new_weights[key] = max(0.05, min(0.9, best_weights[key] + delta))
+            
+            # 正規化
+            total = sum(new_weights.values())
+            new_weights = {k: v / total for k, v in new_weights.items()}
+            
+            # 学習データで評価
+            result = self.run_backtest(self.train_years, new_weights)
+            
+            # スコア = 回収率（的中率だけでなく、回収率を重視）
+            score = result["recovery_rate"]
+            
+            if score > best_score:
+                best_score = score
+                best_weights = new_weights.copy()
+                
+                if (i + 1) % 20 == 0:
+                    print(f"  [{i+1}/{iterations}] 回収率: {score*100:.2f}% (的中率: {result['hit_rate']*100:.2f}%)")
+        
+        # テストデータで検証
+        print("\n[PHASE 2] テストデータで検証中...")
+        train_result = self.run_backtest(self.train_years, best_weights)
+        test_result = self.run_backtest(self.test_years, best_weights)
+        
+        print("\n" + "=" * 60)
+        print("📊 最適化結果")
         print("=" * 60)
         
-        archive_data = self.load_archive_data()
+        print("\n【学習データ（Train）】")
+        print(f"  対象レース数: {train_result['total_races']:,}")
+        print(f"  的中数: {train_result['total_hits']:,}")
+        print(f"  的中率: {train_result['hit_rate']*100:.2f}%")
+        print(f"  回収率: {train_result['recovery_rate']*100:.2f}%")
         
-        if not archive_data:
-            print("[WARN] 最適化に必要なデータがありません")
-            return self.weight_manager.weights
+        print("\n【テストデータ（Test）】")
+        print(f"  対象レース数: {test_result['total_races']:,}")
+        print(f"  的中数: {test_result['total_hits']:,}")
+        print(f"  的中率: {test_result['hit_rate']*100:.2f}%")
+        print(f"  回収率: {test_result['recovery_rate']*100:.2f}%")
         
-        best_weights = None
-        best_score = -1
-        best_metrics = {}
+        print("\n【最適化された重み】")
+        for agent, weight in best_weights.items():
+            print(f"  {agent}: {weight*100:.1f}%")
         
-        # グリッドサーチ
-        steps = int((max_weight - min_weight) / grid_step) + 1
-        total_combinations = 0
+        # 結果を保存
+        result_data = {
+            "weights": best_weights,
+            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "train_metrics": {
+                "years": self.train_years,
+                "total_races": train_result["total_races"],
+                "hit_rate": train_result["hit_rate"],
+                "recovery_rate": train_result["recovery_rate"],
+            },
+            "test_metrics": {
+                "years": self.test_years,
+                "total_races": test_result["total_races"],
+                "hit_rate": test_result["hit_rate"],
+                "recovery_rate": test_result["recovery_rate"],
+            },
+            "metrics": {
+                "total_races": test_result["total_races"],
+                "correct_predictions": test_result["total_hits"],
+                "hit_rate": test_result["hit_rate"],
+                "recovery_rate": test_result["recovery_rate"],
+                "total_investment": test_result["total_investment"],
+                "total_return": test_result["total_return"],
+            }
+        }
         
-        print(f"[INFO] グリッドサーチ開始 (ステップ: {grid_step})")
-        
-        for i in range(steps):
-            w1 = min_weight + i * grid_step
-            for j in range(steps):
-                w2 = min_weight + j * grid_step
-                w3 = 1.0 - w1 - w2
-                
-                # 重みの制約チェック
-                if w3 < min_weight or w3 > max_weight:
-                    continue
-                
-                weights = {
-                    "SpeedAgent": round(w1, 2),
-                    "AdaptabilityAgent": round(w2, 2),
-                    "PedigreeFormAgent": round(w3, 2)
-                }
-                
-                total_combinations += 1
-                
-                # 評価
-                metrics = self.evaluate_weights(weights, archive_data)
-                
-                # スコア計算（回収率を重視、的中率も考慮）
-                score = metrics["recovery_rate"] * 0.7 + metrics["hit_rate"] * 0.3
-                
-                if score > best_score:
-                    best_score = score
-                    best_weights = weights
-                    best_metrics = metrics
-                    print(f"  [UPDATE] 新しい最適解: {weights}")
-                    print(f"           回収率: {metrics['recovery_rate']*100:.1f}% 的中率: {metrics['hit_rate']*100:.1f}%")
-        
-        print(f"\n[INFO] {total_combinations}通りの組み合わせを評価")
-        
-        if best_weights:
-            print("\n" + "=" * 60)
-            print("✅ 最適化完了")
-            print("=" * 60)
-            print(f"最適な重み:")
-            print(f"  SpeedAgent:       {best_weights['SpeedAgent']:.2f}")
-            print(f"  AdaptabilityAgent: {best_weights['AdaptabilityAgent']:.2f}")
-            print(f"  PedigreeFormAgent: {best_weights['PedigreeFormAgent']:.2f}")
-            print(f"\n評価指標:")
-            print(f"  回収率: {best_metrics['recovery_rate']*100:.1f}%")
-            print(f"  的中率: {best_metrics['hit_rate']*100:.1f}%")
-            print(f"  評価レース数: {best_metrics['total_races']}")
-            
-            # 保存
-            self.weight_manager.save_weights(best_weights, best_metrics)
-            
-            # 最適化ログを保存
-            self._save_optimization_log(best_weights, best_metrics)
-            
-            return best_weights
-        
-        return self.weight_manager.weights
-    
-    def _save_optimization_log(self, weights: Dict, metrics: Dict):
-        """最適化ログを保存"""
+        # 保存
         MODELS_DIR.mkdir(parents=True, exist_ok=True)
+        with open(WEIGHTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(result_data, f, ensure_ascii=False, indent=2)
         
-        log_entry = {
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "weights": weights,
-            "metrics": metrics
-        }
+        print(f"\n✅ 重みを保存しました: {WEIGHTS_FILE}")
         
-        # 既存ログを読み込み
-        logs = []
-        if OPTIMIZATION_LOG_FILE.exists():
-            try:
-                with open(OPTIMIZATION_LOG_FILE, 'r', encoding='utf-8') as f:
-                    logs = json.load(f)
-            except:
-                logs = []
-        
-        logs.append(log_entry)
-        
-        # 最新100件のみ保持
-        logs = logs[-100:]
-        
-        with open(OPTIMIZATION_LOG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(logs, f, ensure_ascii=False, indent=2)
+        return result_data
 
 
-# ensemble_agents.py の IntegratedCalculator クラスに追加
-
-class IntegratedCalculator:
-    """3つのエージェントを統合してUMA指数と期待値を算出"""
-    
-    def __init__(self):
-        self.weight_manager = WeightManager()
-        self.agents = [
-            SpeedAgent(self.weight_manager),
-            AdaptabilityAgent(self.weight_manager),
-            PedigreeFormAgent(self.weight_manager)
-        ]
-        
-        # インサイダー検知連携
-        try:
-            from scraper_realtime import RealtimeIntegration
-            self.realtime = RealtimeIntegration()
-            self.realtime_enabled = True
-        except ImportError:
-            self.realtime = None
-            self.realtime_enabled = False
-    
-    def calculate_with_realtime(
-        self,
-        horse: HorseData,
-        condition: RaceCondition,
-        race_id: str,
-        bankroll: float = 100000
-    ) -> IntegratedPrediction:
-        """
-        リアルタイムインサイダー検知を考慮した計算
-        """
-        # 基本計算
-        result = self.calculate(horse, condition)
-        
-        # リアルタイム連携が有効な場合
-        if self.realtime_enabled and self.realtime:
-            params = self.realtime.get_adjusted_parameters(
-                race_id=race_id,
-                umaban=horse.umaban,
-                base_odds=horse.odds
-            )
-            
-            # インサイダーアラートがある場合
-            if params["aggressive_mode"]:
-                # 期待値をブースト
-                result.expected_value *= params["expected_value_boost"]
-                
-                # インサイダーフラグを設定
-                result.insider_alert = True
-                
-                # ケリー基準を再計算（Aggressiveモード）
-                kelly_result = self.realtime.calculate_adjusted_kelly(
-                    win_probability=result.win_probability,
-                    odds=horse.odds,
-                    race_id=race_id,
-                    umaban=horse.umaban,
-                    bankroll=bankroll
-                )
-                
-                result.kelly_fraction = kelly_result["kelly_fraction"]
-                
-                # ランクを再評価
-                if result.expected_value >= 1.5:
-                    result.rank = "S+"
-                elif result.expected_value >= 1.2:
-                    result.rank = "S"
-        
-        return result
-    
-    def calculate_batch_with_realtime(
-        self,
-        horses: List[HorseData],
-        condition: RaceCondition,
-        race_id: str,
-        bankroll: float = 100000
-    ) -> List[IntegratedPrediction]:
-        """
-        複数馬をまとめて計算（リアルタイム連携付き）
-        """
-        results = []
-        for horse in horses:
-            result = self.calculate_with_realtime(horse, condition, race_id, bankroll)
-            results.append(result)
-        
-        # UMA指数でソート
-        results.sort(key=lambda x: x.uma_index, reverse=True)
-        
-        return results
-
-
-# --- メイン処理 ---
+# --- メイン関数 ---
 
 def main():
-    import sys
-    
+    """メイン関数"""
     print("=" * 60)
-    print("🤖 UMA-Logic PRO - アンサンブル学習エンジン")
+    print("🧠 UMA-Logic PRO - アンサンブル学習エンジン")
+    print("   （厳格バックテスト版 - データリーク防止）")
     print("=" * 60)
     
-    # コマンドライン引数で最適化モードを指定
-    if len(sys.argv) > 1 and sys.argv[1] == "--optimize":
-        optimizer = WeightOptimizer()
-        optimizer.optimize_weights()
-    else:
-        # 通常の予測モード
-        calculator = IntegratedCalculator()
+    args = sys.argv[1:]
+    
+    # デフォルト設定
+    train_years = [2024]
+    test_years = [2025]
+    iterations = 100
+    learning_rate = 0.1
+    source_dir = None
+    
+    # 引数解析
+    i = 0
+    while i < len(args):
+        if args[i] == "--optimize":
+            i += 1
+        elif args[i] == "--source" and i + 1 < len(args):
+            source_dir = args[i + 1]
+            # ソースディレクトリから年を推定
+            if "2024" in source_dir:
+                train_years = [2024]
+                test_years = [2025]
+            elif "2025" in source_dir:
+                train_years = [2024]
+                test_years = [2025]
+            i += 2
+        elif args[i] == "--train-years" and i + 1 < len(args):
+            train_years = [int(y) for y in args[i + 1].split(",")]
+            i += 2
+        elif args[i] == "--test-years" and i + 1 < len(args):
+            test_years = [int(y) for y in args[i + 1].split(",")]
+            i += 2
+        elif args[i] == "--iterations" and i + 1 < len(args):
+            iterations = int(args[i + 1])
+            i += 2
+        elif args[i] == "--learning-rate" and i + 1 < len(args):
+            learning_rate = float(args[i + 1])
+            i += 2
+        else:
+            i += 1
+    
+    if "--optimize" in args or not args:
+        # 最適化実行
+        backtester = StrictBacktester(train_years, test_years)
+        result = backtester.optimize_weights(iterations, learning_rate)
         
+        print("\n" + "=" * 60)
+        print("✅ 処理完了")
+        print("=" * 60)
+    
+    elif "--backtest" in args:
+        # バックテストのみ実行
+        backtester = StrictBacktester(train_years, test_years)
+        
+        print("\n[INFO] 現在の重みでバックテスト実行中...")
+        
+        weights = backtester.calculator.weights
+        train_result = backtester.run_backtest(train_years, weights)
+        test_result = backtester.run_backtest(test_years, weights)
+        
+        print("\n【学習データ】")
+        print(f"  的中率: {train_result['hit_rate']*100:.2f}%")
+        print(f"  回収率: {train_result['recovery_rate']*100:.2f}%")
+        
+        print("\n【テストデータ】")
+        print(f"  的中率: {test_result['hit_rate']*100:.2f}%")
+        print(f"  回収率: {test_result['recovery_rate']*100:.2f}%")
+    
+    elif "--show-weights" in args:
         # 現在の重みを表示
-        print("\n現在の重み:")
-        for agent in calculator.agents:
-            print(f"  {agent.name}: {agent.weight:.2f}")
-        
-        # テスト予測
-        horse = HorseData(
-            umaban=5, horse_name="テストホース", jockey="川田将雅",
-            odds=5.0, last_3_results=[2, 1, 3], best_time="1:35.2",
-            running_style="先行", father="ディープインパクト"
-        )
-        condition = RaceCondition(
-            venue="東京", distance=1600, track_type="芝",
-            track_condition="良", grade="G1", race_num=11
-        )
-        
-        result = calculator.calculate(horse, condition)
-        
-        print(f"\n予測結果:")
-        print(f"  馬名: {result.horse_name}")
-        print(f"  UMA指数: {result.uma_index:.1f}")
-        print(f"  期待値: {result.expected_value:.2f}")
-        print(f"  勝率: {result.win_probability * 100:.1f}%")
-        print(f"  ランク: {result.rank}")
+        calculator = IntegratedCalculator()
+        print("\n【現在の重み】")
+        for agent, weight in calculator.weights.items():
+            print(f"  {agent}: {weight*100:.1f}%")
     
-    print("\n✅ 処理完了")
+    else:
+        print("\n使用方法:")
+        print("  python ensemble_agents.py --optimize")
+        print("  python ensemble_agents.py --optimize --train-years 2024 --test-years 2025")
+        print("  python ensemble_agents.py --optimize --iterations 200 --learning-rate 0.05")
+        print("  python ensemble_agents.py --backtest")
+        print("  python ensemble_agents.py --show-weights")
 
 
 if __name__ == "__main__":

@@ -308,6 +308,7 @@ class ArchiveManager:
 
     def get_available_venues(self, date_str: str) -> List[str]:
         """指定日の利用可能な競馬場のリストを取得"""
+        # date_str: YYYYMMDD または YYYY-MM-DD
         if "-" in date_str:
             date_key = date_str
         else:
@@ -321,6 +322,7 @@ class ArchiveManager:
         指定日のレースデータを取得
         アーカイブから高速に読み込み
         """
+        # date_str: YYYYMMDD形式に正規化
         if "-" in date_str:
             date_str = date_str.replace("-", "")
 
@@ -342,7 +344,9 @@ class ArchiveManager:
             return None
 
     def get_races_by_date_and_venue(self, date_str: str, venue: str) -> List[Dict]:
-        """指定日・指定競馬場のレースデータを取得"""
+        """
+        指定日・指定競馬場のレースデータを取得
+        """
         data = self.get_races_by_date(date_str)
         if not data:
             return []
@@ -402,20 +406,34 @@ class ArchiveManager:
 # --- UI用高速検索クラス ---
 
 class ArchiveSearcher:
-    """UIからの高速検索用クラス"""
+    """
+    UIからの高速検索用クラス
+    インデックスを使用して高速にデータを取得
+    """
 
     def __init__(self):
         self.manager = ArchiveManager()
 
     def get_hierarchical_data(self) -> Dict:
-        """階層型検索用のデータ構造を取得"""
-        result = {"years": []}
+        """
+        階層型検索用のデータ構造を取得
+        年 > 月 > 日 > 競馬場 の階層
+        """
+        result = {
+            "years": []
+        }
 
         for year in self.manager.get_available_years():
-            year_data = {"year": year, "months": []}
+            year_data = {
+                "year": year,
+                "months": []
+            }
 
             for month in self.manager.get_available_months(year):
-                month_data = {"month": month, "days": []}
+                month_data = {
+                    "month": month,
+                    "days": []
+                }
 
                 for day in self.manager.get_available_days(year, month):
                     date_str = f"{year}{month}{day}"
@@ -441,9 +459,12 @@ class ArchiveSearcher:
         day: str = None,
         venue: str = None
     ) -> List[Dict]:
-        """条件に基づいてレースを検索"""
+        """
+        条件に基づいてレースを検索
+        """
         results = []
 
+        # 日付が指定されている場合
         if year and month and day:
             date_str = f"{year}{month}{day}"
 
@@ -455,6 +476,7 @@ class ArchiveSearcher:
 
             return races
 
+        # 年月のみ指定されている場合
         if year and month:
             days = self.manager.get_available_days(year, month)
             for d in days:
@@ -467,6 +489,7 @@ class ArchiveSearcher:
                             results.append(race)
             return results
 
+        # 年のみ指定されている場合
         if year:
             months = self.manager.get_available_months(year)
             for m in months:
@@ -497,14 +520,17 @@ def main():
         command = sys.argv[1]
 
         if command == "--archive-all":
+            # 全ファイルをアーカイブ
             result = manager.archive_all_results()
             print(f"\n結果: {result}")
 
         elif command == "--rebuild-index":
+            # インデックス再構築
             result = manager.rebuild_index()
             print(f"\n結果: {result}")
 
         elif command == "--stats":
+            # 統計情報表示
             stats = manager.get_statistics()
             print("\n📊 アーカイブ統計")
             print("-" * 40)
@@ -522,6 +548,7 @@ def main():
                 print(f"  {venue}: {data['total_dates']}日 / {data['total_races']}レース")
 
         elif command == "--archive-date":
+            # 指定日をアーカイブ
             if len(sys.argv) > 2:
                 date_str = sys.argv[2]
                 result_file = DATA_DIR / f"{RESULTS_PREFIX}{date_str}.json"
@@ -535,15 +562,17 @@ def main():
                 print("[ERROR] 日付を指定してください (例: --archive-date 20240106)")
 
         elif command == "--search":
+            # 検索テスト
             searcher = ArchiveSearcher()
             hierarchical = searcher.get_hierarchical_data()
             print("\n📂 階層型データ構造:")
-            for year_data in hierarchical["years"][:2]:
+            for year_data in hierarchical["years"][:2]:  # 最新2年のみ表示
                 print(f"\n  {year_data['year']}年:")
-                for month_data in year_data["months"][:3]:
+                for month_data in year_data["months"][:3]:  # 最新3ヶ月のみ表示
                     print(f"    {month_data['month']}月: {len(month_data['days'])}日")
 
         elif command == "--check":
+            # アーカイブ状態チェック
             if len(sys.argv) > 2:
                 date_str = sys.argv[2]
                 if manager.check_archived(date_str):
@@ -564,6 +593,7 @@ def main():
             print("  --check DATE       : アーカイブ状態を確認")
 
     else:
+        # デフォルト: 本日の結果をアーカイブ
         print("\n[INFO] 本日の結果をアーカイブします...")
         manager.archive_today_results()
 

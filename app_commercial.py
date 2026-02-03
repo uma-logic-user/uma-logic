@@ -1,5 +1,8 @@
 # app_commercial.py
-# UMA-Logic Pro - 商用グレード完成版（6タブ構成 + エラーハンドリング強化）
+# UMA-Logic PRO - 商用グレード完全版UI
+# 完全版（Full Code）- そのままコピー＆ペーストで動作
+# レース番号昇順ソート対応 + 階層型検索UI統合
+# weights.json 自動適用機能追加
 
 import streamlit as st
 import pandas as pd
@@ -7,6 +10,10 @@ import numpy as np
 from datetime import datetime, timedelta
 import json
 from pathlib import Path
+import sys
+
+# scriptsディレクトリをパスに追加
+sys.path.insert(0, str(Path(__file__).parent / "scripts"))
 
 # Plotlyのインポート
 try:
@@ -25,7 +32,7 @@ except ImportError:
 
 # --- ページ設定 ---
 st.set_page_config(
-    page_title="UMA-Logic Pro",
+    page_title="UMA-Logic PRO",
     page_icon="🐎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -34,599 +41,1252 @@ st.set_page_config(
 # --- 定数 ---
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+ARCHIVE_DIR = DATA_DIR / "archive"
+ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+MODELS_DIR = DATA_DIR / "models"
+MODELS_DIR.mkdir(parents=True, exist_ok=True)
 PREDICTIONS_PREFIX = "predictions_"
 RESULTS_PREFIX = "results_"
+ALERTS_FILE = DATA_DIR / "insider_alerts.json"
+HISTORY_FILE = DATA_DIR / "history.json"
+INDEX_FILE = ARCHIVE_DIR / "index.json"
+WEIGHTS_FILE = MODELS_DIR / "weights.json"
+
+# 曜日の日本語表記
+WEEKDAY_JP = ["月", "火", "水", "木", "金", "土", "日"]
+
+# デフォルトの重み
+DEFAULT_WEIGHTS = {
+    "SpeedAgent": 0.35,
+    "AdaptabilityAgent": 0.35,
+    "PedigreeFormAgent": 0.30
+}
+
+# 有名種牡馬のスコア補正
+SIRE_BONUS = {
+    "ディープインパクト": 15,
+    "キングカメハメハ": 12,
+    "ロードカナロア": 12,
+    "ハーツクライ": 10,
+    "エピファネイア": 10,
+    "ドゥラメンテ": 10,
+    "キタサンブラック": 10,
+    "モーリス": 8,
+    "オルフェーヴル": 8,
+    "ゴールドシップ": 5,
+}
+
+# トップ騎手
+TOP_JOCKEYS = ["ルメール", "川田将雅", "戸崎圭太", "横山武史", "福永祐一", "武豊"]
 
 # --- CSSスタイル ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap' );
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
 
     html, body, [class*="st-"], .stApp {
         font-family: 'Noto Sans JP', sans-serif;
-        background-color: #1A1A2E;
-        color: #FFFFFF;
+        background-color: #0e1117;
     }
 
-    .stSidebar {
-        background-color: #16213E;
-    }
-
-    h1, h2, h3 {
-        color: #F6C953 !important;
-    }
-
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #16213E;
-        padding: 10px;
+    .main-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 1.5rem;
         border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #e94560;
     }
 
-    .stTabs [data-baseweb="tab"] {
-        background-color: #1A1A2E;
+    .main-header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 2rem;
+    }
+
+    .main-header p {
+        color: #a0a0a0;
+        margin: 0.5rem 0 0 0;
+    }
+
+    .race-card {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+        border: 1px solid #2a2a4a;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .race-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(233, 69, 96, 0.15);
+    }
+
+    .race-title {
+        color: #e94560;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .race-info {
+        color: #a0a0a0;
+        font-size: 0.85rem;
+    }
+
+    .horse-row {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #2a2a4a;
+    }
+
+    .horse-row:last-child {
+        border-bottom: none;
+    }
+
+    .horse-number {
+        background: #e94560;
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .horse-name {
+        color: #ffffff;
+        font-weight: 600;
+        flex: 1;
+    }
+
+    .horse-odds {
+        color: #4ade80;
+        font-weight: 600;
+    }
+
+    .rank-badge {
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        margin-right: 0.5rem;
+    }
+
+    .rank-s-plus {
+        background: linear-gradient(135deg, #ffd700, #ffaa00);
+        color: #000;
+    }
+
+    .rank-s {
+        background: linear-gradient(135deg, #e94560, #ff6b6b);
+        color: #fff;
+    }
+
+    .rank-a {
+        background: linear-gradient(135deg, #4ade80, #22c55e);
+        color: #000;
+    }
+
+    .rank-b {
+        background: #3b82f6;
+        color: #fff;
+    }
+
+    .rank-c {
+        background: #6b7280;
+        color: #fff;
+    }
+
+    .insider-alert {
+        background: linear-gradient(135deg, #ff6b6b, #e94560);
+        color: white;
+        padding: 1rem;
         border-radius: 8px;
-        padding: 12px 24px;
-        color: #FFFFFF;
-        font-weight: bold;
-    }
-
-    .stTabs [aria-selected="true"] {
-        background-color: #F6C953 !important;
-        color: #1A1A2E !important;
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(246, 201, 83, 0.7); }
-        70% { box-shadow: 0 0 0 15px rgba(246, 201, 83, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(246, 201, 83, 0); }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
     }
 
-    .pulse-s-rank {
-        animation: pulse 2s infinite;
-        border: 2px solid #F6C953;
+    .metric-card {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
         border-radius: 10px;
-        padding: 15px;
-        background-color: rgba(246, 201, 83, 0.1);
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid #2a2a4a;
     }
 
-    .rank-s { color: #F6C953; font-weight: bold; font-size: 1.2em; }
-    .rank-a { color: #87CEEB; font-weight: bold; }
-    .rank-b { color: #AAAAAA; }
-
-    .gold-badge {
-        display: inline-block;
-        background-color: #F6C953;
-        color: #1A1A2E;
-        padding: 3px 10px;
-        border-radius: 15px;
-        font-weight: bold;
-        font-size: 0.85em;
-        margin-left: 8px;
+    .metric-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #4ade80;
     }
 
-    .hit-badge {
-        display: inline-block;
-        background: linear-gradient(135deg, #4CAF50, #45a049);
-        color: white;
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-weight: bold;
-        font-size: 0.9em;
-        margin-left: 10px;
+    .metric-label {
+        color: #a0a0a0;
+        font-size: 0.85rem;
     }
 
-    .venue-card {
-        background: linear-gradient(135deg, #2a2a4e, #1A1A2E);
-        padding: 15px 20px;
+    .payout-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .payout-table th, .payout-table td {
+        padding: 0.5rem;
+        text-align: left;
+        border-bottom: 1px solid #2a2a4a;
+    }
+
+    .payout-table th {
+        color: #a0a0a0;
+        font-weight: 600;
+    }
+
+    .payout-table td {
+        color: #ffffff;
+    }
+
+    .payout-amount {
+        color: #4ade80;
+        font-weight: 700;
+    }
+
+    .venue-button {
+        background: #2a2a4a;
+        color: #ffffff;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        margin-right: 0.5rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .venue-button:hover {
+        background: #e94560;
+    }
+
+    .venue-button.active {
+        background: #e94560;
+    }
+
+    .ai-weights-card {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
         border-radius: 12px;
-        margin-bottom: 20px;
-        border-left: 4px solid #F6C953;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #4ade80;
+    }
+
+    .ai-weights-title {
+        color: #4ade80;
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .weight-bar {
+        height: 8px;
+        background: #2a2a4a;
+        border-radius: 4px;
+        margin: 0.3rem 0;
+        overflow: hidden;
+    }
+
+    .weight-fill {
+        height: 100%;
+        border-radius: 4px;
+    }
+
+    .weight-speed {
+        background: linear-gradient(90deg, #e94560, #ff6b6b);
+    }
+
+    .weight-adapt {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+
+    .weight-pedigree {
+        background: linear-gradient(90deg, #4ade80, #22c55e);
     }
 </style>
 """, unsafe_allow_html=True)
 
 
-# --- 安全なデータ読み込み関数 ---
+# --- AI重み読み込み関数 ---
 
-def safe_load_json(filepath: Path) -> dict:
-    """JSONファイルを安全に読み込む"""
-    try:
-        if filepath.exists():
-            with open(filepath, 'r', encoding='utf-8') as f:
+@st.cache_data(ttl=300)  # 5分間キャッシュ
+def load_ai_weights() -> dict:
+    """weights.json から最新のAI重みを読み込み"""
+    if WEIGHTS_FILE.exists():
+        try:
+            with open(WEIGHTS_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data
+        except Exception as e:
+            st.warning(f"AI重み読み込みエラー: {e}")
+    return {
+        "weights": DEFAULT_WEIGHTS.copy(),
+        "metrics": {},
+        "train_metrics": {},
+        "test_metrics": {},
+        "updated_at": ""
+    }
+
+
+def get_agent_weights() -> dict:
+    """エージェント重みを取得"""
+    data = load_ai_weights()
+    return data.get("weights", DEFAULT_WEIGHTS.copy())
+
+
+# --- スコア計算関数（アンサンブル） ---
+
+def calculate_speed_score(horse: dict, race: dict, weight: float = 0.35) -> float:
+    """スピードスコアを計算（0-100）"""
+    score = 50.0
+    
+    odds = float(horse.get("オッズ", horse.get("odds", 0)) or 0)
+    popularity = int(horse.get("人気", horse.get("popularity", 0)) or 0)
+    gate_num = int(horse.get("枠番", horse.get("gate_num", 0)) or 0)
+    distance = int(race.get("distance", 0) or 0)
+    
+    # オッズが低い（人気がある）ほど高スコア
+    if odds > 0:
+        if odds < 2.0:
+            score += 30
+        elif odds < 5.0:
+            score += 20
+        elif odds < 10.0:
+            score += 10
+        elif odds < 20.0:
+            score += 0
+        else:
+            score -= 10
+    
+    # 人気順
+    if popularity > 0:
+        if popularity <= 3:
+            score += 15
+        elif popularity <= 6:
+            score += 5
+        else:
+            score -= 5
+    
+    # 距離適性（簡易版）
+    if distance > 0:
+        if distance <= 1400:
+            # 短距離は内枠有利
+            if gate_num <= 4:
+                score += 5
+        elif distance >= 2000:
+            # 長距離は差し馬有利（人気薄でも）
+            if popularity > 5 and odds < 30:
+                score += 5
+    
+    return max(0, min(100, score)) * weight
+
+
+def calculate_adaptability_score(horse: dict, race: dict, weight: float = 0.35) -> float:
+    """適応性スコアを計算（0-100）"""
+    score = 50.0
+    
+    gate_num = int(horse.get("枠番", horse.get("gate_num", 0)) or 0)
+    horse_weight = float(horse.get("馬体重", horse.get("weight", 0)) or 0)
+    weight_diff = float(horse.get("増減", horse.get("weight_diff", 0)) or 0)
+    distance = int(race.get("distance", 0) or 0)
+    track_condition = race.get("track_condition", "")
+    
+    # 枠順評価
+    if distance > 0 and gate_num > 0:
+        if distance <= 1400:
+            if gate_num <= 3:
+                score += 15
+            elif gate_num <= 5:
+                score += 5
+            elif gate_num >= 7:
+                score -= 5
+        elif distance <= 1800:
+            pass
+        else:
+            if gate_num >= 7:
+                score -= 10
+    
+    # 馬場状態
+    if track_condition in ["重", "不良"]:
+        if horse_weight >= 500:
+            score += 10
+        elif horse_weight <= 440:
+            score -= 5
+    
+    # 馬体重増減
+    if weight_diff != 0:
+        if abs(weight_diff) > 20:
+            score -= 10
+        elif -10 <= weight_diff <= 10:
+            score += 5
+    
+    return max(0, min(100, score)) * weight
+
+
+def calculate_pedigree_score(horse: dict, race: dict, weight: float = 0.30) -> float:
+    """血統・調子スコアを計算（0-100）"""
+    score = 50.0
+    
+    father = horse.get("父", horse.get("father", ""))
+    jockey = horse.get("騎手", horse.get("jockey", ""))
+    odds = float(horse.get("オッズ", horse.get("odds", 0)) or 0)
+    
+    # 血統評価
+    if father:
+        bonus = SIRE_BONUS.get(father, 0)
+        score += bonus
+    
+    # 騎手評価
+    if jockey in TOP_JOCKEYS:
+        score += 10
+    
+    return max(0, min(100, score)) * weight
+
+
+def calculate_uma_index(horse: dict, race: dict) -> float:
+    """
+    UMA指数を計算（3エージェントのアンサンブル）
+    weights.json の重みを自動適用
+    """
+    weights = get_agent_weights()
+    
+    speed_weight = weights.get("SpeedAgent", 0.35)
+    adapt_weight = weights.get("AdaptabilityAgent", 0.35)
+    pedigree_weight = weights.get("PedigreeFormAgent", 0.30)
+    
+    # 各エージェントのスコアを計算
+    speed_score = calculate_speed_score(horse, race, speed_weight)
+    adapt_score = calculate_adaptability_score(horse, race, adapt_weight)
+    pedigree_score = calculate_pedigree_score(horse, race, pedigree_weight)
+    
+    # 統合スコア
+    total_score = speed_score + adapt_score + pedigree_score
+    
+    return total_score
+
+
+def calculate_expected_value(uma_index: float, odds: float) -> float:
+    """期待値を計算"""
+    if odds <= 0:
+        return 0
+    
+    # UMA指数を勝率に変換（簡易版）
+    # 指数70以上 → 勝率約25%
+    # 指数60以上 → 勝率約15%
+    # 指数50以上 → 勝率約10%
+    if uma_index >= 70:
+        win_prob = 0.25
+    elif uma_index >= 60:
+        win_prob = 0.15
+    elif uma_index >= 50:
+        win_prob = 0.10
+    else:
+        win_prob = 0.05
+    
+    return win_prob * odds
+
+
+def get_rank_from_score(score: float) -> str:
+    """スコアからランクを決定"""
+    if score >= 75:
+        return "S+"
+    elif score >= 65:
+        return "S"
+    elif score >= 55:
+        return "A"
+    elif score >= 45:
+        return "B"
+    else:
+        return "C"
+
+
+# --- ヘルパー関数 ---
+
+def load_json_file(file_path: Path) -> dict:
+    """JSONファイルを読み込み"""
+    if file_path.exists():
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
-    except Exception:
-        pass
+        except Exception as e:
+            st.error(f"ファイル読み込みエラー: {e}")
     return {}
+
+
+def load_predictions(date_str: str = None) -> dict:
+    """予想データを読み込み"""
+    if date_str is None:
+        date_str = datetime.now().strftime("%Y%m%d")
+    file_path = DATA_DIR / f"{PREDICTIONS_PREFIX}{date_str}.json"
+    return load_json_file(file_path)
+
+
+def load_results(date_str: str = None) -> dict:
+    """結果データを読み込み（アーカイブ対応）"""
+    if date_str is None:
+        date_str = datetime.now().strftime("%Y%m%d")
+
+    # まずアーカイブから探す
+    year = date_str[:4]
+    month = date_str[4:6]
+    day = date_str[6:8]
+    archive_path = ARCHIVE_DIR / year / month / day / f"{RESULTS_PREFIX}{date_str}.json"
+
+    if archive_path.exists():
+        return load_json_file(archive_path)
+
+    # なければdata/から探す
+    file_path = DATA_DIR / f"{RESULTS_PREFIX}{date_str}.json"
+    return load_json_file(file_path)
+
+
+def load_insider_alerts() -> dict:
+    """インサイダーアラートを読み込み"""
+    return load_json_file(ALERTS_FILE)
+
+
+def load_history() -> list:
+    """的中履歴を読み込み"""
+    data = load_json_file(HISTORY_FILE)
+    return data.get("history", [])
+
+
+def load_archive_index() -> dict:
+    """アーカイブインデックスを読み込み"""
+    return load_json_file(INDEX_FILE)
 
 
 def get_available_dates() -> list:
     """利用可能な日付リストを取得"""
     dates = set()
+
+    # data/から取得
+    for f in DATA_DIR.glob(f"{RESULTS_PREFIX}*.json"):
+        match = f.stem.replace(RESULTS_PREFIX, "")
+        if len(match) == 8 and match.isdigit():
+            dates.add(match)
+
+    # アーカイブから取得
+    if ARCHIVE_DIR.exists():
+        for year_dir in ARCHIVE_DIR.iterdir():
+            if not year_dir.is_dir() or not year_dir.name.isdigit():
+                continue
+            for month_dir in year_dir.iterdir():
+                if not month_dir.is_dir() or not month_dir.name.isdigit():
+                    continue
+                for day_dir in month_dir.iterdir():
+                    if not day_dir.is_dir() or not day_dir.name.isdigit():
+                        continue
+                    date_str = f"{year_dir.name}{month_dir.name}{day_dir.name}"
+                    dates.add(date_str)
+
+    return sorted(dates, reverse=True)
+
+
+def format_date_jp(date_str: str) -> str:
+    """日付を日本語形式にフォーマット"""
     try:
-        for filepath in DATA_DIR.glob(f"{PREDICTIONS_PREFIX}*.json"):
-            date_str = filepath.stem.replace(PREDICTIONS_PREFIX, "")
-            if len(date_str) == 8 and date_str.isdigit():
-                try:
-                    dates.add(datetime.strptime(date_str, "%Y%m%d").date())
-                except ValueError:
-                    continue
-        for filepath in DATA_DIR.glob(f"{RESULTS_PREFIX}*.json"):
-            date_str = filepath.stem.replace(RESULTS_PREFIX, "")
-            if len(date_str) == 8 and date_str.isdigit():
-                try:
-                    dates.add(datetime.strptime(date_str, "%Y%m%d").date())
-                except ValueError:
-                    continue
+        dt = datetime.strptime(date_str, "%Y%m%d")
+        weekday = WEEKDAY_JP[dt.weekday()]
+        return f"{dt.month}月{dt.day}日 ({weekday})"
     except Exception:
-        pass
-    return sorted(dates, reverse=True) if dates else [datetime.now().date()]
+        return date_str
 
 
-def load_predictions(date) -> dict:
-    """指定日の予想データを読み込む"""
-    date_str = date.strftime("%Y%m%d")
-    filepath = DATA_DIR / f"{PREDICTIONS_PREFIX}{date_str}.json"
-    data = safe_load_json(filepath)
-    if data:
-        return data
-    latest_path = DATA_DIR / "latest_predictions.json"
-    return safe_load_json(latest_path) or {"races": [], "date": date.strftime("%Y-%m-%d")}
-
-
-def load_results(date) -> dict:
-    """指定日の結果データを読み込む"""
-    date_str = date.strftime("%Y%m%d")
-    filepath = DATA_DIR / f"{RESULTS_PREFIX}{date_str}.json"
-    return safe_load_json(filepath) or {"races": [], "date": date.strftime("%Y-%m-%d")}
-
-
-def load_history() -> list:
-    """的中履歴を読み込む"""
-    filepath = DATA_DIR / "history.json"
-    data = safe_load_json(filepath)
-    return data if isinstance(data, list) else []
-
-
-def check_hit(prediction: dict, result: dict) -> dict:
-    """予想と結果を照合して的中判定"""
-    hit_result = {
-        "単勝": {"hit": False, "payout": 0},
-        "複勝": {"hit": False, "payout": 0},
-        "馬連": {"hit": False, "payout": 0},
-        "三連複": {"hit": False, "payout": 0},
+def get_rank_badge_html(rank: str) -> str:
+    """ランクバッジのHTMLを生成"""
+    rank_classes = {
+        "S+": "rank-s-plus",
+        "S": "rank-s",
+        "A": "rank-a",
+        "B": "rank-b",
+        "C": "rank-c",
+        "D": "rank-c"
     }
-    
-    if not result or not prediction:
-        return hit_result
-    
-    top3 = result.get("top3", [])
-    if len(top3) < 3:
-        return hit_result
-    
-    first = top3[0].get("馬番", 0)
-    second = top3[1].get("馬番", 0)
-    third = top3[2].get("馬番", 0)
-    
-    horses = prediction.get("horses", [])
-    honmei = next((h["馬番"] for h in horses if h.get("印") == "◎"), 0)
-    taikou = next((h["馬番"] for h in horses if h.get("印") == "○"), 0)
-    tanpana = next((h["馬番"] for h in horses if h.get("印") == "▲"), 0)
-    
-    payouts = result.get("payouts", {})
-    
-    if honmei == first:
-        hit_result["単勝"] = {"hit": True, "payout": payouts.get("単勝", 0)}
-    
-    if honmei in [first, second, third]:
-        fukusho = payouts.get("複勝", {})
-        payout = fukusho.get(str(honmei), 0) if isinstance(fukusho, dict) else 0
-        hit_result["複勝"] = {"hit": True, "payout": payout}
-    
-    if {honmei, taikou} == {first, second}:
-        hit_result["馬連"] = {"hit": True, "payout": payouts.get("馬連", 0)}
-    
-    if {honmei, taikou, tanpana} == {first, second, third}:
-        hit_result["三連複"] = {"hit": True, "payout": payouts.get("三連複", 0)}
-    
-    return hit_result
+    css_class = rank_classes.get(rank, "rank-c")
+    return f'<span class="rank-badge {css_class}">{rank}</span>'
+
+
+def sort_races_by_number(races: list) -> list:
+    """レースを番号順にソート（1R→12R）"""
+    def get_race_num(race):
+        race_num = race.get("race_num", 0)
+        if isinstance(race_num, str):
+            # "1R" → 1 のように変換
+            num_str = ''.join(filter(str.isdigit, race_num))
+            return int(num_str) if num_str else 0
+        return race_num if race_num else 0
+
+    return sorted(races, key=get_race_num)
+
+
+# --- メインヘッダー ---
+st.markdown("""
+<div class="main-header">
+    <h1>🐎 UMA-Logic PRO</h1>
+    <p>AI競馬予想システム - 商用グレード完全版（アンサンブル学習対応）</p>
+</div>
+""", unsafe_allow_html=True)
 
 
 # --- サイドバー ---
-st.sidebar.markdown("# 🐎 UMA-Logic Pro")
-st.sidebar.markdown("---")
+with st.sidebar:
+    st.markdown("### ⚙️ 設定")
 
-st.sidebar.markdown("### 📅 アーカイブ")
-available_dates = get_available_dates()
+    # 資金設定
+    bankroll = st.number_input(
+        "💰 総資金 (円)",
+        min_value=10000,
+        max_value=10000000,
+        value=100000,
+        step=10000
+    )
 
-selected_date = st.sidebar.date_input(
-    "表示する日付",
-    value=available_dates[0] if available_dates else datetime.now().date(),
-    format="YYYY/MM/DD"
-)
+    # ケリー基準モード
+    kelly_mode = st.selectbox(
+        "📊 投資モード",
+        ["ハーフケリー（安全）", "フルケリー（標準）", "アグレッシブ（積極的）"]
+    )
 
-st.sidebar.markdown("---")
+    st.markdown("---")
 
-st.sidebar.markdown("### 💰 投資設定")
-total_budget = st.sidebar.slider("総予算", 1000, 100000, 10000, 1000, format="¥%d")
-investment_style = st.sidebar.radio(
-    "投資スタイル",
-    ["A：バランス型", "B：高配当狙い"],
-    captions=["単勝〜三連単まで分散", "馬連・三連系に集中"]
-)
+    # AI重み表示
+    st.markdown("### 🧠 AI重み（自動適用）")
+    
+    ai_data = load_ai_weights()
+    weights = ai_data.get("weights", DEFAULT_WEIGHTS)
+    metrics = ai_data.get("metrics", {})
+    test_metrics = ai_data.get("test_metrics", {})
+    updated_at = ai_data.get("updated_at", "未更新")
+    
+    # 重みバー表示
+    speed_pct = weights.get("SpeedAgent", 0.35) * 100
+    adapt_pct = weights.get("AdaptabilityAgent", 0.35) * 100
+    pedigree_pct = weights.get("PedigreeFormAgent", 0.30) * 100
+    
+    st.markdown(f"""
+    <div class="ai-weights-card">
+        <div class="ai-weights-title">🔥 Speed: {speed_pct:.0f}%</div>
+        <div class="weight-bar"><div class="weight-fill weight-speed" style="width: {speed_pct}%;"></div></div>
+        <div class="ai-weights-title">🎯 Adapt: {adapt_pct:.0f}%</div>
+        <div class="weight-bar"><div class="weight-fill weight-adapt" style="width: {adapt_pct}%;"></div></div>
+        <div class="ai-weights-title">🧬 Pedigree: {pedigree_pct:.0f}%</div>
+        <div class="weight-bar"><div class="weight-fill weight-pedigree" style="width: {pedigree_pct}%;"></div></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # テストデータの成績
+    if test_metrics:
+        test_hit_rate = test_metrics.get("hit_rate", 0) * 100
+        test_recovery = test_metrics.get("recovery_rate", 0) * 100
+        st.markdown(f"**テスト成績**: 的中率 {test_hit_rate:.1f}% / 回収率 {test_recovery:.1f}%")
+    elif metrics:
+        hit_rate = metrics.get("hit_rate", 0) * 100
+        recovery = metrics.get("recovery_rate", 0) * 100
+        st.markdown(f"**成績**: 的中率 {hit_rate:.1f}% / 回収率 {recovery:.1f}%")
+    
+    st.markdown(f"<small>更新: {updated_at}</small>", unsafe_allow_html=True)
+    
+    # 重み再読み込みボタン
+    if st.button("🔄 重み再読み込み"):
+        st.cache_data.clear()
+        st.rerun()
 
-st.sidebar.markdown("---")
-st.sidebar.caption("© 2026 UMA-Logic Pro v2.0")
+    st.markdown("---")
+
+    # システム状態
+    st.markdown("### 📈 システム状態")
+
+    # 利用可能なデータ数
+    available_dates = get_available_dates()
+    st.metric("📅 データ日数", f"{len(available_dates)}日")
+
+    # 最終更新
+    if available_dates:
+        latest_date = available_dates[0]
+        st.metric("🕐 最新データ", format_date_jp(latest_date))
 
 
-# --- データ読み込み ---
-predictions_data = load_predictions(selected_date)
-results_data = load_results(selected_date)
-history_data = load_history()
-
-
-# --- メインコンテンツ（6タブ構成） ---
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+# --- メインタブ ---
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🎯 本日の予想",
-    "🏁 レース結果",
+    "📊 レース結果",
     "🎉 的中実績",
     "📈 収支レポート",
     "💰 資金配分",
-    "⚙️ システム状態"
+    "🧠 AI学習状況",
+    "⚙️ システム"
 ])
 
 
-# ========================================
-# タブ1: 本日の予想
-# ========================================
+# === タブ1: 本日の予想 ===
 with tab1:
-    st.markdown(f"## 🎯 {selected_date.strftime('%Y年%m月%d日')} の予想")
-    
-    races = predictions_data.get("races", [])
-    
-    if not races:
-        st.warning("この日の予想データがありません。")
+    st.header("🎯 本日の予想")
+
+    # インサイダーアラート表示
+    alerts_data = load_insider_alerts()
+    active_alerts = [a for a in alerts_data.get("alerts", [])
+                     if a.get("status") == "active"]
+
+    if active_alerts:
+        st.markdown("### 🚨 インサイダーアラート")
+        for alert in active_alerts[:3]:
+            st.markdown(f"""
+            <div class="insider-alert">
+                <strong>⚡ {alert.get('venue', '')} {alert.get('race_num', '')}R - {alert.get('horse_name', '')}</strong><br>
+                オッズ急落検知: {alert.get('odds_before', 0):.1f} → {alert.get('odds_after', 0):.1f}
+                （{alert.get('drop_rate', 0)*100:.1f}%低下）<br>
+                <small>検出時刻: {alert.get('detected_at', '')}</small>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # 予想データ読み込み
+    today_str = datetime.now().strftime("%Y%m%d")
+    predictions = load_predictions(today_str)
+
+    if predictions and predictions.get("races"):
+        races = predictions.get("races", [])
+        races = sort_races_by_number(races)  # レース番号順にソート
+
+        # 競馬場でグループ化
+        venues = list(set(r.get("venue", "") for r in races))
+        venues = sorted(venues)
+
+        if venues:
+            selected_venue = st.selectbox("🏟️ 競馬場を選択", venues)
+
+            venue_races = [r for r in races if r.get("venue") == selected_venue]
+            venue_races = sort_races_by_number(venue_races)
+
+            for race in venue_races:
+                race_num = race.get("race_num", 0)
+                race_name = race.get("race_name", "")
+                distance = race.get("distance", 0)
+                track_type = race.get("track_type", "")
+
+                with st.expander(f"🏇 {race_num}R {race_name} ({track_type}{distance}m)", expanded=False):
+                    horses = race.get("horses", []) or race.get("predictions", [])
+
+                    if horses:
+                        # UMA指数を再計算（最新の重みを適用）
+                        for horse in horses:
+                            uma_index = calculate_uma_index(horse, race)
+                            horse["uma_index"] = uma_index
+                            horse["rank"] = get_rank_from_score(uma_index)
+                            
+                            odds = float(horse.get("オッズ", horse.get("odds", 0)) or 0)
+                            horse["expected_value"] = calculate_expected_value(uma_index, odds)
+                        
+                        # UMA指数でソート
+                        horses = sorted(horses, key=lambda x: x.get("uma_index", 0), reverse=True)
+
+                        for i, horse in enumerate(horses[:5]):  # 上位5頭表示
+                            umaban = horse.get("umaban", horse.get("馬番", ""))
+                            name = horse.get("horse_name", horse.get("馬名", ""))
+                            odds = horse.get("odds", horse.get("オッズ", 0))
+                            uma_index = horse.get("uma_index", 0)
+                            rank = horse.get("rank", "C")
+                            ev = horse.get("expected_value", 0)
+
+                            # 印を決定
+                            marks = ["◎", "○", "▲", "△", "☆"]
+                            mark = marks[i] if i < len(marks) else ""
+
+                            col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 3, 2, 2, 1])
+                            with col1:
+                                st.markdown(f"**{mark}**")
+                            with col2:
+                                st.markdown(f"**{umaban}**")
+                            with col3:
+                                st.markdown(f"{name}")
+                            with col4:
+                                if uma_index > 0:
+                                    st.markdown(f"指数: **{uma_index:.1f}**")
+                            with col5:
+                                if odds > 0:
+                                    st.markdown(f"オッズ: **{odds:.1f}**")
+                            with col6:
+                                st.markdown(get_rank_badge_html(rank), unsafe_allow_html=True)
+                    else:
+                        st.info("出馬データがありません")
     else:
-        s_count = len([r for r in races if r.get("rank") == "S"])
-        a_count = len([r for r in races if r.get("rank") == "A"])
-        b_count = len([r for r in races if r.get("rank") == "B"])
-        
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("総レース数", f"{len(races)}R")
-        col2.metric("🥇 Sランク", f"{s_count}R")
-        col3.metric("🥈 Aランク", f"{a_count}R")
-        col4.metric("🥉 Bランク", f"{b_count}R")
-        
-        st.markdown("---")
-        
-        venues = sorted(set(r.get("venue", "不明") for r in races))
-        
-        for venue in venues:
-            st.markdown(f'<div class="venue-card"><h3>🏇 {venue}競馬場</h3></div>', unsafe_allow_html=True)
-            
-            venue_races = sorted(
-                [r for r in races if r.get("venue") == venue],
-                key=lambda x: x.get("race_num", 0)
-            )
-            
-            cols = st.columns(3)
-            
-            for idx, race in enumerate(venue_races):
-                with cols[idx % 3]:
-                    rank = race.get("rank", "B")
-                    rank_class = f"rank-{rank.lower()}"
-                    container_class = "pulse-s-rank" if rank == "S" else ""
-                    
-                    horses = race.get("horses", [])
-                    honmei = next((h for h in horses if h.get("印") == "◎"), None)
-                    
-                    race_result = next(
-                        (r for r in results_data.get("races", [])
-                         if r.get("venue") == venue and r.get("race_num") == race.get("race_num")),
-                        None
-                    )
-                    hit_info = check_hit(race, race_result) if race_result else None
-                    
-                    if container_class:
-                        st.markdown(f'<div class="{container_class}">', unsafe_allow_html=True)
-                    
-                    title_html = f"**{race.get('race_num', '')}R** <span class='{rank_class}'>[{rank}]</span>"
-                    if honmei:
-                        title_html += f" ◎{honmei.get('馬番', '')} {honmei.get('馬名', '')}"
-                    
-                    if hit_info:
-                        total_payout = sum(h["payout"] for h in hit_info.values() if h["hit"])
-                        if total_payout > 0:
-                            title_html += f'<span class="hit-badge">🎯 +¥{total_payout:,}</span>'
-                    
-                    st.markdown(title_html, unsafe_allow_html=True)
-                    
-                    with st.expander("詳細", expanded=(rank == "S")):
-                        for horse in horses[:5]:
-                            mark = horse.get("印", "")
-                            if not mark:
-                                continue
-                            
-                            h_info = f"**{mark} {horse.get('馬番', '')} {horse.get('馬名', '')}**"
-                            ev = horse.get("期待値", 0)
-                            if ev >= 1.2:
-                                h_info += f'<span class="gold-badge">EV {ev:.2f}</span>'
-                            st.markdown(h_info, unsafe_allow_html=True)
-                            
-                            uma_idx = horse.get("UMA指数", 50)
-                            st.progress(uma_idx / 100, text=f"UMA指数: {uma_idx}")
-                            
-                            odds = horse.get("単勝オッズ", 0)
-                            reason = horse.get("推奨理由", "")
-                            st.caption(f"単勝 {odds:.1f}倍 / {reason}")
-                    
-                    if container_class:
-                        st.markdown('</div>', unsafe_allow_html=True)
-                    st.markdown("")
+        st.info("📭 本日の予想データがありません。土日の朝に自動更新されます。")
 
 
-# ========================================
-# タブ2: レース結果
-# ========================================
+# === タブ2: レース結果（階層型検索UI） ===
 with tab2:
-    st.markdown(f"## 🏁 {selected_date.strftime('%Y年%m月%d日')} のレース結果")
-    
-    result_races = results_data.get("races", [])
-    
-    if not result_races:
-        st.info("この日の結果データはまだありません。レース終了後に自動取得されます。")
+    st.header("📊 レース結果")
+
+    # 利用可能な日付を取得
+    available_dates = get_available_dates()
+
+    if not available_dates:
+        st.info("📭 レース結果データがありません。")
     else:
-        result_venues = sorted(set(r.get("venue", "不明") for r in result_races))
-        selected_venue = st.selectbox("競馬場を選択", result_venues)
+        # 年でグループ化
+        dates_by_year = {}
+        for date_str in available_dates:
+            year = date_str[:4]
+            if year not in dates_by_year:
+                dates_by_year[year] = []
+            dates_by_year[year].append(date_str)
+
+        # 階層型フィルター
+        filter_col1, filter_col2 = st.columns(2)
+
+        with filter_col1:
+            years = sorted(dates_by_year.keys(), reverse=True)
+            selected_year = st.selectbox("📅 年を選択", years, key="result_year")
+
+        with filter_col2:
+            year_dates = dates_by_year.get(selected_year, [])
+            date_options = [(d, format_date_jp(d)) for d in year_dates]
+
+            if date_options:
+                selected_date_idx = st.selectbox(
+                    "📆 開催日を選択",
+                    range(len(date_options)),
+                    format_func=lambda x: date_options[x][1],
+                    key="result_date"
+                )
+                selected_date = date_options[selected_date_idx][0]
+            else:
+                selected_date = None
+
+        if selected_date:
+            # 結果データを読み込み
+            results_data = load_results(selected_date)
+
+            if results_data and results_data.get("races"):
+                races = results_data.get("races", [])
+                races = sort_races_by_number(races)  # レース番号順にソート
+
+                # 競馬場でグループ化
+                venues = list(set(r.get("venue", "") for r in races if r.get("venue")))
+                venues = sorted(venues)
+
+                if venues:
+                    # 競馬場タブ
+                    venue_tabs = st.tabs(venues)
+
+                    for venue_tab, venue in zip(venue_tabs, venues):
+                        with venue_tab:
+                            venue_races = [r for r in races if r.get("venue") == venue]
+                            venue_races = sort_races_by_number(venue_races)
+
+                            for race in venue_races:
+                                race_num = race.get("race_num", 0)
+                                race_name = race.get("race_name", "")
+
+                                # レースカード
+                                st.markdown(f"""
+                                <div class="race-card">
+                                    <div class="race-title">{race_num}R {race_name}</div>
+                                    <div class="race-info">{venue} / {race.get('distance', '')}m / {race.get('track_type', '')}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                                with st.expander(f"📋 詳細を見る", expanded=False):
+                                    # 着順表
+                                    st.markdown("#### 🏆 着順")
+                                    top3 = race.get("top3", [])
+                                    all_results = race.get("all_results", top3)
+
+                                    if all_results:
+                                        result_df = pd.DataFrame(all_results)
+
+                                        # カラム名を日本語に
+                                        column_mapping = {
+                                            "着順": "着順",
+                                            "rank": "着順",
+                                            "馬番": "馬番",
+                                            "umaban": "馬番",
+                                            "馬名": "馬名",
+                                            "horse_name": "馬名",
+                                            "騎手": "騎手",
+                                            "jockey": "騎手",
+                                            "タイム": "タイム",
+                                            "time": "タイム",
+                                            "上がり3F": "上がり3F",
+                                            "last_3f": "上がり3F",
+                                            "オッズ": "オッズ",
+                                            "odds": "オッズ"
+                                        }
+
+                                        result_df = result_df.rename(columns=column_mapping)
+
+                                        # 表示するカラムを選択
+                                        display_cols = ["着順", "馬番", "馬名", "騎手", "タイム", "上がり3F", "オッズ"]
+                                        display_cols = [c for c in display_cols if c in result_df.columns]
+
+                                        if display_cols:
+                                            st.dataframe(
+                                                result_df[display_cols],
+                                                use_container_width=True,
+                                                hide_index=True
+                                            )
+                                    else:
+                                        st.info("着順データがありません")
+
+                                    # 払戻金表
+                                    st.markdown("#### 💰 払戻金")
+                                    payouts = race.get("payouts", {})
+
+                                    if payouts:
+                                        # 2カラムで表示
+                                        payout_col1, payout_col2 = st.columns(2)
+
+                                        payout_items = list(payouts.items())
+                                        mid = len(payout_items) // 2 + len(payout_items) % 2
+
+                                        with payout_col1:
+                                            for key, value in payout_items[:mid]:
+                                                if isinstance(value, dict):
+                                                    # 複勝・ワイドなど複数値
+                                                    values_str = " / ".join([f"{k}: ¥{v:,}" for k, v in value.items()])
+                                                    st.markdown(f"**{key}**: {values_str}")
+                                                else:
+                                                    st.markdown(f"**{key}**: ¥{value:,}")
+
+                                        with payout_col2:
+                                            for key, value in payout_items[mid:]:
+                                                if isinstance(value, dict):
+                                                    values_str = " / ".join([f"{k}: ¥{v:,}" for k, v in value.items()])
+                                                    st.markdown(f"**{key}**: {values_str}")
+                                                else:
+                                                    st.markdown(f"**{key}**: ¥{value:,}")
+                                    else:
+                                        st.info("払戻金データがありません")
+
+                                st.markdown("---")
+                else:
+                    st.warning("競馬場情報がありません")
+            else:
+                st.warning(f"{format_date_jp(selected_date)} のデータがありません")
+
+
+# === タブ3: 的中実績 ===
+with tab3:
+    st.header("🎉 的中実績")
+
+    history = load_history()
+
+    if history:
+        # 最新順にソート
+        history = sorted(history, key=lambda x: x.get("date", ""), reverse=True)
+
+        # 統計
+        total_hits = len(history)
+        total_payout = sum(h.get("payout", 0) for h in history)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("🎯 総的中数", f"{total_hits}回")
+        with col2:
+            st.metric("💰 総払戻金", f"¥{total_payout:,}")
+
+        st.markdown("---")
+
+        # 的中履歴テーブル
+        for hit in history[:20]:  # 最新20件
+            date = hit.get("date", "")
+            venue = hit.get("venue", "")
+            race_num = hit.get("race_num", "")
+            bet_type = hit.get("bet_type", "")
+            payout = hit.get("payout", 0)
+            horse = hit.get("horse_name", "")
+
+            st.markdown(f"""
+            <div class="race-card">
+                <div class="race-title">🎉 {venue} {race_num}R - {bet_type}</div>
+                <div class="race-info">
+                    {format_date_jp(date) if date else ''} / {horse}<br>
+                    <span class="payout-amount">払戻: ¥{payout:,}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("📭 まだ的中データがありません。")
+
+
+# === タブ4: 収支レポート ===
+with tab4:
+    st.header("📈 収支レポート")
+
+    history = load_history()
+
+    if history:
+        # データフレーム化
+        df = pd.DataFrame(history)
+
+        if "date" in df.columns and "payout" in df.columns:
+            # 日付でグループ化
+            df["date"] = pd.to_datetime(df["date"], format="%Y%m%d", errors="coerce")
+            daily = df.groupby(df["date"].dt.date).agg({
+                "payout": "sum",
+                "bet_amount": "sum" if "bet_amount" in df.columns else "count"
+            }).reset_index()
+
+            # 累積収支
+            if "bet_amount" in daily.columns:
+                daily["profit"] = daily["payout"] - daily["bet_amount"]
+                daily["cumulative"] = daily["profit"].cumsum()
+
+                # グラフ
+                if PLOTLY_AVAILABLE:
+                    fig = go.Figure()
+                    fig.add_trace(go.Scatter(
+                        x=daily["date"],
+                        y=daily["cumulative"],
+                        mode="lines+markers",
+                        name="累積収支",
+                        line=dict(color="#4ade80", width=2)
+                    ))
+                    fig.update_layout(
+                        title="累積収支推移",
+                        xaxis_title="日付",
+                        yaxis_title="収支 (円)",
+                        template="plotly_dark",
+                        height=400
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+            # サマリー
+            total_bet = df["bet_amount"].sum() if "bet_amount" in df.columns else 0
+            total_payout = df["payout"].sum()
+            profit = total_payout - total_bet
+            roi = (total_payout / total_bet * 100) if total_bet > 0 else 0
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("💸 総投資額", f"¥{total_bet:,}")
+            with col2:
+                st.metric("💰 総払戻額", f"¥{total_payout:,}")
+            with col3:
+                st.metric("📊 純損益", f"¥{profit:,}")
+            with col4:
+                st.metric("📈 回収率", f"{roi:.1f}%")
+    else:
+        st.info("📭 まだ収支データがありません。")
+
+
+# === タブ5: 資金配分 ===
+with tab5:
+    st.header("💰 資金配分（ケリー基準）")
+
+    st.markdown("""
+    **ケリー基準**は、期待値がプラスの賭けに対して、長期的に資金を最大化する最適な投資比率を算出する数学的手法です。
+
+    - **ハーフケリー**: 安全重視（推奨）
+    - **フルケリー**: 標準
+    - **アグレッシブ**: 積極的（インサイダー検知時に自動切替）
+    """)
+
+    st.markdown("---")
+
+    # 計算シミュレーター
+    st.markdown("### 📊 投資額シミュレーター")
+
+    sim_col1, sim_col2 = st.columns(2)
+
+    with sim_col1:
+        sim_prob = st.slider("勝率 (%)", 5, 50, 20) / 100
+        sim_odds = st.slider("オッズ", 1.5, 30.0, 5.0, 0.5)
+
+    with sim_col2:
+        sim_bankroll = st.number_input("資金 (円)", 10000, 10000000, bankroll, 10000)
+
+    # ケリー計算
+    b = sim_odds - 1
+    p = sim_prob
+    q = 1 - p
+    kelly = (b * p - q) / b if b > 0 else 0
+    kelly = max(0, kelly)
+
+    half_kelly = kelly * 0.5
+    full_kelly = kelly
+    aggressive_kelly = kelly * 1.2
+
+    st.markdown("### 📈 推奨投資額")
+
+    result_col1, result_col2, result_col3 = st.columns(3)
+
+    with result_col1:
+        bet_half = int(sim_bankroll * half_kelly / 100) * 100
+        st.metric("ハーフケリー", f"¥{bet_half:,}", f"{half_kelly*100:.2f}%")
+
+    with result_col2:
+        bet_full = int(sim_bankroll * full_kelly / 100) * 100
+        st.metric("フルケリー", f"¥{bet_full:,}", f"{full_kelly*100:.2f}%")
+
+    with result_col3:
+        bet_agg = int(sim_bankroll * aggressive_kelly / 100) * 100
+        st.metric("アグレッシブ", f"¥{bet_agg:,}", f"{aggressive_kelly*100:.2f}%")
+
+    # 期待値
+    expected_value = sim_prob * sim_odds
+    st.markdown(f"**期待値**: {expected_value:.2f} {'✅ プラス期待値' if expected_value > 1 else '❌ マイナス期待値'}")
+
+
+# === タブ6: AI学習状況 ===
+with tab6:
+    st.header("🧠 AI学習状況")
+    
+    ai_data = load_ai_weights()
+    
+    # 基本情報
+    st.markdown("### 📊 現在のAI重み")
+    
+    weights = ai_data.get("weights", DEFAULT_WEIGHTS)
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("🔥 SpeedAgent", f"{weights.get('SpeedAgent', 0.35)*100:.0f}%")
+    with col2:
+        st.metric("🎯 AdaptabilityAgent", f"{weights.get('AdaptabilityAgent', 0.35)*100:.0f}%")
+    with col3:
+        st.metric("🧬 PedigreeFormAgent", f"{weights.get('PedigreeFormAgent', 0.30)*100:.0f}%")
+    
+    st.markdown("---")
+    
+    # Train/Test分離の成績
+    st.markdown("### 📈 バックテスト結果（Train/Test分離）")
+    
+    train_metrics = ai_data.get("train_metrics", {})
+    test_metrics = ai_data.get("test_metrics", {})
+    
+    if train_metrics and test_metrics:
+        train_col, test_col = st.columns(2)
         
-        venue_results = sorted(
-            [r for r in result_races if r.get("venue") == selected_venue],
-            key=lambda x: x.get("race_num", 0)
-        )
+        with train_col:
+            st.markdown("#### 📚 学習データ（Train）")
+            train_years = train_metrics.get("years", [])
+            st.markdown(f"**対象年**: {', '.join(map(str, train_years)) if train_years else '不明'}")
+            st.metric("対象レース数", f"{train_metrics.get('total_races', 0):,}")
+            st.metric("的中率", f"{train_metrics.get('hit_rate', 0)*100:.2f}%")
+            st.metric("回収率", f"{train_metrics.get('recovery_rate', 0)*100:.2f}%")
         
-        for race in venue_results:
-            st.markdown(f"### {race.get('race_num', '')}R {race.get('race_name', '')}")
-            
-            top3 = race.get("top3", [])
-            if top3:
-                df = pd.DataFrame([
-                    {
-                        "着順": i + 1,
-                        "馬番": h.get("馬番", ""),
-                        "馬名": h.get("馬名", ""),
-                        "騎手": h.get("騎手", ""),
-                        "タイム": h.get("タイム", ""),
-                        "上がり3F": h.get("上がり3F", "")
-                    }
-                    for i, h in enumerate(top3)
-                ])
-                st.dataframe(df, use_container_width=True, hide_index=True)
-            
-            payouts = race.get("payouts", {})
-            if payouts:
-                st.markdown("**💰 払戻金**")
-                p_cols = st.columns(4)
-                bet_types = ["単勝", "複勝", "馬連", "馬単", "ワイド", "三連複", "三連単", "枠連"]
-                for i, bt in enumerate(bet_types):
-                    if bt in payouts:
-                        val = payouts[bt]
-                        if isinstance(val, dict):
-                            display = " / ".join([f"¥{v:,}" for v in val.values()])
-                        elif isinstance(val, (int, float)) and val > 0:
-                            display = f"¥{int(val):,}"
-                        else:
-                            display = "-"
-                        p_cols[i % 4].metric(bt, display)
+        with test_col:
+            st.markdown("#### 🧪 テストデータ（Test）")
+            test_years = test_metrics.get("years", [])
+            st.markdown(f"**対象年**: {', '.join(map(str, test_years)) if test_years else '不明'}")
+            st.metric("対象レース数", f"{test_metrics.get('total_races', 0):,}")
+            st.metric("的中率", f"{test_metrics.get('hit_rate', 0)*100:.2f}%")
+            st.metric("回収率", f"{test_metrics.get('recovery_rate', 0)*100:.2f}%")
+        
+        # 過学習チェック
+        train_recovery = train_metrics.get("recovery_rate", 0)
+        test_recovery = test_metrics.get("recovery_rate", 0)
+        
+        if train_recovery > 0 and test_recovery > 0:
+            overfit_ratio = train_recovery / test_recovery if test_recovery > 0 else float('inf')
             
             st.markdown("---")
-
-
-# ========================================
-# タブ3: 的中実績
-# ========================================
-with tab3:
-    st.markdown("## 🎉 的中実績")
-    
-    all_hits = []
-    for date in available_dates:
-        pred = load_predictions(date)
-        res = load_results(date)
-        
-        for race in pred.get("races", []):
-            race_result = next(
-                (r for r in res.get("races", [])
-                 if r.get("venue") == race.get("venue") and r.get("race_num") == race.get("race_num")),
-                None
-            )
-            if race_result:
-                hit_info = check_hit(race, race_result)
-                for bet_type, info in hit_info.items():
-                    if info["hit"] and info["payout"] > 0:
-                        all_hits.append({
-                            "日付": date.strftime("%Y-%m-%d"),
-                            "会場": race.get("venue", ""),
-                            "R": race.get("race_num", 0),
-                            "券種": bet_type,
-                            "配当": info["payout"],
-                            "本命": next((h.get("馬名", "") for h in race.get("horses", []) if h.get("印") == "◎"), "")
-                        })
-    
-    if all_hits:
-        hit_df = pd.DataFrame(all_hits)
-        
-        total_payout = hit_df["配当"].sum()
-        hit_count = len(hit_df)
-        
-        c1, c2, c3 = st.columns(3)
-        c1.metric("🎯 的中回数", f"{hit_count}回")
-        c2.metric("💰 累計配当", f"¥{total_payout:,}")
-        c3.metric("📊 平均配当", f"¥{total_payout // hit_count:,}" if hit_count > 0 else "¥0")
-        
-        st.markdown("---")
-        st.markdown("### 的中一覧")
-        st.dataframe(hit_df, use_container_width=True, hide_index=True)
-        
-        st.markdown("### 券種別集計")
-        summary = hit_df.groupby("券種").agg({"配当": ["count", "sum", "mean"]}).round(0)
-        summary.columns = ["回数", "合計", "平均"]
-        st.dataframe(summary, use_container_width=True)
-    else:
-        st.info("まだ的中データがありません。")
-
-
-# ========================================
-# タブ4: 収支レポート
-# ========================================
-with tab4:
-    st.markdown("## 📈 収支レポート")
-    
-    if history_data:
-        hist_df = pd.DataFrame(history_data)
-        
-        if "投資額" in hist_df.columns and "的中配当金" in hist_df.columns:
-            total_invest = hist_df["投資額"].sum()
-            total_return = hist_df["的中配当金"].sum()
-            profit = total_return - total_invest
-            roi = (total_return / total_invest * 100) if total_invest > 0 else 0
+            st.markdown("### ⚠️ 過学習チェック")
             
-            col1, col2 = st.columns([2, 1])
-            
-            with col1:
-                if PLOTLY_AVAILABLE:
-                    fig = go.Figure(go.Indicator(
-                        mode="gauge+number+delta",
-                        value=roi,
-                        title={'text': "累計回収率", 'font': {'size': 20, 'color': 'white'}},
-                        delta={'reference': 100, 'increasing': {'color': "#4CAF50"}, 'decreasing': {'color': "#f44336"}},
-                        gauge={
-                            'axis': {'range': [0, 200], 'tickcolor': "white"},
-                            'bar': {'color': "#F6C953"},
-                            'bgcolor': "#1A1A2E",
-                            'borderwidth': 2,
-                            'bordercolor': "#3c3c5a",
-                            'steps': [
-                                {'range': [0, 80], 'color': '#3c3c5a'},
-                                {'range': [80, 120], 'color': '#5a5a7a'}
-                            ],
-                            'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 100}
-                        }
-                    ))
-                    fig.update_layout(paper_bgcolor="#1A1A2E", font_color="white", height=300)
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.metric("累計回収率", f"{roi:.1f}%")
-            
-            with col2:
-                st.metric("💰 純損益", f"¥{profit:,}")
-                st.metric("📥 総投資", f"¥{total_invest:,}")
-                st.metric("📤 総払戻", f"¥{total_return:,}")
-        else:
-            st.warning("履歴データの形式が正しくありません。")
+            if overfit_ratio > 2.0:
+                st.error(f"⚠️ **過学習の可能性あり**: Train回収率がTest回収率の{overfit_ratio:.1f}倍です。モデルの見直しを推奨します。")
+            elif overfit_ratio > 1.5:
+                st.warning(f"⚡ **軽度の過学習**: Train回収率がTest回収率の{overfit_ratio:.1f}倍です。注意が必要です。")
+            else:
+                st.success(f"✅ **良好**: Train/Test間の差異は許容範囲内です（比率: {overfit_ratio:.2f}）")
     else:
-        st.info("まだ収支データがありません。")
-
-
-# ========================================
-# タブ5: 資金配分
-# ========================================
-with tab5:
-    st.markdown("## 💰 資金配分シミュレーター")
-    
-    st.info(f"総予算: **¥{total_budget:,}** / スタイル: **{investment_style}**")
-    
-    races = predictions_data.get("races", [])
-    
-    if not races:
-        st.warning("予想データがありません。")
-    else:
-        race_options = [f"{r.get('venue', '')}{r.get('race_num', '')}R [{r.get('rank', 'B')}]" for r in races]
-        selected_race_str = st.selectbox("対象レースを選択", race_options)
-        
-        idx = race_options.index(selected_race_str)
-        selected_race = races[idx]
-        
-        st.markdown(f"### シミュレーション: {selected_race_str}")
-        
-        rank = selected_race.get("rank", "B")
-        multiplier = {"S": 1.5, "A": 1.0, "B": 0.7}.get(rank, 1.0)
-        
-        if "バランス" in investment_style:
-            config = {"単勝": 0.2, "馬連": 0.25, "馬単": 0.15, "三連複": 0.25, "三連単": 0.15}
+        # 旧形式のメトリクス
+        metrics = ai_data.get("metrics", {})
+        if metrics:
+            st.markdown("#### 📊 全体成績")
+            st.metric("対象レース数", f"{metrics.get('total_races', 0):,}")
+            st.metric("的中率", f"{metrics.get('hit_rate', 0)*100:.2f}%")
+            st.metric("回収率", f"{metrics.get('recovery_rate', 0)*100:.2f}%")
+            
+            st.warning("⚠️ Train/Test分離されていない旧形式のデータです。`ensemble_agents.py --optimize` を実行して更新してください。")
         else:
-            config = {"単勝": 0.05, "馬連": 0.3, "馬単": 0.2, "三連複": 0.3, "三連単": 0.15}
-        
-        allocations = {k: int(np.round(total_budget * v * multiplier / 100) * 100) for k, v in config.items()}
-        
-        alloc_cols = st.columns(5)
-        for i, (bt, amt) in enumerate(allocations.items()):
-            alloc_cols[i].metric(bt, f"¥{amt:,}")
-        
-        st.success(f"合計配分: ¥{sum(allocations.values()):,}")
-        
-        st.markdown("---")
-        st.markdown("### 買い目構成案")
-        
-        horses = selected_race.get("horses", [])
-        honmei = next((h for h in horses if h.get("印") == "◎"), None)
-        taikou = next((h for h in horses if h.get("印") == "○"), None)
-        tanpana = next((h for h in horses if h.get("印") == "▲"), None)
-        
-        if honmei:
-            st.write(f"**単勝**: {honmei.get('馬番', '')}番")
-        if honmei and taikou:
-            st.write(f"**馬連**: {honmei.get('馬番', '')} - {taikou.get('馬番', '')}")
-        if honmei and taikou and tanpana:
-            st.write(f"**三連複**: {honmei.get('馬番', '')} - {taikou.get('馬番', '')} - {tanpana.get('馬番', '')}")
-
-
-# ========================================
-# タブ6: システム状態
-# ========================================
-with tab6:
-    st.markdown("## ⚙️ システム状態")
-    
-    st.markdown("### 📁 データファイル状態")
-    
-    files_to_check = [
-        ("latest_predictions.json", "最新予想"),
-        ("history.json", "的中履歴"),
-    ]
-    
-    for filename, label in files_to_check:
-        filepath = DATA_DIR / filename
-        if filepath.exists():
-            mtime = datetime.fromtimestamp(filepath.stat().st_mtime)
-            st.markdown(f'✅ **{label}** (`{filename}`) - 最終更新: {mtime.strftime("%Y-%m-%d %H:%M")}')
-        else:
-            st.markdown(f'❌ **{label}** (`{filename}`) - ファイルなし')
+            st.info("📭 AI学習データがありません。`ensemble_agents.py --optimize` を実行してください。")
     
     st.markdown("---")
     
-    st.markdown("### 📊 アーカイブ状況")
+    # 更新情報
+    updated_at = ai_data.get("updated_at", "")
+    if updated_at:
+        st.markdown(f"**最終更新**: {updated_at}")
+
+
+# === タブ7: システム ===
+with tab7:
+    st.header("⚙️ システム情報")
+
+    # データ統計
+    st.markdown("### 📊 データ統計")
+
     pred_count = len(list(DATA_DIR.glob(f"{PREDICTIONS_PREFIX}*.json")))
     res_count = len(list(DATA_DIR.glob(f"{RESULTS_PREFIX}*.json")))
-    
-    c1, c2 = st.columns(2)
-    c1.metric("予想ファイル数", f"{pred_count}件")
-    c2.metric("結果ファイル数", f"{res_count}件")
-    
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("📝 予想ファイル", f"{pred_count}件")
+    with col2:
+        st.metric("📊 結果ファイル", f"{res_count}件")
+    with col3:
+        st.metric("📅 アーカイブ日数", f"{len(available_dates)}日")
+
     st.markdown("---")
-    
+
+    # アーカイブ統計
+    st.markdown("### 📚 アーカイブ統計")
+
+    index_data = load_archive_index()
+    if index_data:
+        years_data = index_data.get("years", {})
+        for year in sorted(years_data.keys(), reverse=True):
+            year_info = years_data[year]
+            st.markdown(f"**{year}年**: {year_info.get('total_dates', 0)}日 / {year_info.get('total_races', 0)}レース")
+    else:
+        st.info("アーカイブインデックスがありません。`--rebuild-index` を実行してください。")
+
+    st.markdown("---")
+
+    # ワークフロー状態
     st.markdown("### 🔄 GitHub Actions ワークフロー")
+
     st.markdown("""
     | ワークフロー | スケジュール | 説明 |
     |-------------|-------------|------|
     | 🐎 予想データ取得 | 土日 07:00 JST | レースデータ取得＋スコア計算 |
     | 📊 レース結果取得 | 土日 18:00 JST | 結果＋払戻金取得 |
-    | 💹 リアルタイムオッズ | 手動実行 | 直前オッズ取得 |
+    | 💹 リアルタイムオッズ | 手動実行 | 直前オッズ取得＋インサイダー検知 |
+    | 📚 過去データ一括取得 | 手動実行 | 過去2年分のデータ収集 |
+    | 🧠 AI学習 | 週1回（月曜） | 重み最適化＋バックテスト |
     """)
-    
+
     st.markdown("---")
+
+    # システム情報
     st.markdown("### 📋 システム情報")
+
     st.code(f"""
-UMA-Logic Pro v2.0
+UMA-Logic PRO v2.1 (アンサンブル学習対応)
+Python: {sys.version.split()[0]}
 Streamlit: {st.__version__}
 Plotly: {'Available' if PLOTLY_AVAILABLE else 'Not Available'}
 AgGrid: {'Available' if AGGRID_AVAILABLE else 'Not Available'}
 データディレクトリ: {DATA_DIR.absolute()}
+アーカイブディレクトリ: {ARCHIVE_DIR.absolute()}
+モデルディレクトリ: {MODELS_DIR.absolute()}
+重みファイル: {WEIGHTS_FILE.absolute()}
     """)

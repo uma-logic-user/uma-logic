@@ -1150,6 +1150,166 @@ with tab6:
     
     ai_data = load_ai_weights()
     
+    # --- 資産推移シミュレーション ---
+    st.markdown("### 📈 資産推移シミュレーション（Equity Curve）")
+    
+    test_metrics = ai_data.get("test_metrics", {})
+    metrics = ai_data.get("metrics", {})
+    
+    # シミュレーション用パラメータ
+    sim_col1, sim_col2, sim_col3 = st.columns(3)
+    with sim_col1:
+        initial_capital = st.number_input("初期資金 (円)", 10000, 10000000, 100000, 10000, key="equity_capital")
+    with sim_col2:
+        bet_per_race = st.number_input("1レースあたり投資額 (円)", 100, 10000, 100, 100, key="equity_bet")
+    with sim_col3:
+        sim_races = st.number_input("シミュレーションレース数", 100, 10000, 1000, 100, key="equity_races")
+    
+    # 的中率と回収率を取得
+    hit_rate = test_metrics.get("hit_rate", metrics.get("hit_rate", 0.2))
+    recovery_rate = test_metrics.get("recovery_rate", metrics.get("recovery_rate", 0.8))
+    
+    if hit_rate > 0 and recovery_rate > 0:
+        # 平均オッズを逆算（回収率 = 的中率 × 平均オッズ）
+        avg_odds = recovery_rate / hit_rate if hit_rate > 0 else 5.0
+        
+        # モンテカルロシミュレーション
+        import random
+        random.seed(42)  # 再現性のため
+        
+        equity_curve = [initial_capital]
+        drawdowns = []
+        max_equity = initial_capital
+        current_equity = initial_capital
+        
+        consecutive_losses = 0
+        max_consecutive_losses = 0
+        
+        for i in range(sim_races):
+            # 的中判定
+            if random.random() < hit_rate:
+                # 的中
+                payout = int(bet_per_race * avg_odds)
+                current_equity += payout - bet_per_race
+                consecutive_losses = 0
+            else:
+                # 不的中
+                current_equity -= bet_per_race
+                consecutive_losses += 1
+                max_consecutive_losses = max(max_consecutive_losses, consecutive_losses)
+            
+            # 資金が0以下になったら終了
+            if current_equity <= 0:
+                current_equity = 0
+                equity_curve.append(current_equity)
+                break
+            
+            equity_curve.append(current_equity)
+            
+            # ドローダウン計算
+            if current_equity > max_equity:
+                max_equity = current_equity
+            drawdown = (max_equity - current_equity) / max_equity if max_equity > 0 else 0
+            drawdowns.append(drawdown)
+        
+        # 資産推移グラフ
+        if PLOTLY_AVAILABLE:
+            fig_equity = go.Figure()
+            fig_equity.add_trace(go.Scatter(
+                x=list(range(len(equity_curve))),
+                y=equity_curve,
+                mode="lines",
+                name="資産推移",
+                line=dict(color="#4ade80", width=2)
+            ))
+            fig_equity.add_hline(y=initial_capital, line_dash="dash", line_color="#fbbf24", annotation_text="初期資金")
+            fig_equity.update_layout(
+                title=f"資産推移シミュレーション（的中率: {hit_rate*100:.1f}%, 回収率: {recovery_rate*100:.1f}%）",
+                xaxis_title="レース数",
+                yaxis_title="資産 (円)",
+                template="plotly_dark",
+                height=400
+            )
+            st.plotly_chart(fig_equity, use_container_width=True)
+        else:
+            st.line_chart(equity_curve)
+        
+        # シミュレーション結果サマリー
+        final_equity = equity_curve[-1]
+        total_profit = final_equity - initial_capital
+        profit_rate = (final_equity / initial_capital - 1) * 100
+        max_drawdown = max(drawdowns) * 100 if drawdowns else 0
+        
+        result_col1, result_col2, result_col3, result_col4 = st.columns(4)
+        with result_col1:
+            st.metric("最終資産", f"¥{final_equity:,.0f}", f"{profit_rate:+.1f}%")
+        with result_col2:
+            st.metric("純損益", f"¥{total_profit:,.0f}")
+        with result_col3:
+            st.metric("最大ドローダウン", f"{max_drawdown:.1f}%")
+        with result_col4:
+            st.metric("最大連敗数", f"{max_consecutive_losses}連敗")
+        
+        st.markdown("---")
+        
+        # --- ドローダウン解析 ---
+        st.markdown("### 📉 ドローダウン解析")
+        
+        if PLOTLY_AVAILABLE and drawdowns:
+            fig_dd = go.Figure()
+            fig_dd.add_trace(go.Scatter(
+                x=list(range(len(drawdowns))),
+                y=[d * 100 for d in drawdowns],
+                mode="lines",
+                name="ドローダウン",
+                fill="tozeroy",
+                line=dict(color="#ef4444", width=1)
+            ))
+            fig_dd.update_layout(
+                title="ドローダウン推移（資産最高値からの下落率）",
+                xaxis_title="レース数",
+                yaxis_title="ドローダウン (%)",
+                template="plotly_dark",
+                height=300
+            )
+            st.plotly_chart(fig_dd, use_container_width=True)
+        
+        # ドローダウン統計
+        st.markdown("#### 📊 ドローダウン統計")
+        
+        if drawdowns:
+            avg_dd = sum(drawdowns) / len(drawdowns) * 100
+            
+            dd_col1, dd_col2, dd_col3 = st.columns(3)
+            with dd_col1:
+                st.metric("平均ドローダウン", f"{avg_dd:.2f}%")
+            with dd_col2:
+                st.metric("最大ドローダウン", f"{max_drawdown:.2f}%")
+            with dd_col3:
+                # 回復に必要な勝率
+                recovery_needed = max_drawdown / (1 - max_drawdown/100) if max_drawdown < 100 else float('inf')
+                st.metric("回復に必要な上昇率", f"{recovery_needed:.2f}%")
+        
+        # 連敗確率の解説
+        st.markdown("#### 🎲 連敗確率の理論値")
+        
+        loss_rate = 1 - hit_rate
+        st.markdown(f"""
+        | 連敗数 | 確率 | 発生頻度（{sim_races}レース中） |
+        |--------|------|-------------------------------|
+        | 5連敗 | {(loss_rate**5)*100:.2f}% | 約{int(sim_races * (loss_rate**5))}回 |
+        | 10連敗 | {(loss_rate**10)*100:.4f}% | 約{int(sim_races * (loss_rate**10))}回 |
+        | 15連敗 | {(loss_rate**15)*100:.6f}% | 約{int(sim_races * (loss_rate**15))}回 |
+        | 20連敗 | {(loss_rate**20)*100:.8f}% | 約{int(sim_races * (loss_rate**20))}回 |
+        
+        **解説**: 的中率{hit_rate*100:.1f}%の場合、{max_consecutive_losses}連敗は統計的に十分起こりうる範囲です。
+        システムを信じて継続することが重要です。
+        """)
+    else:
+        st.warning("AI学習データがないため、シミュレーションを実行できません。")
+    
+    st.markdown("---")
+    
     # 基本情報
     st.markdown("### 📊 現在のAI重み")
     

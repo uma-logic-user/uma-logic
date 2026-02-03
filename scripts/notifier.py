@@ -252,7 +252,18 @@ def notify_results(status: str = "success"):
 
 
 def notify_optimize(status: str = "success"):
-    """AI学習完了通知"""
+    """
+    AI学習完了通知
+    weights.json の正しい階層構造を読み取る
+    
+    weights.json の構造:
+    {
+        "weights": { "SpeedAgent": 0.35, ... },
+        "train_metrics": { "hit_rate": 0.46, "recovery_rate": 1.26, ... },
+        "test_metrics": { "hit_rate": 0.44, "recovery_rate": 1.21, ... },
+        "metrics": { ... }
+    }
+    """
     notifier = Notifier()
 
     if not notifier.available_platforms:
@@ -268,20 +279,83 @@ def notify_optimize(status: str = "success"):
     if WEIGHTS_FILE.exists():
         try:
             with open(WEIGHTS_FILE, 'r', encoding='utf-8') as f:
-                weights = json.load(f)
+                weights_data = json.load(f)
             
-            agent_weights = weights.get("weights", {})
+            # エージェントの重みを表示
+            agent_weights = weights_data.get("weights", {})
             for agent, weight in agent_weights.items():
-                agent_name = agent.replace("_agent", "").title()
-                fields.append({"name": f"⚖️ {agent_name}", "value": f"{weight:.2%}", "inline": True})
-
-            metrics = weights.get("optimization_metrics", {})
-            if metrics:
-                fields.append({"name": "📈 的中率", "value": f"{metrics.get('hit_rate', 0):.1%}", "inline": True})
-                fields.append({"name": "💰 回収率", "value": f"{metrics.get('roi', 0):.1%}", "inline": True})
+                # "SpeedAgent" -> "Speed" に変換
+                agent_name = agent.replace("Agent", "")
+                fields.append({
+                    "name": f"⚖️ {agent_name}",
+                    "value": f"{weight:.2%}",
+                    "inline": True
+                })
+            
+            # Train メトリクスを表示
+            train_metrics = weights_data.get("train_metrics", {})
+            if train_metrics:
+                train_years = train_metrics.get("years", [])
+                train_hit_rate = train_metrics.get("hit_rate", 0)
+                train_recovery = train_metrics.get("recovery_rate", 0)
+                
+                fields.append({
+                    "name": f"📊 Train ({', '.join(map(str, train_years))})",
+                    "value": f"的中率: {train_hit_rate:.1%}\n回収率: {train_recovery:.1%}",
+                    "inline": True
+                })
+            
+            # Test メトリクスを表示
+            test_metrics = weights_data.get("test_metrics", {})
+            if test_metrics:
+                test_years = test_metrics.get("years", [])
+                test_hit_rate = test_metrics.get("hit_rate", 0)
+                test_recovery = test_metrics.get("recovery_rate", 0)
+                
+                fields.append({
+                    "name": f"📈 Test ({', '.join(map(str, test_years))})",
+                    "value": f"的中率: {test_hit_rate:.1%}\n回収率: {test_recovery:.1%}",
+                    "inline": True
+                })
+            
+            # 過学習チェック
+            if train_metrics and test_metrics:
+                train_recovery = train_metrics.get("recovery_rate", 0)
+                test_recovery = test_metrics.get("recovery_rate", 0)
+                
+                if test_recovery > 0:
+                    overfit_ratio = train_recovery / test_recovery
+                    if overfit_ratio > 2.0:
+                        overfit_status = "⚠️ 過学習の可能性"
+                        color = 0xef4444  # 赤
+                    elif overfit_ratio > 1.5:
+                        overfit_status = "⚡ 軽度の過学習"
+                        color = 0xfbbf24  # 黄
+                    else:
+                        overfit_status = "✅ 良好"
+                    
+                    fields.append({
+                        "name": "🔍 過学習チェック",
+                        "value": f"{overfit_status}\n(Train/Test比: {overfit_ratio:.2f})",
+                        "inline": True
+                    })
+            
+            # 更新日時
+            updated_at = weights_data.get("updated_at", "")
+            if updated_at:
+                fields.append({
+                    "name": "🕐 更新日時",
+                    "value": updated_at,
+                    "inline": True
+                })
 
         except Exception as e:
             print(f"[WARN] 重みファイル読み込みエラー: {e}")
+            fields.append({
+                "name": "⚠️ エラー",
+                "value": str(e),
+                "inline": False
+            })
 
     results = notifier.send_all(title, message, color, fields)
     print(f"[INFO] 通知送信結果: {results}")
@@ -349,108 +423,66 @@ def notify_historical(status: str = "success"):
     # アーカイブ統計を取得
     archive_dir = DATA_DIR / "archive"
     if archive_dir.exists():
-        total_files = len(list(archive_dir.glob("**/*.json")))
-        fields.append({"name": "📁 ファイル数", "value": f"{total_files}件", "inline": True})
+        try:
+            years = [d.name for d in archive_dir.iterdir() if d.is_dir() and d.name.isdigit()]
+            if years:
+                fields.append({
+                    "name": "📅 取得年",
+                    "value": ", ".join(sorted(years)),
+                    "inline": True
+                })
+        except Exception:
+            pass
 
     results = notifier.send_all(title, message, color, fields)
     print(f"[INFO] 通知送信結果: {results}")
 
 
-def notify_hit(hit_info: Dict):
-    """的中通知（即座に送信）"""
+def notify_error(error_type: str, error_message: str):
+    """エラー通知"""
     notifier = Notifier()
 
     if not notifier.available_platforms:
+        print("[INFO] 通知プラットフォームが設定されていません")
         return
 
-    title = "🎉 的中！"
-    venue = hit_info.get("venue", "")
-    race_num = hit_info.get("race_num", "")
-    bet_type = hit_info.get("bet_type", "")
-    payout = hit_info.get("payout", 0)
-    horse_name = hit_info.get("horse_name", "")
-
-    message = f"{venue} {race_num}R で的中しました！"
-    color = 0x4ade80
+    title = f"❌ エラー発生: {error_type}"
+    message = error_message
+    color = 0xef4444
     fields = [
-        {"name": "🏇 馬名", "value": horse_name, "inline": True},
-        {"name": "🎫 券種", "value": bet_type, "inline": True},
-        {"name": "💰 払戻金", "value": f"¥{payout:,}", "inline": True}
+        {"name": "🕐 発生時刻", "value": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "inline": True}
     ]
 
-    notifier.send_all(title, message, color, fields)
+    results = notifier.send_all(title, message, color, fields)
+    print(f"[INFO] 通知送信結果: {results}")
 
 
-# --- メイン関数 ---
+# --- メイン ---
 
 def main():
-    """メイン関数"""
-    print("=" * 60)
-    print("📱 UMA-Logic PRO - 通知システム")
-    print("=" * 60)
+    """コマンドライン引数に基づいて通知を送信"""
+    import argparse
 
-    # 利用可能なプラットフォームを表示
-    notifier = Notifier()
-    print(f"\n[INFO] 利用可能なプラットフォーム: {notifier.available_platforms or 'なし'}")
+    parser = argparse.ArgumentParser(description="UMA-Logic PRO 通知システム")
+    parser.add_argument("--type", choices=["predictions", "results", "optimize", "odds", "historical", "error"],
+                        required=True, help="通知タイプ")
+    parser.add_argument("--status", default="success", help="ステータス（success/failure）")
+    parser.add_argument("--error-message", default="", help="エラーメッセージ（typeがerrorの場合）")
 
-    if len(sys.argv) < 2:
-        print("\n使用方法:")
-        print("  python notifier.py --type [predictions|results|optimize|odds|historical]")
-        print("  python notifier.py --type odds --insider-count 3")
-        print("  python notifier.py --test")
-        return
+    args = parser.parse_args()
 
-    args = sys.argv[1:]
-
-    if "--test" in args:
-        # テスト通知
-        print("\n[INFO] テスト通知を送信します...")
-        results = notifier.send_all(
-            "🔔 テスト通知",
-            "UMA-Logic PRO からのテスト通知です。",
-            0x4ade80,
-            [{"name": "📊 ステータス", "value": "正常", "inline": True}]
-        )
-        print(f"[INFO] 送信結果: {results}")
-        return
-
-    # 引数を解析
-    notify_type = None
-    status = "success"
-    insider_count = 0
-
-    i = 0
-    while i < len(args):
-        if args[i] == "--type" and i + 1 < len(args):
-            notify_type = args[i + 1]
-            i += 2
-        elif args[i] == "--status" and i + 1 < len(args):
-            status = args[i + 1]
-            i += 2
-        elif args[i] == "--insider-count" and i + 1 < len(args):
-            try:
-                insider_count = int(args[i + 1])
-            except ValueError:
-                insider_count = 0
-            i += 2
-        else:
-            i += 1
-
-    # 通知タイプに応じて送信
-    if notify_type == "predictions":
-        notify_predictions(status)
-    elif notify_type == "results":
-        notify_results(status)
-    elif notify_type == "optimize":
-        notify_optimize(status)
-    elif notify_type == "odds":
-        notify_odds(insider_count)
-    elif notify_type == "historical":
-        notify_historical(status)
-    else:
-        print(f"[ERROR] 不明な通知タイプ: {notify_type}")
-
-    print("\n✅ 処理完了")
+    if args.type == "predictions":
+        notify_predictions(args.status)
+    elif args.type == "results":
+        notify_results(args.status)
+    elif args.type == "optimize":
+        notify_optimize(args.status)
+    elif args.type == "odds":
+        notify_odds()
+    elif args.type == "historical":
+        notify_historical(args.status)
+    elif args.type == "error":
+        notify_error("Unknown", args.error_message)
 
 
 if __name__ == "__main__":

@@ -1,379 +1,687 @@
 # scripts/calculator_pro.py
-# UMA-Logic Pro - 高精度スコア計算エンジン
-# 10段階枠順評価、信頼区間算出、動的期待値計算を実装
+# UMA-Logic PRO - 高精度スコア計算エンジン + ケリー基準資金管理
+# 完全版（Full Code）- そのままコピー＆ペーストで動作
 
 import json
 import math
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, field, asdict
 from datetime import datetime
-
-# scipy がインストールされていない環境でも動作するようにフォールバック
-try:
-    from scipy import stats
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-    print("[WARN] scipy が見つかりません。信頼区間計算は簡易版を使用します。")
+import sys
 
 # --- 定数 ---
 DATA_DIR = Path("data")
+MODELS_DIR = DATA_DIR / "models"
+WEIGHTS_FILE = MODELS_DIR / "weights.json"
+ALERTS_FILE = DATA_DIR / "insider_alerts.json"
 
-# 枠順 × 脚質 × 距離 の10段階評価マトリクス
-# キー: (距離カテゴリ, 脚質, 枠番カテゴリ) → スコア(1-10)
-GATE_STYLE_MATRIX = {
-    # 短距離（〜1400m）
-    ("短距離", "逃げ", "内"): 10,
-    ("短距離", "逃げ", "中"): 8,
-    ("短距離", "逃げ", "外"): 6,
-    ("短距離", "先行", "内"): 9,
-    ("短距離", "先行", "中"): 8,
-    ("短距離", "先行", "外"): 7,
-    ("短距離", "差し", "内"): 6,
-    ("短距離", "差し", "中"): 7,
-    ("短距離", "差し", "外"): 7,
-    ("短距離", "追込", "内"): 4,
-    ("短距離", "追込", "中"): 5,
-    ("短距離", "追込", "外"): 6,
-    
-    # マイル（1600m）
-    ("マイル", "逃げ", "内"): 9,
-    ("マイル", "逃げ", "中"): 8,
-    ("マイル", "逃げ", "外"): 6,
-    ("マイル", "先行", "内"): 9,
-    ("マイル", "先行", "中"): 8,
-    ("マイル", "先行", "外"): 7,
-    ("マイル", "差し", "内"): 7,
-    ("マイル", "差し", "中"): 8,
-    ("マイル", "差し", "外"): 7,
-    ("マイル", "追込", "内"): 5,
-    ("マイル", "追込", "中"): 6,
-    ("マイル", "追込", "外"): 6,
-    
-    # 中距離（1800-2200m）
-    ("中距離", "逃げ", "内"): 8,
-    ("中距離", "逃げ", "中"): 7,
-    ("中距離", "逃げ", "外"): 5,
-    ("中距離", "先行", "内"): 9,
-    ("中距離", "先行", "中"): 8,
-    ("中距離", "先行", "外"): 7,
-    ("中距離", "差し", "内"): 8,
-    ("中距離", "差し", "中"): 9,
-    ("中距離", "差し", "外"): 8,
-    ("中距離", "追込", "内"): 6,
-    ("中距離", "追込", "中"): 7,
-    ("中距離", "追込", "外"): 7,
-    
-    # 長距離（2400m〜）
-    ("長距離", "逃げ", "内"): 7,
-    ("長距離", "逃げ", "中"): 6,
-    ("長距離", "逃げ", "外"): 4,
-    ("長距離", "先行", "内"): 8,
-    ("長距離", "先行", "中"): 8,
-    ("長距離", "先行", "外"): 7,
-    ("長距離", "差し", "内"): 9,
-    ("長距離", "差し", "中"): 9,
-    ("長距離", "差し", "外"): 8,
-    ("長距離", "追込", "内"): 8,
-    ("長距離", "追込", "中"): 9,
-    ("長距離", "追込", "外"): 9,
+# デフォルトのエージェント重み
+DEFAULT_WEIGHTS = {
+    "speed_agent": 0.35,
+    "adaptability_agent": 0.35,
+    "pedigree_agent": 0.30
+}
+
+# ケリー基準モード
+KELLY_MODES = {
+    "conservative": 0.25,
+    "half": 0.50,
+    "full": 1.00,
+    "aggressive": 1.20
 }
 
 
-@dataclass
-class ConfidenceInterval:
-    """信頼区間データ"""
-    lower: float  # 下限
-    upper: float  # 上限
-    mean: float   # 平均（推定値）
-    confidence: float  # 信頼度（0.95など）
-
+# --- データクラス ---
 
 @dataclass
-class ExpectedValue:
-    """期待値データ"""
-    raw_ev: float          # 生の期待値
-    adjusted_ev: float     # 調整後期待値
-    win_probability: float # 推定勝率
-    fair_odds: float       # 適正オッズ
-    value_rating: str      # 評価（◎/○/△/×）
+class HorseScore:
+    """馬のスコア"""
+    umaban: int
+    horse_name: str
+    speed_score: float = 0.0
+    adaptability_score: float = 0.0
+    pedigree_score: float = 0.0
+    integrated_score: float = 0.0
+    win_probability: float = 0.0
+    expected_value: float = 0.0
+    kelly_fraction: float = 0.0
+    recommended_bet: int = 0
+    insider_boost: float = 1.0
+    confidence: float = 0.0
 
 
-def get_distance_category(distance: int) -> str:
-    """
-    距離をカテゴリに変換
-    """
-    if distance <= 1400:
-        return "短距離"
-    elif distance <= 1600:
-        return "マイル"
-    elif distance <= 2200:
-        return "中距離"
-    else:
-        return "長距離"
+@dataclass
+class RaceAnalysis:
+    """レース分析結果"""
+    race_id: str
+    race_num: int
+    venue: str
+    race_name: str
+    horses: List[HorseScore] = field(default_factory=list)
+    top_picks: List[int] = field(default_factory=list)
+    analysis_time: str = ""
 
 
-def get_gate_category(gate: int, total_horses: int = 18) -> str:
+# --- スピードエージェント ---
+
+class SpeedAgent:
     """
-    枠番をカテゴリに変換
+    スピードエージェント
+    タイム解析に基づいて勝率を算出
     """
-    ratio = gate / total_horses
-    if ratio <= 0.33:
-        return "内"
-    elif ratio <= 0.66:
-        return "中"
-    else:
-        return "外"
+
+    def __init__(self):
+        self.name = "SpeedAgent"
+        self.weight = DEFAULT_WEIGHTS["speed_agent"]
+
+    def calculate_score(self, horse_data: Dict, race_condition: Dict) -> float:
+        """
+        スピードスコアを計算
+        - 過去のタイムを距離で正規化
+        - 上がり3Fタイムを評価
+        - 走破タイムの安定性を評価
+        """
+        score = 50.0
+
+        distance = race_condition.get("distance", 1600)
+
+        best_time = horse_data.get("best_time", "")
+        if best_time:
+            try:
+                if ":" in best_time:
+                    parts = best_time.split(":")
+                    seconds = float(parts[0]) * 60 + float(parts[1])
+                else:
+                    seconds = float(best_time)
+
+                base_time = distance / 16.0
+                time_diff = base_time - seconds
+
+                score += time_diff * 5
+            except (ValueError, IndexError):
+                pass
+
+        last_3f = horse_data.get("last_3f", 0)
+        if last_3f:
+            try:
+                last_3f_val = float(last_3f)
+                if last_3f_val < 33.0:
+                    score += 15
+                elif last_3f_val < 34.0:
+                    score += 10
+                elif last_3f_val < 35.0:
+                    score += 5
+                elif last_3f_val > 36.0:
+                    score -= 5
+            except ValueError:
+                pass
+
+        last_results = horse_data.get("last_3_results", [])
+        if last_results:
+            avg_position = sum(last_results) / len(last_results)
+            if avg_position <= 2:
+                score += 15
+            elif avg_position <= 3:
+                score += 10
+            elif avg_position <= 5:
+                score += 5
+            elif avg_position > 10:
+                score -= 10
+
+        score = max(0, min(100, score))
+
+        return score
 
 
-def estimate_running_style(horse: dict) -> str:
-    """
-    馬の脚質を推定（過去データがない場合はデフォルト）
-    """
-    style = horse.get("脚質", horse.get("style", ""))
-    if style in ["逃げ", "先行", "差し", "追込"]:
-        return style
-    
-    # 人気と枠から推定（簡易版）
-    popularity = horse.get("人気", 10)
-    gate = horse.get("馬番", 9)
-    
-    if gate <= 4 and popularity <= 3:
-        return "先行"
-    elif gate <= 4:
-        return "差し"
-    elif popularity <= 2:
-        return "先行"
-    else:
-        return "差し"
+# --- 適性エージェント ---
 
+class AdaptabilityAgent:
+    """
+    適性エージェント
+    馬場適性・距離適性・枠順適性を評価
+    """
 
-def calculate_gate_style_score(horse: dict, distance: int, total_horses: int = 18) -> int:
-    """
-    枠順 × 脚質 × 距離 の10段階スコアを計算
-    """
-    gate = horse.get("馬番", 9)
-    style = estimate_running_style(horse)
-    
-    distance_cat = get_distance_category(distance)
-    gate_cat = get_gate_category(gate, total_horses)
-    
-    key = (distance_cat, style, gate_cat)
-    score = GATE_STYLE_MATRIX.get(key, 5)  # デフォルト5
-    
-    return score
+    def __init__(self):
+        self.name = "AdaptabilityAgent"
+        self.weight = DEFAULT_WEIGHTS["adaptability_agent"]
 
-
-def calculate_confidence_interval(
-    uma_index: float,
-    sample_size: int = 10,
-    confidence_level: float = 0.95
-) -> ConfidenceInterval:
-    """
-    UMA指数から95%信頼区間を計算
-    
-    Args:
-        uma_index: UMA指数（0-100）
-        sample_size: サンプルサイズ（過去レース数など）
-        confidence_level: 信頼水準（デフォルト95%）
-    
-    Returns:
-        ConfidenceInterval オブジェクト
-    """
-    # 推定勝率（UMA指数を確率に変換）
-    mean_prob = uma_index / 100 * 0.35  # 最大35%勝率
-    
-    # 標準誤差の推定（ベータ分布を仮定）
-    # 簡易的に二項分布の標準誤差を使用
-    if mean_prob <= 0 or mean_prob >= 1:
-        mean_prob = max(0.01, min(0.99, mean_prob))
-    
-    std_error = math.sqrt(mean_prob * (1 - mean_prob) / sample_size)
-    
-    if SCIPY_AVAILABLE:
-        # scipy を使用した正確な信頼区間
-        z_score = stats.norm.ppf((1 + confidence_level) / 2)
-    else:
-        # 簡易版（95%信頼区間のz値を固定）
-        z_score = 1.96 if confidence_level == 0.95 else 1.645
-    
-    margin = z_score * std_error
-    
-    lower = max(0, mean_prob - margin)
-    upper = min(1, mean_prob + margin)
-    
-    return ConfidenceInterval(
-        lower=round(lower * 100, 2),
-        upper=round(upper * 100, 2),
-        mean=round(mean_prob * 100, 2),
-        confidence=confidence_level
-    )
-
-
-def calculate_dynamic_expected_value(
-    uma_index: float,
-    live_odds: float,
-    confidence_interval: ConfidenceInterval = None
-) -> ExpectedValue:
-    """
-    動的期待値を計算
-    
-    Args:
-        uma_index: UMA指数（0-100）
-        live_odds: リアルタイムオッズ
-        confidence_interval: 信頼区間（オプション）
-    
-    Returns:
-        ExpectedValue オブジェクト
-    """
-    if live_odds <= 0:
-        return ExpectedValue(
-            raw_ev=0,
-            adjusted_ev=0,
-            win_probability=0,
-            fair_odds=0,
-            value_rating="×"
-        )
-    
-    # 推定勝率
-    win_probability = uma_index / 100 * 0.35
-    
-    # 適正オッズ（1 / 勝率）
-    fair_odds = 1 / win_probability if win_probability > 0 else 100
-    
-    # 生の期待値（適正オッズ / 実オッズ）
-    raw_ev = fair_odds / live_odds
-    
-    # 調整後期待値（信頼区間の下限を使用してより保守的に）
-    if confidence_interval:
-        conservative_prob = confidence_interval.lower / 100
-        conservative_fair_odds = 1 / conservative_prob if conservative_prob > 0 else 100
-        adjusted_ev = conservative_fair_odds / live_odds
-    else:
-        adjusted_ev = raw_ev * 0.9  # 10%割引
-    
-    # 評価
-    if adjusted_ev >= 1.3:
-        value_rating = "◎"
-    elif adjusted_ev >= 1.1:
-        value_rating = "○"
-    elif adjusted_ev >= 0.9:
-        value_rating = "△"
-    else:
-        value_rating = "×"
-    
-    return ExpectedValue(
-        raw_ev=round(raw_ev, 3),
-        adjusted_ev=round(adjusted_ev, 3),
-        win_probability=round(win_probability * 100, 2),
-        fair_odds=round(fair_odds, 1),
-        value_rating=value_rating
-    )
-
-
-def process_race(race: dict) -> dict:
-    """
-    1レースの全馬に対してスコア計算を実行
-    """
-    distance = race.get("distance", 1600)
-    horses = race.get("horses", [])
-    total_horses = len(horses)
-    
-    processed_horses = []
-    
-    for horse in horses:
-        # 枠順×脚質スコア
-        gate_style_score = calculate_gate_style_score(horse, distance, total_horses)
-        
-        # UMA指数
-        uma_index = horse.get("UMA指数", 50)
-        
-        # 信頼区間
-        ci = calculate_confidence_interval(uma_index)
-        
-        # 動的期待値
-        live_odds = horse.get("単勝オッズ", 0)
-        ev = calculate_dynamic_expected_value(uma_index, live_odds, ci)
-        
-        # 結果を統合
-        processed_horse = {
-            **horse,
-            "枠順脚質スコア": gate_style_score,
-            "信頼区間": asdict(ci),
-            "動的期待値": asdict(ev),
-            "総合評価": ev.value_rating
+        self.gate_matrix = {
+            ("短距離", "逃げ", "内"): 10,
+            ("短距離", "逃げ", "中"): 8,
+            ("短距離", "逃げ", "外"): 6,
+            ("短距離", "先行", "内"): 9,
+            ("短距離", "先行", "中"): 8,
+            ("短距離", "先行", "外"): 7,
+            ("短距離", "差し", "内"): 6,
+            ("短距離", "差し", "中"): 7,
+            ("短距離", "差し", "外"): 7,
+            ("短距離", "追込", "内"): 4,
+            ("短距離", "追込", "中"): 5,
+            ("短距離", "追込", "外"): 6,
+            ("中距離", "逃げ", "内"): 9,
+            ("中距離", "逃げ", "中"): 8,
+            ("中距離", "逃げ", "外"): 7,
+            ("中距離", "先行", "内"): 9,
+            ("中距離", "先行", "中"): 9,
+            ("中距離", "先行", "外"): 8,
+            ("中距離", "差し", "内"): 7,
+            ("中距離", "差し", "中"): 8,
+            ("中距離", "差し", "外"): 8,
+            ("中距離", "追込", "内"): 5,
+            ("中距離", "追込", "中"): 6,
+            ("中距離", "追込", "外"): 7,
+            ("長距離", "逃げ", "内"): 7,
+            ("長距離", "逃げ", "中"): 7,
+            ("長距離", "逃げ", "外"): 6,
+            ("長距離", "先行", "内"): 8,
+            ("長距離", "先行", "中"): 8,
+            ("長距離", "先行", "外"): 8,
+            ("長距離", "差し", "内"): 8,
+            ("長距離", "差し", "中"): 9,
+            ("長距離", "差し", "外"): 9,
+            ("長距離", "追込", "内"): 7,
+            ("長距離", "追込", "中"): 8,
+            ("長距離", "追込", "外"): 9,
         }
-        processed_horses.append(processed_horse)
-    
-    return {
-        **race,
-        "horses": processed_horses,
-        "processed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
+
+    def _get_distance_category(self, distance: int) -> str:
+        if distance <= 1400:
+            return "短距離"
+        elif distance <= 2000:
+            return "中距離"
+        else:
+            return "長距離"
+
+    def _get_gate_category(self, umaban: int, total_horses: int) -> str:
+        ratio = umaban / max(total_horses, 1)
+        if ratio <= 0.33:
+            return "内"
+        elif ratio <= 0.67:
+            return "中"
+        else:
+            return "外"
+
+    def calculate_score(self, horse_data: Dict, race_condition: Dict) -> float:
+        """
+        適性スコアを計算
+        - 枠順 × 脚質 × 距離の相性
+        - 馬場状態への適性
+        - コース適性
+        """
+        score = 50.0
+
+        distance = race_condition.get("distance", 1600)
+        distance_cat = self._get_distance_category(distance)
+
+        umaban = horse_data.get("umaban", 1)
+        total_horses = race_condition.get("total_horses", 18)
+        gate_cat = self._get_gate_category(umaban, total_horses)
+
+        running_style = horse_data.get("running_style", "先行")
+
+        gate_score = self.gate_matrix.get((distance_cat, running_style, gate_cat), 5)
+        score += (gate_score - 5) * 5
+
+        track_condition = race_condition.get("track_condition", "良")
+        track_aptitude = horse_data.get("track_aptitude", {})
+
+        if track_condition in track_aptitude:
+            apt_score = track_aptitude[track_condition]
+            score += (apt_score - 50) * 0.3
+
+        if track_condition in ["重", "不良"]:
+            if horse_data.get("heavy_track_wins", 0) > 0:
+                score += 10
+
+        venue = race_condition.get("venue", "")
+        venue_wins = horse_data.get("venue_wins", {}).get(venue, 0)
+        if venue_wins > 0:
+            score += min(15, venue_wins * 5)
+
+        score = max(0, min(100, score))
+
+        return score
 
 
-def process_predictions_file(input_path: Path, output_path: Path = None):
+# --- 血統エージェント ---
+
+class PedigreeAgent:
     """
-    予想ファイルを読み込み、高精度計算を適用して保存
+    血統エージェント
+    血統パターンに基づいて勝率を算出
     """
-    if not input_path.exists():
-        print(f"[ERROR] ファイルが見つかりません: {input_path}")
-        return
-    
-    with open(input_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    
-    races = data.get("races", [])
-    processed_races = []
-    
-    for race in races:
-        processed_race = process_race(race)
-        processed_races.append(processed_race)
-    
-    data["races"] = processed_races
-    data["calculator_version"] = "pro_v1.0"
-    data["processed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # 出力先
-    if output_path is None:
-        output_path = input_path  # 上書き
-    
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    
-    print(f"[INFO] 処理完了: {output_path}")
 
+    def __init__(self):
+        self.name = "PedigreeAgent"
+        self.weight = DEFAULT_WEIGHTS["pedigree_agent"]
+
+        self.sire_ratings = {
+            "ディープインパクト": 95,
+            "キングカメハメハ": 90,
+            "ハーツクライ": 88,
+            "ロードカナロア": 92,
+            "エピファネイア": 85,
+            "キタサンブラック": 88,
+            "ドゥラメンテ": 87,
+            "モーリス": 86,
+            "オルフェーヴル": 84,
+            "ルーラーシップ": 83,
+            "ダイワメジャー": 82,
+            "ゴールドシップ": 80,
+            "ジャスタウェイ": 81,
+            "リアルスティール": 79,
+            "サトノダイヤモンド": 78,
+        }
+
+        self.distance_sire_aptitude = {
+            "ディープインパクト": {"短距離": 70, "中距離": 95, "長距離": 90},
+            "キングカメハメハ": {"短距離": 80, "中距離": 90, "長距離": 75},
+            "ロードカナロア": {"短距離": 95, "中距離": 80, "長距離": 60},
+            "ハーツクライ": {"短距離": 60, "中距離": 85, "長距離": 95},
+            "キタサンブラック": {"短距離": 65, "中距離": 90, "長距離": 95},
+        }
+
+    def _get_distance_category(self, distance: int) -> str:
+        if distance <= 1400:
+            return "短距離"
+        elif distance <= 2000:
+            return "中距離"
+        else:
+            return "長距離"
+
+    def calculate_score(self, horse_data: Dict, race_condition: Dict) -> float:
+        """
+        血統スコアを計算
+        - 父の実績評価
+        - 距離適性（血統ベース）
+        - 母父の影響
+        """
+        score = 50.0
+
+        father = horse_data.get("father", "")
+        if father in self.sire_ratings:
+            sire_score = self.sire_ratings[father]
+            score += (sire_score - 80) * 0.5
+
+        distance = race_condition.get("distance", 1600)
+        distance_cat = self._get_distance_category(distance)
+
+        if father in self.distance_sire_aptitude:
+            apt = self.distance_sire_aptitude[father].get(distance_cat, 75)
+            score += (apt - 75) * 0.3
+
+        mother_father = horse_data.get("mother_father", "")
+        if mother_father in self.sire_ratings:
+            mf_score = self.sire_ratings[mother_father]
+            score += (mf_score - 80) * 0.2
+
+        score = max(0, min(100, score))
+
+        return score
+
+
+# --- 統合計算クラス ---
+
+class IntegratedCalculator:
+    """
+    統合計算クラス
+    3つのエージェントを統合してUMA指数と期待値を算出
+    """
+
+    def __init__(self):
+        self.speed_agent = SpeedAgent()
+        self.adaptability_agent = AdaptabilityAgent()
+        self.pedigree_agent = PedigreeAgent()
+
+        self.weights = self._load_weights()
+        self.insider_alerts = self._load_insider_alerts()
+
+    def _load_weights(self) -> Dict:
+        """重みを読み込み"""
+        if WEIGHTS_FILE.exists():
+            try:
+                with open(WEIGHTS_FILE, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return DEFAULT_WEIGHTS.copy()
+
+    def _save_weights(self):
+        """重みを保存"""
+        MODELS_DIR.mkdir(parents=True, exist_ok=True)
+        with open(WEIGHTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(self.weights, f, ensure_ascii=False, indent=2)
+
+    def _load_insider_alerts(self) -> Dict:
+        """インサイダーアラートを読み込み"""
+        if ALERTS_FILE.exists():
+            try:
+                with open(ALERTS_FILE, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {"alerts": []}
+
+    def get_insider_boost(self, race_id: str, umaban: int) -> Tuple[float, bool]:
+        """
+        インサイダーブースト係数を取得
+        returns: (boost_factor, aggressive_mode)
+        """
+        alerts = self.insider_alerts.get("alerts", [])
+
+        for alert in alerts:
+            if alert.get("status") != "active":
+                continue
+            if alert.get("race_id") == race_id and alert.get("umaban") == umaban:
+                boost = alert.get("expected_value_boost", 1.0)
+                aggressive = alert.get("aggressive_mode", False)
+                return (boost, aggressive)
+
+        return (1.0, False)
+
+    def calculate_horse_score(
+        self,
+        horse_data: Dict,
+        race_condition: Dict
+    ) -> HorseScore:
+        """馬のスコアを計算"""
+
+        speed_score = self.speed_agent.calculate_score(horse_data, race_condition)
+        adaptability_score = self.adaptability_agent.calculate_score(horse_data, race_condition)
+        pedigree_score = self.pedigree_agent.calculate_score(horse_data, race_condition)
+
+        integrated_score = (
+            speed_score * self.weights.get("speed_agent", 0.35) +
+            adaptability_score * self.weights.get("adaptability_agent", 0.35) +
+            pedigree_score * self.weights.get("pedigree_agent", 0.30)
+        )
+
+        win_probability = self._score_to_probability(integrated_score)
+
+        race_id = race_condition.get("race_id", "")
+        umaban = horse_data.get("umaban", 0)
+        insider_boost, aggressive_mode = self.get_insider_boost(race_id, umaban)
+
+        odds = horse_data.get("odds", 10.0)
+        expected_value = win_probability * odds * insider_boost
+
+        confidence = min(1.0, integrated_score / 80)
+
+        return HorseScore(
+            umaban=umaban,
+            horse_name=horse_data.get("horse_name", ""),
+            speed_score=speed_score,
+            adaptability_score=adaptability_score,
+            pedigree_score=pedigree_score,
+            integrated_score=integrated_score,
+            win_probability=win_probability,
+            expected_value=expected_value,
+            insider_boost=insider_boost,
+            confidence=confidence
+        )
+
+    def _score_to_probability(self, score: float) -> float:
+        """スコアを勝率に変換"""
+        normalized = (score - 30) / 50
+        probability = 1 / (1 + math.exp(-normalized * 2))
+        probability = probability * 0.4
+        return max(0.01, min(0.5, probability))
+
+    def calculate_kelly_bet(
+        self,
+        win_probability: float,
+        odds: float,
+        bankroll: int,
+        mode: str = "half",
+        aggressive_override: bool = False
+    ) -> Tuple[float, int]:
+        """
+        ケリー基準で投資額を計算
+
+        Args:
+            win_probability: 勝率 (0-1)
+            odds: オッズ
+            bankroll: 総資金
+            mode: ケリーモード (conservative/half/full/aggressive)
+            aggressive_override: インサイダー検知時のアグレッシブモード強制
+
+        Returns:
+            (kelly_fraction, recommended_bet)
+        """
+        if aggressive_override:
+            mode = "aggressive"
+
+        b = odds - 1
+        p = win_probability
+        q = 1 - p
+
+        if b <= 0 or p <= 0:
+            return (0.0, 0)
+
+        kelly = (b * p - q) / b
+
+        kelly = max(0, kelly)
+
+        mode_multiplier = KELLY_MODES.get(mode, 0.5)
+        adjusted_kelly = kelly * mode_multiplier
+
+        adjusted_kelly = min(0.25, adjusted_kelly)
+
+        recommended_bet = int(bankroll * adjusted_kelly / 100) * 100
+
+        return (adjusted_kelly, recommended_bet)
+
+    def analyze_race(
+        self,
+        race_data: Dict,
+        bankroll: int = 100000,
+        kelly_mode: str = "half"
+    ) -> RaceAnalysis:
+        """レース全体を分析"""
+
+        race_condition = {
+            "race_id": race_data.get("race_id", ""),
+            "distance": race_data.get("distance", 1600),
+            "track_type": race_data.get("track_type", "芝"),
+            "track_condition": race_data.get("track_condition", "良"),
+            "venue": race_data.get("venue", ""),
+            "total_horses": len(race_data.get("horses", []))
+        }
+
+        horse_scores = []
+
+        for horse in race_data.get("horses", []):
+            score = self.calculate_horse_score(horse, race_condition)
+
+            _, aggressive = self.get_insider_boost(
+                race_condition["race_id"],
+                horse.get("umaban", 0)
+            )
+
+            kelly_fraction, recommended_bet = self.calculate_kelly_bet(
+                score.win_probability,
+                horse.get("odds", 10.0),
+                bankroll,
+                kelly_mode,
+                aggressive
+            )
+
+            score.kelly_fraction = kelly_fraction
+            score.recommended_bet = recommended_bet
+
+            horse_scores.append(score)
+
+        horse_scores.sort(key=lambda x: x.integrated_score, reverse=True)
+
+        top_picks = [h.umaban for h in horse_scores[:3]]
+
+        return RaceAnalysis(
+            race_id=race_data.get("race_id", ""),
+            race_num=race_data.get("race_num", 0),
+            venue=race_data.get("venue", ""),
+            race_name=race_data.get("race_name", ""),
+            horses=horse_scores,
+            top_picks=top_picks,
+            analysis_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
+
+
+# --- ケリー基準計算ユーティリティ ---
+
+class KellyCalculator:
+    """ケリー基準計算のユーティリティクラス"""
+
+    @staticmethod
+    def calculate(
+        win_probability: float,
+        odds: float,
+        bankroll: int,
+        mode: str = "half"
+    ) -> Dict:
+        """
+        ケリー基準で投資額を計算
+
+        Returns:
+            {
+                "kelly_fraction": float,
+                "recommended_bet": int,
+                "expected_value": float,
+                "edge": float,
+                "mode": str
+            }
+        """
+        b = odds - 1
+        p = win_probability
+        q = 1 - p
+
+        if b <= 0 or p <= 0:
+            return {
+                "kelly_fraction": 0,
+                "recommended_bet": 0,
+                "expected_value": 0,
+                "edge": 0,
+                "mode": mode
+            }
+
+        kelly = (b * p - q) / b
+        kelly = max(0, kelly)
+
+        mode_multiplier = KELLY_MODES.get(mode, 0.5)
+        adjusted_kelly = kelly * mode_multiplier
+        adjusted_kelly = min(0.25, adjusted_kelly)
+
+        recommended_bet = int(bankroll * adjusted_kelly / 100) * 100
+
+        expected_value = p * odds
+        edge = expected_value - 1
+
+        return {
+            "kelly_fraction": adjusted_kelly,
+            "recommended_bet": recommended_bet,
+            "expected_value": expected_value,
+            "edge": edge,
+            "mode": mode
+        }
+
+    @staticmethod
+    def calculate_portfolio(
+        bets: List[Dict],
+        bankroll: int,
+        mode: str = "half",
+        max_total_fraction: float = 0.5
+    ) -> List[Dict]:
+        """
+        複数の賭けに対するポートフォリオ配分を計算
+
+        Args:
+            bets: [{"win_probability": float, "odds": float, "name": str}, ...]
+            bankroll: 総資金
+            mode: ケリーモード
+            max_total_fraction: 最大投資比率
+
+        Returns:
+            配分結果のリスト
+        """
+        results = []
+        total_fraction = 0
+
+        for bet in bets:
+            result = KellyCalculator.calculate(
+                bet["win_probability"],
+                bet["odds"],
+                bankroll,
+                mode
+            )
+            result["name"] = bet.get("name", "")
+            results.append(result)
+            total_fraction += result["kelly_fraction"]
+
+        if total_fraction > max_total_fraction:
+            scale = max_total_fraction / total_fraction
+            for result in results:
+                result["kelly_fraction"] *= scale
+                result["recommended_bet"] = int(bankroll * result["kelly_fraction"] / 100) * 100
+
+        return results
+
+
+# --- メイン処理 ---
 
 def main():
-    """
-    メイン処理
-    """
     print("=" * 60)
-    print("UMA-Logic Pro - 高精度スコア計算エンジン")
+    print("🧮 UMA-Logic PRO - 高精度スコア計算エンジン")
     print("=" * 60)
-    
-    # 最新の予想ファイルを処理
-    latest_path = DATA_DIR / "latest_predictions.json"
-    
-    if latest_path.exists():
-        print(f"[INFO] 処理対象: {latest_path}")
-        process_predictions_file(latest_path)
-    else:
-        print("[INFO] latest_predictions.json が見つかりません。")
-        
-        # 日付別ファイルを探す
-        prediction_files = list(DATA_DIR.glob("predictions_*.json"))
-        if prediction_files:
-            # 最新のファイルを処理
-            latest_file = max(prediction_files, key=lambda p: p.stem)
-            print(f"[INFO] 代替ファイルを処理: {latest_file}")
-            process_predictions_file(latest_file)
-        else:
-            print("[INFO] 処理対象のファイルがありません。正常終了します。")
-    
-    print("[INFO] 処理完了")
 
+    calculator = IntegratedCalculator()
 
-if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+
+        if command == "--kelly":
+            print("\n💰 ケリー基準シミュレーター")
+            print("-" * 40)
+
+            prob = float(sys.argv[2]) if len(sys.argv) > 2 else 0.2
+            odds = float(sys.argv[3]) if len(sys.argv) > 3 else 5.0
+            bankroll = int(sys.argv[4]) if len(sys.argv) > 4 else 100000
+
+            print(f"勝率: {prob*100:.1f}%")
+            print(f"オッズ: {odds:.1f}")
+            print(f"資金: ¥{bankroll:,}")
+
+            for mode in ["conservative", "half", "full", "aggressive"]:
+                result = KellyCalculator.calculate(prob, odds, bankroll, mode)
+                print(f"\n{mode.upper()}:")
+                print(f"  投資比率: {result['kelly_fraction']*100:.2f}%")
+                print(f"  推奨投資額: ¥{result['recommended_bet']:,}")
+                print(f"  期待値: {result['expected_value']:.2f}")
+
+        elif command == "--analyze":
+            print("\n📊 レース分析デモ")
+
+            demo_race = {
+                "race_id": "202401010101",
+                "race_num": 1,
+                "venue": "中山",
+                "race_name": "3歳未勝利",
+                "distance": 1600,
+                "track_type": "芝",
+                "track_condition": "良",
+                "horses": [
+                    {"umaban": 1, "horse_name": "テスト馬A", "odds": 3.5, "father": "ディープインパクト"},
+                    {"umaban": 2, "horse_name": "テスト馬B", "odds": 5.0, "father": "キングカメハメハ"},
+                    {"umaban": 3, "horse_name": "テスト馬C", "odds": 8.0, "father": "ロードカナロア"},
+                ]
+            }
+
+            analysis = calculator.analyze_race(demo_race)
+
+            print(f"\nレース: {analysis.venue} {analysis.race_num}R {analysis.race_name}")
+            print("-" * 40)
+
+            for horse in analysis.horses:
+                print(f"\n{horse.umaban}番 {horse.horse_name}")
+                print(f"  統合スコア: {horse.integrated_score:.1f}")
+                print(f"  勝率: {horse.win_probability*100:.1f}%")
+                print(f" 

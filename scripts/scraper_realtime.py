@@ -1,564 +1,634 @@
 # scripts/scraper_realtime.py
-# UMA-Logic Pro - 高機能リアルタイムスクレイパー
-# netkeiba.comから最新オッズ・脚質データを取得し、ペース予想を行う
+# UMA-Logic PRO - リアルタイムスクレイパー＆インサイダー探知機
+# オッズ変動監視 + インサイダーアラート + ケリー基準連動
 
 import requests
 from bs4 import BeautifulSoup
+import json
 import time
 import re
-import json
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
-from enum import Enum
+from dataclasses import dataclass, field, asdict
+import math
 
 # --- 定数 ---
-BASE_URL = "https://race.netkeiba.com"
-ODDS_URL = "https://race.netkeiba.com/odds/index.html"
-SHUTUBA_URL = "https://race.netkeiba.com/race/shutuba.html"
+DATA_DIR = Path("data")
+ODDS_DIR = DATA_DIR / "odds"
+ALERTS_FILE = DATA_DIR / "insider_alerts.json"
+REALTIME_STATE_FILE = DATA_DIR / "realtime_state.json"
 
-# リトライ設定
 MAX_RETRIES = 3
-RETRY_DELAY = 2  # 秒
-REQUEST_TIMEOUT = 10  # 秒
+REQUEST_TIMEOUT = 15
+REQUEST_INTERVAL = 1.0
 
-# User-Agent（ブロック回避用 ）
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+}
+
+# インサイダー検知閾値
+INSIDER_THRESHOLDS = {
+    "odds_drop_rate": 0.20,      # 20%以上のオッズ低下
+    "odds_drop_rate_fast": 0.15, # 15分以内に15%低下
+    "volume_spike": 2.0,         # 通常の2倍以上の売れ行き
+    "time_window_minutes": 30,   # 監視時間窓（分）
+    "min_odds_for_alert": 3.0,   # アラート対象の最低オッズ
 }
 
 
-class RunningStyle(Enum):
-    """脚質の列挙型"""
-    NIGE = "逃げ"      # 逃げ
-    SENKO = "先行"     # 先行
-    SASHI = "差し"     # 差し
-    OIKOMI = "追込"    # 追込
-    UNKNOWN = "不明"
-
+# --- データクラス ---
 
 @dataclass
-class HorseOdds:
-    """馬のオッズ情報"""
-    horse_number: int
+class OddsSnapshot:
+    """オッズスナップショット"""
+    timestamp: str
+    race_id: str
+    umaban: int
     horse_name: str
-    win_odds: float          # 単勝オッズ
-    place_odds_min: float    # 複勝オッズ（下限）
-    place_odds_max: float    # 複勝オッズ（上限）
-    popularity: int          # 人気順
+    odds: float
+    popularity: int
 
 
 @dataclass
-class WideOdds:
-    """ワイドオッズ情報"""
-    horse1: int
-    horse2: int
-    odds_min: float
-    odds_max: float
-
-
-@dataclass
-class HorseRunningStyle:
-    """馬の脚質情報"""
-    horse_number: int
+class InsiderAlert:
+    """インサイダーアラート"""
+    alert_id: str
+    race_id: str
+    race_name: str
+    venue: str
+    umaban: int
     horse_name: str
-    style: RunningStyle
-    style_score: Dict[str, int]  # 各脚質のスコア（過去レースから算出）
+    alert_type: str  # "ODDS_DROP", "VOLUME_SPIKE", "PATTERN_MATCH"
+    severity: str    # "HIGH", "MEDIUM", "LOW"
+    initial_odds: float
+    current_odds: float
+    drop_rate: float
+    detected_at: str
+    time_to_race_minutes: int
+    confidence: float
+    aggressive_mode: bool = True  # ケリー基準をAggressiveに変更
+    expected_value_boost: float = 1.0  # 期待値ブースト係数
+    
+    def to_dict(self) -> Dict:
+        return asdict(self)
 
 
 @dataclass
-class PacePrediction:
-    """ペース予想結果"""
-    pace_type: str           # "ハイペース" / "ミドルペース" / "スローペース"
-    confidence: float        # 信頼度（0-1）
-    nige_count: int          # 逃げ馬の数
-    senko_count: int         # 先行馬の数
-    sashi_count: int         # 差し馬の数
-    oikomi_count: int        # 追込馬の数
-    analysis: str            # 分析コメント
+class RealtimeState:
+    """リアルタイム状態管理"""
+    last_update: str = ""
+    active_alerts: List[Dict] = field(default_factory=list)
+    odds_history: Dict[str, List[Dict]] = field(default_factory=dict)  # race_id -> [snapshots]
+    aggressive_mode_horses: List[str] = field(default_factory=list)  # "race_id_umaban" のリスト
 
 
-def _make_request(url: str, params: Optional[Dict] = None) -> Optional[requests.Response]:
+# --- インサイダー検知クラス ---
+
+class InsiderDetector:
     """
-    リトライ・タイムアウト処理付きのHTTPリクエスト
-    
-    Args:
-        url: リクエスト先URL
-        params: クエリパラメータ
-    
-    Returns:
-        レスポンスオブジェクト（失敗時はNone）
+    インサイダー取引検知エンジン
+    オッズの急激な変動を監視し、不自然なパターンを検出
     """
-    for attempt in range(MAX_RETRIES):
-        try:
-            response = requests.get(
-                url, 
-                params=params, 
-                headers=HEADERS, 
-                timeout=REQUEST_TIMEOUT
-            )
-            response.raise_for_status()
-            return response
-        except requests.exceptions.Timeout:
-            print(f"[WARN] タイムアウト発生 (試行 {attempt + 1}/{MAX_RETRIES}): {url}")
-        except requests.exceptions.HTTPError as e:
-            print(f"[ERROR] HTTPエラー: {e}")
-            if response.status_code == 404:
-                return None  # 404は即座に終了
-        except requests.exceptions.RequestException as e:
-            print(f"[ERROR] リクエストエラー (試行 {attempt + 1}/{MAX_RETRIES}): {e}")
-        
-        if attempt < MAX_RETRIES - 1:
-            time.sleep(RETRY_DELAY)
     
-    print(f"[ERROR] 最大リトライ回数に達しました: {url}")
-    return None
-
-
-def _decode_html(response: requests.Response) -> str:
-    """
-    netkeibaのHTMLをデコード（EUC-JP対応）
+    def __init__(self):
+        self.state = self._load_state()
+        self.alerts: List[InsiderAlert] = []
+        self._load_alerts()
     
-    Args:
-        response: HTTPレスポンス
-    
-    Returns:
-        デコードされたHTML文字列
-    """
-    try:
-        return response.content.decode('euc-jp', errors='replace')
-    except Exception:
-        return response.text
-
-
-def get_live_odds(race_id: str) -> Dict[str, any]:
-    """
-    レース直前の単複・ワイドオッズを取得
-    
-    Args:
-        race_id: レースID（例: "202605010101"）
-    
-    Returns:
-        {
-            "race_id": str,
-            "timestamp": str,
-            "win_place_odds": List[HorseOdds],
-            "wide_odds": List[WideOdds],
-            "error": Optional[str]
-        }
-    """
-    result = {
-        "race_id": race_id,
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "win_place_odds": [],
-        "wide_odds": [],
-        "error": None
-    }
-
-    # --- 単勝・複勝オッズ取得 ---
-    win_place_url = f"{ODDS_URL}?type=b1&race_id={race_id}&rf=shutuba_submenu"
-    response = _make_request(win_place_url)
-    
-    if response is None:
-        result["error"] = "単複オッズの取得に失敗しました"
-        return result
-    
-    html = _decode_html(response)
-    soup = BeautifulSoup(html, 'lxml')
-    
-    try:
-        # 単勝・複勝テーブルを解析
-        odds_table = soup.select_one('table.RaceOdds_HorseList_Table')
-        if odds_table:
-            rows = odds_table.select('tr.HorseList')
-            for row in rows:
-                try:
-                    # 馬番
-                    umaban_td = row.select_one('td[class*="Umaban"]')
-                    horse_number = int(umaban_td.get_text(strip=True)) if umaban_td else 0
-                    
-                    # 馬名
-                    horse_name_td = row.select_one('span.HorseName')
-                    horse_name = horse_name_td.get_text(strip=True) if horse_name_td else ""
-                    
-                    # 単勝オッズ
-                    win_odds_td = row.select_one('td.Odds.Txt_R')
-                    win_odds_text = win_odds_td.get_text(strip=True) if win_odds_td else "0"
-                    win_odds = float(win_odds_text.replace(',', '')) if win_odds_text not in ['---', ''] else 0.0
-                    
-                    # 複勝オッズ（範囲）
-                    place_odds_tds = row.select('td.Odds.Txt_R')
-                    place_odds_min = 0.0
-                    place_odds_max = 0.0
-                    if len(place_odds_tds) >= 3:
-                        place_min_text = place_odds_tds[1].get_text(strip=True)
-                        place_max_text = place_odds_tds[2].get_text(strip=True)
-                        place_odds_min = float(place_min_text.replace(',', '')) if place_min_text not in ['---', ''] else 0.0
-                        place_odds_max = float(place_max_text.replace(',', '')) if place_max_text not in ['---', ''] else 0.0
-                    
-                    # 人気
-                    popularity_td = row.select_one('td.Popular')
-                    popularity = int(popularity_td.get_text(strip=True)) if popularity_td else 0
-                    
-                    if horse_number > 0:
-                        result["win_place_odds"].append(HorseOdds(
-                            horse_number=horse_number,
-                            horse_name=horse_name,
-                            win_odds=win_odds,
-                            place_odds_min=place_odds_min,
-                            place_odds_max=place_odds_max,
-                            popularity=popularity
-                        ))
-                except Exception as e:
-                    print(f"[WARN] 馬データのパースエラー: {e}")
-                    continue
-    except Exception as e:
-        result["error"] = f"単複オッズのパースエラー: {e}"
-        return result
-
-    # --- ワイドオッズ取得 ---
-    wide_url = f"{ODDS_URL}?type=b5&race_id={race_id}&rf=shutuba_submenu"
-    response = _make_request(wide_url)
-    
-    if response:
-        html = _decode_html(response)
-        soup = BeautifulSoup(html, 'lxml')
-        
-        try:
-            # ワイドオッズテーブルを解析
-            wide_table = soup.select_one('table.Wide_Odds_Table')
-            if wide_table:
-                cells = wide_table.select('td.Odds')
-                for cell in cells:
-                    try:
-                        # セルのdata属性から馬番の組み合わせを取得
-                        data_id = cell.get('data-odds-id', '')
-                        if '-' in data_id:
-                            parts = data_id.split('-')
-                            horse1 = int(parts[0])
-                            horse2 = int(parts[1])
-                            
-                            odds_text = cell.get_text(strip=True)
-                            # "1.5 - 2.0" のような形式を解析
-                            odds_match = re.search(r'([\d.]+)\s*-\s*([\d.]+)', odds_text)
-                            if odds_match:
-                                odds_min = float(odds_match.group(1))
-                                odds_max = float(odds_match.group(2))
-                                
-                                result["wide_odds"].append(WideOdds(
-                                    horse1=horse1,
-                                    horse2=horse2,
-                                    odds_min=odds_min,
-                                    odds_max=odds_max
-                                ))
-                    except Exception as e:
-                        continue
-        except Exception as e:
-            print(f"[WARN] ワイドオッズのパースエラー: {e}")
-
-    # 人気順でソート
-    result["win_place_odds"].sort(key=lambda x: x.popularity if x.popularity > 0 else 999)
-    
-    return result
-
-
-def get_running_styles(race_id: str) -> List[HorseRunningStyle]:
-    """
-    出走馬の脚質データを取得
-    
-    Args:
-        race_id: レースID
-    
-    Returns:
-        各馬の脚質情報リスト
-    """
-    result = []
-    
-    # 出馬表ページから脚質情報を取得
-    shutuba_url = f"{SHUTUBA_URL}?race_id={race_id}"
-    response = _make_request(shutuba_url)
-    
-    if response is None:
-        return result
-    
-    html = _decode_html(response)
-    soup = BeautifulSoup(html, 'lxml')
-    
-    try:
-        # 出馬表テーブルを解析
-        horse_rows = soup.select('tr.HorseList')
-        
-        for row in horse_rows:
+    def _load_state(self) -> RealtimeState:
+        """状態を読み込み"""
+        if REALTIME_STATE_FILE.exists():
             try:
-                # 馬番
-                umaban_td = row.select_one('td[class*="Umaban"]')
-                horse_number = int(umaban_td.get_text(strip=True)) if umaban_td else 0
-                
-                # 馬名
-                horse_name_elem = row.select_one('span.HorseName a')
-                horse_name = horse_name_elem.get_text(strip=True) if horse_name_elem else ""
-                
-                # 脚質情報（netkeibaでは直接表示されないため、過去成績から推定）
-                # ここでは馬の詳細ページにアクセスして過去の位置取りから推定
-                horse_link = horse_name_elem.get('href', '') if horse_name_elem else ''
-                
-                style_score = {"逃げ": 0, "先行": 0, "差し": 0, "追込": 0}
-                
-                if horse_link:
-                    # 馬の詳細ページから過去成績を取得（簡易版）
-                    horse_id_match = re.search(r'/horse/(\d+)', horse_link)
-                    if horse_id_match:
-                        horse_id = horse_id_match.group(1)
-                        style_score = _get_horse_running_style_score(horse_id)
-                
-                # 最も高いスコアの脚質を採用
-                if max(style_score.values()) > 0:
-                    dominant_style = max(style_score, key=style_score.get)
-                    style = RunningStyle(dominant_style)
-                else:
-                    style = RunningStyle.UNKNOWN
-                
-                if horse_number > 0:
-                    result.append(HorseRunningStyle(
-                        horse_number=horse_number,
-                        horse_name=horse_name,
-                        style=style,
-                        style_score=style_score
-                    ))
-                    
-            except Exception as e:
-                print(f"[WARN] 脚質データのパースエラー: {e}")
-                continue
-                
-    except Exception as e:
-        print(f"[ERROR] 脚質データ取得エラー: {e}")
+                with open(REALTIME_STATE_FILE, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    state = RealtimeState()
+                    state.last_update = data.get("last_update", "")
+                    state.active_alerts = data.get("active_alerts", [])
+                    state.odds_history = data.get("odds_history", {})
+                    state.aggressive_mode_horses = data.get("aggressive_mode_horses", [])
+                    return state
+            except:
+                pass
+        return RealtimeState()
     
-    return result
-
-
-def _get_horse_running_style_score(horse_id: str) -> Dict[str, int]:
-    """
-    馬の過去成績から脚質スコアを算出
-    
-    Args:
-        horse_id: 馬ID
-    
-    Returns:
-        脚質ごとのスコア
-    """
-    style_score = {"逃げ": 0, "先行": 0, "差し": 0, "追込": 0}
-    
-    # 馬の過去成績ページ
-    horse_url = f"https://db.netkeiba.com/horse/{horse_id}"
-    response = _make_request(horse_url )
-    
-    if response is None:
-        return style_score
-    
-    html = _decode_html(response)
-    soup = BeautifulSoup(html, 'lxml')
-    
-    try:
-        # 過去成績テーブルから通過順位を取得
-        result_table = soup.select_one('table.db_h_race_results')
-        if result_table:
-            rows = result_table.select('tr')[1:11]  # 直近10レース
-            
-            for row in rows:
-                try:
-                    # 通過順位（例: "1-1-1-1" や "5-5-3-2"）
-                    corner_td = row.select('td')
-                    if len(corner_td) >= 11:
-                        corner_text = corner_td[10].get_text(strip=True)
-                        if corner_text and '-' in corner_text:
-                            positions = [int(p) for p in corner_text.split('-') if p.isdigit()]
-                            if positions:
-                                first_corner = positions[0]
-                                # 頭数を取得（同じ行から）
-                                field_size = 18  # デフォルト
-                                
-                                # 位置取りから脚質を判定
-                                position_ratio = first_corner / field_size
-                                
-                                if position_ratio <= 0.15:
-                                    style_score["逃げ"] += 3
-                                elif position_ratio <= 0.35:
-                                    style_score["先行"] += 3
-                                elif position_ratio <= 0.65:
-                                    style_score["差し"] += 3
-                                else:
-                                    style_score["追込"] += 3
-                except Exception:
-                    continue
-                    
-    except Exception as e:
-        print(f"[WARN] 過去成績のパースエラー: {e}")
-    
-    return style_score
-
-
-def get_pace_prediction(race_id: str) -> PacePrediction:
-    """
-    出走馬の脚質分布からハイ/スローペースを予測
-    
-    Args:
-        race_id: レースID
-    
-    Returns:
-        ペース予想結果
-    """
-    # 脚質データを取得
-    running_styles = get_running_styles(race_id)
-    
-    if not running_styles:
-        return PacePrediction(
-            pace_type="不明",
-            confidence=0.0,
-            nige_count=0,
-            senko_count=0,
-            sashi_count=0,
-            oikomi_count=0,
-            analysis="脚質データを取得できませんでした"
-        )
-    
-    # 脚質ごとの頭数をカウント
-    nige_count = sum(1 for h in running_styles if h.style == RunningStyle.NIGE)
-    senko_count = sum(1 for h in running_styles if h.style == RunningStyle.SENKO)
-    sashi_count = sum(1 for h in running_styles if h.style == RunningStyle.SASHI)
-    oikomi_count = sum(1 for h in running_styles if h.style == RunningStyle.OIKOMI)
-    
-    total_horses = len(running_styles)
-    front_runners = nige_count + senko_count  # 前に行きたい馬の数
-    
-    # ペース予測ロジック
-    front_ratio = front_runners / total_horses if total_horses > 0 else 0
-    
-    if nige_count >= 3 or front_ratio >= 0.5:
-        # 逃げ馬が3頭以上、または前に行きたい馬が半数以上 → ハイペース
-        pace_type = "ハイペース"
-        confidence = min(0.9, 0.5 + (nige_count * 0.1) + (front_ratio * 0.3))
-        analysis = f"逃げ馬{nige_count}頭、先行馬{senko_count}頭と前に行きたい馬が多く、ペースが上がりやすい展開。差し・追込馬に有利。"
-    elif nige_count == 0 or front_ratio <= 0.25:
-        # 逃げ馬がいない、または前に行きたい馬が少ない → スローペース
-        pace_type = "スローペース"
-        confidence = min(0.9, 0.5 + ((1 - front_ratio) * 0.4))
-        analysis = f"逃げ馬{nige_count}頭と少なく、ペースが落ち着きやすい展開。逃げ・先行馬に有利。"
-    else:
-        # 中間 → ミドルペース
-        pace_type = "ミドルペース"
-        confidence = 0.6
-        analysis = f"逃げ馬{nige_count}頭、先行馬{senko_count}頭とバランスが取れた構成。展開は読みにくいが、実力馬が力を発揮しやすい。"
-    
-    return PacePrediction(
-        pace_type=pace_type,
-        confidence=round(confidence, 2),
-        nige_count=nige_count,
-        senko_count=senko_count,
-        sashi_count=sashi_count,
-        oikomi_count=oikomi_count,
-        analysis=analysis
-    )
-
-
-def get_all_race_data(race_id: str) -> Dict:
-    """
-    レースの全データ（オッズ・脚質・ペース予想）を一括取得
-    
-    Args:
-        race_id: レースID
-    
-    Returns:
-        統合されたレースデータ
-    """
-    print(f"[INFO] レースデータ取得開始: {race_id}")
-    
-    # オッズ取得
-    odds_data = get_live_odds(race_id)
-    
-    # 脚質データ取得
-    running_styles = get_running_styles(race_id)
-    
-    # ペース予想
-    pace_prediction = get_pace_prediction(race_id)
-    
-    # 統合
-    result = {
-        "race_id": race_id,
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "odds": {
-            "win_place": [
-                {
-                    "horse_number": o.horse_number,
-                    "horse_name": o.horse_name,
-                    "win_odds": o.win_odds,
-                    "place_odds_min": o.place_odds_min,
-                    "place_odds_max": o.place_odds_max,
-                    "popularity": o.popularity
-                } for o in odds_data["win_place_odds"]
-            ],
-            "wide": [
-                {
-                    "horse1": w.horse1,
-                    "horse2": w.horse2,
-                    "odds_min": w.odds_min,
-                    "odds_max": w.odds_max
-                } for w in odds_data["wide_odds"]
-            ],
-            "error": odds_data.get("error")
-        },
-        "running_styles": [
-            {
-                "horse_number": rs.horse_number,
-                "horse_name": rs.horse_name,
-                "style": rs.style.value,
-                "style_score": rs.style_score
-            } for rs in running_styles
-        ],
-        "pace_prediction": {
-            "pace_type": pace_prediction.pace_type,
-            "confidence": pace_prediction.confidence,
-            "nige_count": pace_prediction.nige_count,
-            "senko_count": pace_prediction.senko_count,
-            "sashi_count": pace_prediction.sashi_count,
-            "oikomi_count": pace_prediction.oikomi_count,
-            "analysis": pace_prediction.analysis
+    def _save_state(self):
+        """状態を保存"""
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        
+        data = {
+            "last_update": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "active_alerts": self.state.active_alerts,
+            "odds_history": self.state.odds_history,
+            "aggressive_mode_horses": self.state.aggressive_mode_horses
         }
-    }
+        
+        with open(REALTIME_STATE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
     
-    print(f"[INFO] レースデータ取得完了: {race_id}")
-    return result
+    def _load_alerts(self):
+        """アラートを読み込み"""
+        if ALERTS_FILE.exists():
+            try:
+                with open(ALERTS_FILE, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self.alerts = [
+                        InsiderAlert(**alert) for alert in data.get("alerts", [])
+                    ]
+            except:
+                self.alerts = []
+    
+    def _save_alerts(self):
+        """アラートを保存"""
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        
+        data = {
+            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "alerts": [alert.to_dict() for alert in self.alerts]
+        }
+        
+        with open(ALERTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    
+    def record_odds(self, race_id: str, odds_data: List[Dict]):
+        """オッズを記録"""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        if race_id not in self.state.odds_history:
+            self.state.odds_history[race_id] = []
+        
+        snapshot = {
+            "timestamp": timestamp,
+            "odds": {str(h["umaban"]): h["odds"] for h in odds_data}
+        }
+        
+        self.state.odds_history[race_id].append(snapshot)
+        
+        # 古いデータを削除（2時間以上前）
+        cutoff = datetime.now() - timedelta(hours=2)
+        self.state.odds_history[race_id] = [
+            s for s in self.state.odds_history[race_id]
+            if datetime.strptime(s["timestamp"], "%Y-%m-%d %H:%M:%S") > cutoff
+        ]
+        
+        self._save_state()
+    
+    def detect_insider_activity(
+        self,
+        race_id: str,
+        race_name: str,
+        venue: str,
+        current_odds: List[Dict],
+        time_to_race_minutes: int = 60
+    ) -> List[InsiderAlert]:
+        """
+        インサイダー活動を検知
+        Returns: 検知されたアラートのリスト
+        """
+        detected_alerts = []
+        
+        # オッズ履歴がない場合は記録のみ
+        if race_id not in self.state.odds_history or len(self.state.odds_history[race_id]) < 2:
+            self.record_odds(race_id, current_odds)
+            return detected_alerts
+        
+        history = self.state.odds_history[race_id]
+        
+        for horse in current_odds:
+            umaban = horse.get("umaban", 0)
+            horse_name = horse.get("horse_name", "")
+            current = horse.get("odds", 0)
+            
+            if current <= 0 or current < INSIDER_THRESHOLDS["min_odds_for_alert"]:
+                continue
+            
+            # 最初のオッズを取得
+            initial_odds = None
+            for snapshot in history:
+                if str(umaban) in snapshot["odds"]:
+                    initial_odds = snapshot["odds"][str(umaban)]
+                    break
+            
+            if initial_odds is None or initial_odds <= 0:
+                continue
+            
+            # オッズ低下率を計算
+            drop_rate = (initial_odds - current) / initial_odds
+            
+            # 検知ロジック
+            alert = None
+            
+            # パターン1: 急激なオッズ低下
+            if drop_rate >= INSIDER_THRESHOLDS["odds_drop_rate"]:
+                severity = "HIGH" if drop_rate >= 0.30 else "MEDIUM"
+                confidence = min(0.95, 0.5 + drop_rate)
+                
+                alert = InsiderAlert(
+                    alert_id=f"{race_id}_{umaban}_{datetime.now().strftime('%H%M%S')}",
+                    race_id=race_id,
+                    race_name=race_name,
+                    venue=venue,
+                    umaban=umaban,
+                    horse_name=horse_name,
+                    alert_type="ODDS_DROP",
+                    severity=severity,
+                    initial_odds=initial_odds,
+                    current_odds=current,
+                    drop_rate=drop_rate,
+                    detected_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    time_to_race_minutes=time_to_race_minutes,
+                    confidence=confidence,
+                    aggressive_mode=True,
+                    expected_value_boost=1.0 + drop_rate * 0.5  # 低下率に応じてブースト
+                )
+            
+            # パターン2: 短時間での急落（15分以内）
+            elif drop_rate >= INSIDER_THRESHOLDS["odds_drop_rate_fast"]:
+                recent_cutoff = datetime.now() - timedelta(minutes=15)
+                recent_snapshots = [
+                    s for s in history
+                    if datetime.strptime(s["timestamp"], "%Y-%m-%d %H:%M:%S") > recent_cutoff
+                ]
+                
+                if recent_snapshots:
+                    recent_initial = None
+                    for s in recent_snapshots:
+                        if str(umaban) in s["odds"]:
+                            recent_initial = s["odds"][str(umaban)]
+                            break
+                    
+                    if recent_initial and recent_initial > 0:
+                        recent_drop = (recent_initial - current) / recent_initial
+                        
+                        if recent_drop >= INSIDER_THRESHOLDS["odds_drop_rate_fast"]:
+                            alert = InsiderAlert(
+                                alert_id=f"{race_id}_{umaban}_{datetime.now().strftime('%H%M%S')}",
+                                race_id=race_id,
+                                race_name=race_name,
+                                venue=venue,
+                                umaban=umaban,
+                                horse_name=horse_name,
+                                alert_type="RAPID_DROP",
+                                severity="HIGH",
+                                initial_odds=recent_initial,
+                                current_odds=current,
+                                drop_rate=recent_drop,
+                                detected_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                time_to_race_minutes=time_to_race_minutes,
+                                confidence=min(0.95, 0.6 + recent_drop),
+                                aggressive_mode=True,
+                                expected_value_boost=1.0 + recent_drop * 0.7
+                            )
+            
+            # パターン3: 人気急上昇（順位変動）
+            # TODO: 人気順位の変動も追跡
+            
+            if alert:
+                # 重複チェック
+                existing = [a for a in self.alerts if a.race_id == race_id and a.umaban == umaban]
+                if not existing:
+                    self.alerts.append(alert)
+                    detected_alerts.append(alert)
+                    
+                    # Aggressiveモードリストに追加
+                    key = f"{race_id}_{umaban}"
+                    if key not in self.state.aggressive_mode_horses:
+                        self.state.aggressive_mode_horses.append(key)
+                    
+                    print(f"🚨 [INSIDER ALERT] {venue} {race_name}")
+                    print(f"   {umaban}番 {horse_name}")
+                    print(f"   オッズ: {initial_odds:.1f} → {current:.1f} ({drop_rate*100:.1f}%低下)")
+                    print(f"   信頼度: {alert.confidence*100:.0f}% | 期待値ブースト: {alert.expected_value_boost:.2f}x")
+        
+        # オッズを記録
+        self.record_odds(race_id, current_odds)
+        
+        # アラートを保存
+        if detected_alerts:
+            self._save_alerts()
+            self._save_state()
+        
+        return detected_alerts
+    
+    def get_active_alerts(self, race_id: str = None) -> List[InsiderAlert]:
+        """アクティブなアラートを取得"""
+        if race_id:
+            return [a for a in self.alerts if a.race_id == race_id]
+        return self.alerts
+    
+    def is_aggressive_mode(self, race_id: str, umaban: int) -> bool:
+        """指定馬がAggressiveモードかどうか"""
+        key = f"{race_id}_{umaban}"
+        return key in self.state.aggressive_mode_horses
+    
+    def get_expected_value_boost(self, race_id: str, umaban: int) -> float:
+        """期待値ブースト係数を取得"""
+        alerts = [a for a in self.alerts if a.race_id == race_id and a.umaban == umaban]
+        if alerts:
+            return max(a.expected_value_boost for a in alerts)
+        return 1.0
+    
+    def clear_old_alerts(self, hours: int = 24):
+        """古いアラートをクリア"""
+        cutoff = datetime.now() - timedelta(hours=hours)
+        self.alerts = [
+            a for a in self.alerts
+            if datetime.strptime(a.detected_at, "%Y-%m-%d %H:%M:%S") > cutoff
+        ]
+        self._save_alerts()
 
 
-# --- メイン実行（テスト用） ---
+# --- IntegratedCalculator連携クラス ---
+
+class RealtimeIntegration:
+    """
+    IntegratedCalculatorとの連携
+    インサイダー検知結果を期待値計算に反映
+    """
+    
+    def __init__(self):
+        self.detector = InsiderDetector()
+    
+    def get_adjusted_parameters(self, race_id: str, umaban: int, base_odds: float) -> Dict:
+        """
+        インサイダー検知に基づいて調整されたパラメータを取得
+        
+        Returns:
+            {
+                "aggressive_mode": bool,
+                "expected_value_boost": float,
+                "kelly_multiplier": float,
+                "confidence_boost": float,
+                "alert_info": Optional[Dict]
+            }
+        """
+        is_aggressive = self.detector.is_aggressive_mode(race_id, umaban)
+        ev_boost = self.detector.get_expected_value_boost(race_id, umaban)
+        
+        alerts = self.detector.get_active_alerts(race_id)
+        horse_alert = next((a for a in alerts if a.umaban == umaban), None)
+        
+        # ケリー乗数の決定
+        if is_aggressive:
+            if horse_alert and horse_alert.severity == "HIGH":
+                kelly_multiplier = 1.5  # フルケリーの1.5倍
+            else:
+                kelly_multiplier = 1.2  # フルケリーの1.2倍
+        else:
+            kelly_multiplier = 0.5  # 通常はハーフケリー
+        
+        # 信頼度ブースト
+        confidence_boost = 1.0
+        if horse_alert:
+            confidence_boost = 1.0 + horse_alert.confidence * 0.2
+        
+        return {
+            "aggressive_mode": is_aggressive,
+            "expected_value_boost": ev_boost,
+            "kelly_multiplier": kelly_multiplier,
+            "confidence_boost": confidence_boost,
+            "alert_info": horse_alert.to_dict() if horse_alert else None
+        }
+    
+    def calculate_adjusted_kelly(
+        self,
+        win_probability: float,
+        odds: float,
+        race_id: str,
+        umaban: int,
+        bankroll: float = 100000
+    ) -> Dict:
+        """
+        インサイダー検知を考慮したケリー基準計算
+        
+        Returns:
+            {
+                "kelly_fraction": float,
+                "bet_amount": float,
+                "mode": str,  # "CONSERVATIVE", "NORMAL", "AGGRESSIVE"
+                "reason": str
+            }
+        """
+        params = self.get_adjusted_parameters(race_id, umaban, odds)
+        
+        # 基本ケリー計算
+        if odds <= 1 or win_probability <= 0:
+            return {
+                "kelly_fraction": 0,
+                "bet_amount": 0,
+                "mode": "SKIP",
+                "reason": "オッズまたは勝率が不正"
+            }
+        
+        b = odds - 1
+        q = 1 - win_probability
+        
+        # インサイダー検知による勝率調整
+        adjusted_prob = win_probability * params["confidence_boost"]
+        adjusted_prob = min(0.95, adjusted_prob)  # 上限95%
+        
+        # ケリー基準
+        kelly = (b * adjusted_prob - q) / b
+        kelly = max(0, kelly)
+        
+        # モード別の乗数適用
+        kelly_multiplier = params["kelly_multiplier"]
+        final_kelly = kelly * kelly_multiplier
+        
+        # 上限設定（最大25%）
+        final_kelly = min(0.25, final_kelly)
+        
+        # 賭け金計算
+        bet_amount = bankroll * final_kelly
+        bet_amount = max(0, round(bet_amount / 100) * 100)  # 100円単位
+        
+        # モード判定
+        if params["aggressive_mode"]:
+            mode = "AGGRESSIVE"
+            reason = f"インサイダー検知 (EV boost: {params['expected_value_boost']:.2f}x)"
+        elif kelly_multiplier >= 1.0:
+            mode = "NORMAL"
+            reason = "通常モード"
+        else:
+            mode = "CONSERVATIVE"
+            reason = "保守的モード"
+        
+        return {
+            "kelly_fraction": final_kelly,
+            "bet_amount": bet_amount,
+            "mode": mode,
+            "reason": reason,
+            "adjusted_probability": adjusted_prob,
+            "alert_info": params["alert_info"]
+        }
+
+
+# --- オッズスクレイパー ---
+
+class OddsScraper:
+    """リアルタイムオッズ取得"""
+    
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update(HEADERS)
+        self.detector = InsiderDetector()
+    
+    def fetch_odds(self, race_id: str) -> Optional[List[Dict]]:
+        """オッズを取得"""
+        url = f"https://race.netkeiba.com/odds/index.html?race_id={race_id}"
+        
+        try:
+            response = self.session.get(url, timeout=REQUEST_TIMEOUT )
+            response.encoding = 'euc-jp'
+            
+            soup = BeautifulSoup(response.text, 'lxml')
+            odds_data = []
+            
+            # オッズテーブルをパース
+            for row in soup.select('table tr'):
+                cells = row.select('td')
+                if len(cells) >= 4:
+                    try:
+                        umaban = int(cells[1].get_text(strip=True))
+                        horse_name = cells[2].get_text(strip=True)
+                        odds_text = cells[3].get_text(strip=True)
+                        odds = float(odds_text.replace(',', ''))
+                        
+                        odds_data.append({
+                            "umaban": umaban,
+                            "horse_name": horse_name,
+                            "odds": odds
+                        })
+                    except:
+                        continue
+            
+            return odds_data if odds_data else None
+            
+        except Exception as e:
+            print(f"[ERROR] オッズ取得エラー: {e}")
+            return None
+    
+    def monitor_race(
+        self,
+        race_id: str,
+        race_name: str,
+        venue: str,
+        interval_seconds: int = 60,
+        duration_minutes: int = 30
+    ):
+        """
+        レースを監視してインサイダー検知
+        """
+        print(f"\n🔍 監視開始: {venue} {race_name}")
+        print(f"   レースID: {race_id}")
+        print(f"   監視間隔: {interval_seconds}秒")
+        print(f"   監視時間: {duration_minutes}分")
+        
+        end_time = datetime.now() + timedelta(minutes=duration_minutes)
+        
+        while datetime.now() < end_time:
+            odds_data = self.fetch_odds(race_id)
+            
+            if odds_data:
+                time_to_race = int((end_time - datetime.now()).total_seconds() / 60)
+                
+                alerts = self.detector.detect_insider_activity(
+                    race_id=race_id,
+                    race_name=race_name,
+                    venue=venue,
+                    current_odds=odds_data,
+                    time_to_race_minutes=time_to_race
+                )
+                
+                if alerts:
+                    print(f"\n⚠️ {len(alerts)}件の新規アラート検出")
+            
+            time.sleep(interval_seconds)
+        
+        print(f"\n✅ 監視終了: {venue} {race_name}")
+
+
+# --- メイン処理 ---
+
+def main():
+    import sys
+    
+    print("=" * 60)
+    print("🔍 UMA-Logic PRO - インサイダー探知機")
+    print("=" * 60)
+    
+    detector = InsiderDetector()
+    integration = RealtimeIntegration()
+    
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        
+        if command == "--test":
+            # テストデータでシミュレーション
+            print("\n📊 インサイダー検知テスト")
+            
+            # 初期オッズを記録
+            initial_odds = [
+                {"umaban": 1, "horse_name": "テストホース1", "odds": 5.0},
+                {"umaban": 2, "horse_name": "テストホース2", "odds": 8.0},
+                {"umaban": 3, "horse_name": "テストホース3", "odds": 12.0},
+            ]
+            detector.record_odds("TEST001", initial_odds)
+            
+            time.sleep(1)
+            
+            # オッズ変動をシミュレート
+            changed_odds = [
+                {"umaban": 1, "horse_name": "テストホース1", "odds": 3.5},  # 30%低下
+                {"umaban": 2, "horse_name": "テストホース2", "odds": 7.5},  # 6%低下
+                {"umaban": 3, "horse_name": "テストホース3", "odds": 9.0},  # 25%低下
+            ]
+            
+            alerts = detector.detect_insider_activity(
+                race_id="TEST001",
+                race_name="テストレース",
+                venue="東京",
+                current_odds=changed_odds,
+                time_to_race_minutes=30
+            )
+            
+            print(f"\n検出されたアラート: {len(alerts)}件")
+            
+            # ケリー基準テスト
+            print("\n📈 ケリー基準計算テスト")
+            for horse in changed_odds:
+                result = integration.calculate_adjusted_kelly(
+                    win_probability=0.2,
+                    odds=horse["odds"],
+                    race_id="TEST001",
+                    umaban=horse["umaban"],
+                    bankroll=100000
+                )
+                print(f"  {horse['umaban']}番 {horse['horse_name']}")
+                print(f"    モード: {result['mode']}")
+                print(f"    ケリー: {result['kelly_fraction']*100:.1f}%")
+                print(f"    推奨額: ¥{result['bet_amount']:,}")
+        
+        elif command == "--status":
+            alerts = detector.get_active_alerts()
+            print(f"\n📋 アクティブアラート: {len(alerts)}件")
+            for alert in alerts:
+                print(f"  [{alert.severity}] {alert.venue} {alert.race_name}")
+                print(f"    {alert.umaban}番 {alert.horse_name}")
+                print(f"    オッズ: {alert.initial_odds:.1f} → {alert.current_odds:.1f}")
+        
+        elif command == "--clear":
+            detector.clear_old_alerts(hours=0)
+            print("✅ アラートをクリアしました")
+    
+    else:
+        print("\n使用方法:")
+        print("  --test   : テストモードで実行")
+        print("  --status : アクティブアラートを表示")
+        print("  --clear  : アラートをクリア")
+    
+    print("\n✅ 処理完了")
+
+
 if __name__ == "__main__":
-    # テスト用レースID（実際のレースIDに置き換えてください）
-    test_race_id = "202605010101"
-    
-    print("=" * 60)
-    print("UMA-Logic Pro - リアルタイムスクレイパー テスト")
-    print("=" * 60)
-    
-    # 全データ取得
-    race_data = get_all_race_data(test_race_id)
-    
-    # 結果表示
-    print("\n--- オッズ情報 ---")
-    for odds in race_data["odds"]["win_place"][:5]:
-        print(f"  {odds['popularity']}番人気: {odds['horse_number']}番 {odds['horse_name']} "
-              f"単勝{odds['win_odds']}倍 複勝{odds['place_odds_min']}-{odds['place_odds_max']}倍")
-    
-    print("\n--- 脚質分布 ---")
-    for rs in race_data["running_styles"][:5]:
-        print(f"  {rs['horse_number']}番 {rs['horse_name']}: {rs['style']}")
-    
-    print("\n--- ペース予想 ---")
-    pace = race_data["pace_prediction"]
-    print(f"  予想: {pace['pace_type']} (信頼度: {pace['confidence']:.0%})")
-    print(f"  逃げ{pace['nige_count']}頭 / 先行{pace['senko_count']}頭 / "
-          f"差し{pace['sashi_count']}頭 / 追込{pace['oikomi_count']}頭")
-    print(f"  分析: {pace['analysis']}")
-    
-    # JSON出力
-    print("\n--- JSON出力 ---")
-    print(json.dumps(race_data, ensure_ascii=False, indent=2))
+    main()

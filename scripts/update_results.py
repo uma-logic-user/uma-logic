@@ -8,7 +8,7 @@ import json
 import os
 import time
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -45,10 +45,18 @@ HEADERS = {
 # --- ヘルパー関数 ---
 
 def get_jst_now():
-    """日本時間の現在時刻を取得"""
-    if JST:
-        return datetime.now(JST)
-    return datetime.now() + timedelta(hours=9)
+    """日本時間の現在時刻を取得（確実にJSTで取得）"""
+    try:
+        import pytz
+        JST = pytz.timezone('Asia/Tokyo')
+        # UTCの現在時刻を取得してJSTに変換
+        utc_now = datetime.now(timezone.utc)
+        return utc_now.astimezone(JST)
+    except ImportError:
+        # pytz がない場合は UTC + 9時間
+        jst = timezone(timedelta(hours=9))
+        utc_now = datetime.now(timezone.utc)
+        return utc_now.astimezone(jst)
 
 
 def fetch_with_retry(url: str, params: dict = None) -> Optional[requests.Response]:
@@ -506,14 +514,28 @@ def main():
             print(f"[ERROR] 日付形式が不正です: {sys.argv[1]} (YYYYMMDD形式で指定)")
             sys.exit(1)
     else:
-        # 自動判定：当日または直近の開催日
+        # 自動判定：GitHub Actions 実行時は環境変数で判別
         now = get_jst_now()
-        target_date = now
+        print(f"[DEBUG] 現在時刻(JST): {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
-        # 18時以降なら当日の結果を取得
-        # 18時以前なら前日の結果を取得
-        if now.hour < 18:
+        if os.getenv('GITHUB_ACTIONS'):
+            # GitHub Actions 実行時は明示的に前日を指定
+            # （Actions は結果確定後の翌日に実行されるため）
             target_date = now - timedelta(days=1)
+            print(f"[INFO] GitHub Actions 検出: 前日({target_date.strftime('%Y-%m-%d')})のデータを取得します")
+        else:
+            # ローカル実行時は時刻で判定
+            target_date = now
+            
+            # 18時以降なら当日の結果を取得
+            # 18時以前なら前日の結果を取得
+            if now.hour < 18:
+                target_date = now - timedelta(days=1)
+                print(f"[INFO] 18時前のため前日({target_date.strftime('%Y-%m-%d')})のデータを取得します")
+            else:
+                print(f"[INFO] 18時以降のため当日({target_date.strftime('%Y-%m-%d')})のデータを取得します")
+        
+        print(f"[DEBUG] 対象日: {target_date.strftime('%Y-%m-%d (%A)')}")
     
     print(f"[INFO] 対象日: {target_date.strftime('%Y年%m月%d日')}")
     
@@ -573,18 +595,6 @@ def main():
     else:
         print("\n[WARN] 結果を取得できたレースがありませんでした")
     
-    print("=" * 50)
-    print("処理完了")
-    print("=" * 50)
-
-
-if __name__ == "__main__":
-    main()
-# update_results.py の main() 関数の最後に追加
-
-def main():
-    # ... 既存のコード ...
-    
     # === 自動アーカイブ ===
     try:
         from archive_manager import AutoArchiver
@@ -593,3 +603,11 @@ def main():
         print("[INFO] 本日の結果をアーカイブしました")
     except Exception as e:
         print(f"[WARN] アーカイブエラー: {e}")
+    
+    print("=" * 50)
+    print("処理完了")
+    print("=" * 50)
+
+
+if __name__ == "__main__":
+    main()

@@ -11,6 +11,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # pytzがない環境でも動作
 try:
@@ -24,7 +25,7 @@ BASE_URL = "https://race.netkeiba.com"
 RESULT_URL = "https://race.netkeiba.com/race/result.html"
 RACE_LIST_URL = "https://race.netkeiba.com/top/race_list.html"
 
-DATA_DIR = Path("data" )
+DATA_DIR = Path("data")
 PREDICTIONS_PREFIX = "predictions_"
 RESULTS_PREFIX = "results_"
 HISTORY_FILE = "history.json"
@@ -41,6 +42,20 @@ HEADERS = {
     "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
 }
 
+# 中央競馬の競馬場コード
+VENUE_CODES = {
+    "01": "札幌",
+    "02": "函館",
+    "03": "福島",
+    "04": "新潟",
+    "05": "東京",
+    "06": "中山",
+    "07": "中京",
+    "08": "京都",
+    "09": "阪神",
+    "10": "小倉"
+}
+
 
 # --- ヘルパー関数 ---
 
@@ -49,11 +64,9 @@ def get_jst_now():
     try:
         import pytz
         JST = pytz.timezone('Asia/Tokyo')
-        # UTCの現在時刻を取得してJSTに変換
         utc_now = datetime.now(timezone.utc)
         return utc_now.astimezone(JST)
     except ImportError:
-        # pytz がない場合は UTC + 9時間
         jst = timezone(timedelta(hours=9))
         utc_now = datetime.now(timezone.utc)
         return utc_now.astimezone(jst)
@@ -106,14 +119,136 @@ def parse_float(text: str) -> float:
     return float(nums[0]) if nums else 0.0
 
 
-# --- レースID取得 ---
+# --- レースID生成・検索（新方式） ---
+
+def get_likely_kaisai_codes(target_date: datetime) -> List[str]:
+    """
+    日付から開催コードを推測
+    
+    開催コードは年初からの開催週でカウントされる
+    例: 1月第1週=01, 1月第2週=02, ...
+    """
+    month = target_date.month
+    
+    if month <= 2:
+        return ["01", "02", "03", "04", "05"]
+    elif month <= 4:
+        return ["03", "04", "05", "06", "07", "08"]
+    elif month <= 6:
+        return ["06", "07", "08", "09", "10", "11"]
+    elif month <= 8:
+        return ["09", "10", "11", "12", "13", "14"]
+    elif month <= 10:
+        return ["12", "13", "14", "15", "16", "17"]
+    else:
+        return ["15", "16", "17", "18", "19", "20"]
+
+
+def generate_possible_race_ids(target_date: datetime) -> List[str]:
+    """
+    指定日の全ての可能性のあるrace_idを生成する
+    
+    中央競馬のrace_id形式: 2026XXYYZZMM
+    - 2026: 年
+    - XX: 開催コード (01-20程度、開催週による)
+    - YY: 競馬場コード (01-10)
+    - ZZ: 日付の下2桁
+    - MM: レース番号 (01-12)
+    """
+    year = target_date.year
+    date_2digit = target_date.strftime("%d")
+    
+    # 開催コードを推測
+    kaisai_codes = get_likely_kaisai_codes(target_date)
+    
+    race_ids = []
+    
+    # 全競馬場×全開催コード×全レース番号の組み合わせを生成
+    for kaisai_code in kaisai_codes:
+        for venue_code in VENUE_CODES.keys():
+            for race_num in range(1, 13):  # 1R～12R
+                race_id = f"{year}{kaisai_code}{venue_code}{date_2digit}{race_num:02d}"
+                race_ids.append(race_id)
+    
+    return race_ids
+
+
+def check_race_exists(race_id: str) -> bool:
+    """
+    指定したrace_idのレースが存在するか確認
+    """
+    url = f"{RESULT_URL}?race_id={race_id}"
+    
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=5)
+        
+        # ステータスコード200 かつ レース結果が含まれているか
+        if response.status_code == 200:
+            content = response.text
+            # 404ページやエラーページでないことを確認
+            if "ResultTableWrap" in content or "着順" in content:
+                return True
+        
+        return False
+        
+    except Exception:
+        return False
+
+
+def get_race_ids_for_date_v2(target_date: datetime) -> List[str]:
+    """
+    指定日のレースIDリストを取得（改善版・並列処理）
+    
+    アプローチ:
+    1. 可能性のある全race_idを生成
+    2. 各IDに対して結果ページが存在するか並列確認
+    3. 存在するrace_idのみを返す
+    """
+    print(f"[INFO] レースID探索開始: {target_date.strftime('%Y年%m月%d日')}")
+    
+    # 可能性のある全race_idを生成
+    possible_ids = generate_possible_race_ids(target_date)
+    
+    print(f"[INFO] {len(possible_ids)}個の候補をチェック中...")
+    
+    valid_race_ids = []
+    
+    # 並列処理で高速化
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_id = {
+            executor.submit(check_race_exists, race_id): race_id 
+            for race_id in possible_ids
+        }
+        
+        for future in as_completed(future_to_id):
+            race_id = future_to_id[future]
+            try:
+                if future.result():
+                    valid_race_ids.append(race_id)
+                    # 競馬場名を取得
+                    venue_code = race_id[6:8]
+                    venue_name = VENUE_CODES.get(venue_code, "不明")
+                    race_num = int(race_id[-2:])
+                    print(f"  ✓ レース発見: {race_id} ({venue_name}{race_num}R)")
+            except Exception as e:
+                pass  # エラーは無視して続行
+    
+    # race_idでソート
+    valid_race_ids = sorted(valid_race_ids)
+    
+    print(f"[INFO] {len(valid_race_ids)}件のレースを発見しました")
+    
+    return valid_race_ids
+
 
 def get_race_ids_for_date(target_date: datetime) -> List[str]:
-    """指定日のレースIDリストを取得"""
+    """
+    指定日のレースIDリストを取得（旧方式・フォールバック用）
+    """
     date_str = target_date.strftime("%Y%m%d")
     url = f"{RACE_LIST_URL}?kaisai_date={date_str}"
     
-    print(f"[INFO] レースリスト取得中: {url}")
+    print(f"[INFO] レースリスト取得中（旧方式）: {url}")
     
     response = fetch_with_retry(url)
     if not response:
@@ -187,6 +322,11 @@ def fetch_race_result(race_id: str) -> Optional[Dict]:
             race_data["venue"] = venue_match.group(1)
         else:
             race_data["venue"] = venue_text[:2] if len(venue_text) >= 2 else venue_text
+    
+    # race_idから競馬場を推測（フォールバック）
+    if not race_data["venue"]:
+        venue_code = race_id[6:8]
+        race_data["venue"] = VENUE_CODES.get(venue_code, "不明")
     
     # --- 着順テーブル ---
     result_table = soup.select_one('.ResultTableWrap table')
@@ -498,9 +638,9 @@ def save_results(results: List[Dict], target_date: datetime):
 # --- メイン処理 ---
 
 def main():
-    print("=" * 50)
+    print("=" * 60)
     print("🏁 UMA-Logic Pro - 結果取得スクリプト")
-    print("=" * 50)
+    print("=" * 60)
     
     # データディレクトリ作成
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -520,7 +660,6 @@ def main():
         
         if os.getenv('GITHUB_ACTIONS'):
             # GitHub Actions 実行時は明示的に前日を指定
-            # （Actions は結果確定後の翌日に実行されるため）
             target_date = now - timedelta(days=1)
             print(f"[INFO] GitHub Actions 検出: 前日({target_date.strftime('%Y-%m-%d')})のデータを取得します")
         else:
@@ -539,8 +678,12 @@ def main():
     
     print(f"[INFO] 対象日: {target_date.strftime('%Y年%m月%d日')}")
     
-    # レースID取得
-    race_ids = get_race_ids_for_date(target_date)
+    # レースID取得（新方式を優先、失敗したら旧方式にフォールバック）
+    race_ids = get_race_ids_for_date_v2(target_date)
+    
+    if not race_ids:
+        print("[INFO] 新方式で見つからなかったため、旧方式を試行...")
+        race_ids = get_race_ids_for_date(target_date)
     
     if not race_ids:
         print("[INFO] 本日は開催がないか、レースが見つかりませんでした。")
@@ -604,9 +747,9 @@ def main():
     except Exception as e:
         print(f"[WARN] アーカイブエラー: {e}")
     
-    print("=" * 50)
+    print("=" * 60)
     print("処理完了")
-    print("=" * 50)
+    print("=" * 60)
 
 
 if __name__ == "__main__":

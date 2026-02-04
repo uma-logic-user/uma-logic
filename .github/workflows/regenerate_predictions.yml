@@ -80,14 +80,18 @@ jobs:
             git add data/predictions_*.json
             git commit -m "🔄 過去予想を再生成 ($(date '+%Y-%m-%d %H:%M'))"
             
-            # stash方式でプッシュ
-            git stash push -m "temp-changes" --include-untracked || true
-            git fetch origin main
-            git reset --hard origin/main
-            git stash pop || true
-            git add data/predictions_*.json
-            git commit -m "🔄 過去予想を再生成 ($(date '+%Y-%m-%d %H:%M'))" || true
-            git push origin main
+            # 直接プッシュ（リトライ付き）
+            for i in 1 2 3; do
+              echo "プッシュ試行 $i/3..."
+              if git push origin main; then
+                echo "✅ プッシュ成功"
+                break
+              else
+                echo "⚠️ プッシュ失敗、リトライ..."
+                git pull --rebase origin main || true
+                sleep 5
+              fi
+            done
             
             echo "✅ 予想ファイルをプッシュしました"
           else

@@ -875,10 +875,17 @@ with tab2:
 
             if results_data and results_data.get("races"):
                 races = results_data.get("races", [])
-                races = sort_races_by_number(races)  # レース番号順にソート
+                races = sort_races_by_number(races)
+
+                # race_idからvenueを復元するヘルパー
+                venue_codes = {"01": "札幌", "02": "函館", "03": "福島", "04": "新潟", "05": "東京", "06": "中山", "07": "中京", "08": "京都", "09": "阪神", "10": "小倉"}
+                for race in races:
+                    if not race.get("venue"):
+                        rid = race.get("race_id", "")
+                        race["venue"] = venue_codes.get(rid[6:8], "不明") if len(rid) >= 8 else "不明"
 
                 # 競馬場でグループ化
-                venues = list(set(r.get("venue", "") for r in races if r.get("venue")))
+                venues = list(set(r.get("venue", "不明") for r in races if r.get("venue")))
                 venues = sorted(venues)
 
                 if venues:

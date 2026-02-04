@@ -88,15 +88,33 @@ def calculate_uma_index(horse: Dict, race: Dict, weights: Dict) -> float:
     # --- Speed Agent ---
     speed_score = 50.0
     
-    # 人気順から推定
-    popularity = horse.get("人気", horse.get("popularity", 10))
+    # オッズを取得（複数のキー名に対応）
+    odds = horse.get("オッズ", horse.get("単勝オッズ", horse.get("odds", 10.0)))
+    if isinstance(odds, str):
+        try:
+            odds = float(odds)
+        except:
+            odds = 10.0
+    
+    # 人気順を取得（なければオッズから推定）
+    popularity = horse.get("人気", horse.get("popularity", 0))
+    if not popularity or popularity == 0:
+        # オッズから人気を推定
+        if odds < 2.0:
+            popularity = 1
+        elif odds < 4.0:
+            popularity = 2
+        elif odds < 7.0:
+            popularity = 3
+        elif odds < 15.0:
+            popularity = 5
+        else:
+            popularity = 10
+    
     if popularity <= 3:
         speed_score += 20
     elif popularity <= 6:
         speed_score += 10
-    
-    # オッズから推定
-    odds = horse.get("単勝オッズ", horse.get("odds", 10.0))
     if odds < 3.0:
         speed_score += 15
     elif odds < 5.0:
@@ -187,7 +205,8 @@ def process_race(race: Dict, weights: Dict) -> Dict:
         予想データ
     """
     
-    horses = race.get("horses", [])
+    # horses または all_results から馬データを取得
+    horses = race.get("horses", []) or race.get("all_results", [])
     if not horses:
         return None
     
@@ -197,7 +216,12 @@ def process_race(race: Dict, weights: Dict) -> Dict:
     for horse in horses:
         try:
             uma_index = calculate_uma_index(horse, race, weights)
-            odds = horse.get("単勝オッズ", horse.get("odds", 10.0))
+            odds = horse.get("オッズ", horse.get("単勝オッズ", horse.get("odds", 10.0)))
+            if isinstance(odds, str):
+                try:
+                    odds = float(odds)
+                except:
+                    odds = 10.0
             win_prob = calculate_win_probability(uma_index, odds)
             expected_value = calculate_expected_value(win_prob, odds)
             

@@ -2,9 +2,15 @@ name: 📊 レース結果取得
 
 on:
   schedule:
-    - cron: '0 9 * * 6'
-    - cron: '0 9 * * 0'
-  workflow_dispatch:
+    - cron: '0 22 * * 5,6'  # 土日の朝7時（JST）
+    - cron: '0 8 * * 6,0'   # 土日の夕方5時（JST）
+  workflow_dispatch:         # 手動実行を許可
+    inputs:
+      date:
+        description: '取得する日付 (YYYYMMDD形式、空欄なら前日)'
+        required: false
+        default: ''
+        type: string
 
 env:
   TZ: Asia/Tokyo
@@ -36,8 +42,15 @@ jobs:
           mkdir -p data/archive
           mkdir -p data/models
 
-      - name: 🏁 レース結果を取得
-        run: python scripts/update_results.py || echo "Results fetch skipped"
+      - name: 🏁 レース結果取得
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            echo "日付指定モード: ${{ github.event.inputs.date }}"
+            python scripts/update_results.py ${{ github.event.inputs.date }}
+          else
+            echo "自動判定モード"
+            python scripts/update_results.py
+          fi
 
       - name: 💾 変更をコミット＆プッシュ（コンフリクト回避）
         run: |

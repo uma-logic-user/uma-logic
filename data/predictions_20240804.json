@@ -1,0 +1,5082 @@
+{
+  "date": "20240804",
+  "generated_at": "2026-02-04 09:36:11",
+  "regenerated": true,
+  "races": [
+    {
+      "race_id": "202401010601",
+      "race_num": 1,
+      "race_name": "2歳未勝利",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 10,
+        "horse_name": "ベルベルコンパス",
+        "uma_index": 67.5,
+        "expected_value": 0.59
+      },
+      "horses": [
+        {
+          "umaban": 10,
+          "horse_name": "ベルベルコンパス",
+          "jockey": "北村友一",
+          "odds": 1.1,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.5324,
+          "expected_value": 0.59,
+          "mark": "◎"
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ラストレガシー",
+          "jockey": "丹内祐次",
+          "odds": 9.0,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1826,
+          "expected_value": 1.64,
+          "mark": "○"
+        },
+        {
+          "umaban": 14,
+          "horse_name": "ケイアイブイスリー",
+          "jockey": "横山武史",
+          "odds": 18.3,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.16,
+          "expected_value": 2.93,
+          "mark": "▲"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "アルデツヨシ",
+          "jockey": "池添謙一",
+          "odds": 157.4,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1407,
+          "expected_value": 22.14,
+          "mark": "△"
+        },
+        {
+          "umaban": 12,
+          "horse_name": "イフウドウドウ",
+          "jockey": "武豊",
+          "odds": 38.0,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1487,
+          "expected_value": 5.65,
+          "mark": "×"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "アンズアメ",
+          "jockey": "鮫島克駿",
+          "odds": 13.5,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1634,
+          "expected_value": 2.21,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "トリプレーテ",
+          "jockey": "富田暁",
+          "odds": 26.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.14,
+          "expected_value": 3.73,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ハヤテノツバサ",
+          "jockey": "西村淳也",
+          "odds": 56.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1321,
+          "expected_value": 7.41,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "ポルタフェリーチェ",
+          "jockey": "浜中俊",
+          "odds": 40.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1349,
+          "expected_value": 5.44,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ヤマノインパクト",
+          "jockey": "永野猛蔵",
+          "odds": 130.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1281,
+          "expected_value": 16.68,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "コパノキュラソー",
+          "jockey": "古川吉洋",
+          "odds": 318.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1263,
+          "expected_value": 40.16,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ロザリアン",
+          "jockey": "和田翼",
+          "odds": 133.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.128,
+          "expected_value": 17.06,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "ラインアルテミス",
+          "jockey": "小林凌大",
+          "odds": 110.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1286,
+          "expected_value": 14.19,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "アディクテッドラン",
+          "jockey": "長浜鴻緒",
+          "odds": 223.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1268,
+          "expected_value": 28.36,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010602",
+      "race_num": 2,
+      "race_name": "3歳未勝利",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 10,
+        "horse_name": "ハッピーダンス",
+        "uma_index": 62.2,
+        "expected_value": 0.71
+      },
+      "horses": [
+        {
+          "umaban": 10,
+          "horse_name": "ハッピーダンス",
+          "jockey": "高杉吏麒",
+          "odds": 2.0,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3556,
+          "expected_value": 0.71,
+          "mark": "◎"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "キャンドルマス",
+          "jockey": "北村友一",
+          "odds": 7.2,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2068,
+          "expected_value": 1.49,
+          "mark": "○"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ラブリーサイン",
+          "jockey": "浜中俊",
+          "odds": 4.8,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2346,
+          "expected_value": 1.13,
+          "mark": "▲"
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ノブノリッキー",
+          "jockey": "小林勝太",
+          "odds": 7.7,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1901,
+          "expected_value": 1.46,
+          "mark": "△"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ココモローズ",
+          "jockey": "長浜鴻緒",
+          "odds": 10.2,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.173,
+          "expected_value": 1.76,
+          "mark": "×"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "モズマサニャン",
+          "jockey": "岩田康誠",
+          "odds": 27.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1397,
+          "expected_value": 3.8,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ケイアイカペラ",
+          "jockey": "小崎綾也",
+          "odds": 29.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1388,
+          "expected_value": 4.03,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ボエーム",
+          "jockey": "小林凌大",
+          "odds": 35.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1362,
+          "expected_value": 4.85,
+          "mark": ""
+        },
+        {
+          "umaban": 12,
+          "horse_name": "グレッソネイ",
+          "jockey": "川端海翼",
+          "odds": 31.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1376,
+          "expected_value": 4.38,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "ラブリエスト",
+          "jockey": "佐々木大",
+          "odds": 17.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1477,
+          "expected_value": 2.6,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "ハクサンアップル",
+          "jockey": "永野猛蔵",
+          "odds": 195.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.127,
+          "expected_value": 24.85,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010603",
+      "race_num": 3,
+      "race_name": "3歳未勝利",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 4,
+        "horse_name": "リュサントノレ",
+        "uma_index": 65.8,
+        "expected_value": 1.09
+      },
+      "horses": [
+        {
+          "umaban": 4,
+          "horse_name": "リュサントノレ",
+          "jockey": "武豊",
+          "odds": 4.2,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2596,
+          "expected_value": 1.09,
+          "mark": "◎"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "グランテレーズ",
+          "jockey": "鮫島克駿",
+          "odds": 3.2,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2762,
+          "expected_value": 0.88,
+          "mark": "○"
+        },
+        {
+          "umaban": 6,
+          "horse_name": "アムールリーベ",
+          "jockey": "荻野琢真",
+          "odds": 6.1,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2124,
+          "expected_value": 1.3,
+          "mark": "▲"
+        },
+        {
+          "umaban": 16,
+          "horse_name": "カチヌキマリコ",
+          "jockey": "大野拓弥",
+          "odds": 8.2,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1869,
+          "expected_value": 1.53,
+          "mark": "△"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "マコトジャーベ",
+          "jockey": "横山和生",
+          "odds": 15.5,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1639,
+          "expected_value": 2.54,
+          "mark": "×"
+        },
+        {
+          "umaban": 15,
+          "horse_name": "ピーエムドレミ",
+          "jockey": "佐々木大",
+          "odds": 8.5,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1852,
+          "expected_value": 1.57,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "スプリングデイ",
+          "jockey": "黛弘人",
+          "odds": 23.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.142,
+          "expected_value": 3.34,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "ロンフォン",
+          "jockey": "永野猛蔵",
+          "odds": 22.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1427,
+          "expected_value": 3.23,
+          "mark": ""
+        },
+        {
+          "umaban": 12,
+          "horse_name": "コスモララバイ",
+          "jockey": "丹内祐次",
+          "odds": 15.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1502,
+          "expected_value": 2.39,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "スマイルアクセス",
+          "jockey": "菱田裕二",
+          "odds": 107.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1287,
+          "expected_value": 13.77,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ドレッド",
+          "jockey": "岩田康誠",
+          "odds": 28.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1392,
+          "expected_value": 3.92,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "コスモリダッシュ",
+          "jockey": "高杉吏麒",
+          "odds": 97.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1291,
+          "expected_value": 12.6,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "アルーリングソレル",
+          "jockey": "古川奈穂",
+          "odds": 193.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1271,
+          "expected_value": 24.54,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "ヤマニントリル",
+          "jockey": "伊藤工真",
+          "odds": 400.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.126,
+          "expected_value": 50.46,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "コスモマチュアー",
+          "jockey": "小林勝太",
+          "odds": 187.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1271,
+          "expected_value": 23.88,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "メイショウマサユメ",
+          "jockey": "川端海翼",
+          "odds": 34.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1365,
+          "expected_value": 4.76,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010604",
+      "race_num": 4,
+      "race_name": "3歳未勝利",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 5,
+        "horse_name": "プラムダンディ",
+        "uma_index": 62.2,
+        "expected_value": 0.77
+      },
+      "horses": [
+        {
+          "umaban": 5,
+          "horse_name": "プラムダンディ",
+          "jockey": "小林勝太",
+          "odds": 2.4,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3223,
+          "expected_value": 0.77,
+          "mark": "◎"
+        },
+        {
+          "umaban": 13,
+          "horse_name": "クラウンクーロン",
+          "jockey": "丹内祐次",
+          "odds": 3.2,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2762,
+          "expected_value": 0.88,
+          "mark": "○"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "ノルディア",
+          "jockey": "丸山元気",
+          "odds": 5.7,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2171,
+          "expected_value": 1.24,
+          "mark": "▲"
+        },
+        {
+          "umaban": 6,
+          "horse_name": "フィアマフルミネ",
+          "jockey": "横山和生",
+          "odds": 72.5,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1436,
+          "expected_value": 10.41,
+          "mark": "△"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ミヤビエクセレント",
+          "jockey": "横山琉人",
+          "odds": 9.4,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1807,
+          "expected_value": 1.7,
+          "mark": "×"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "ソルアマゾン",
+          "jockey": "石川倭",
+          "odds": 43.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1342,
+          "expected_value": 5.84,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ドゥザキャッチ",
+          "jockey": "長浜鴻緒",
+          "odds": 32.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1374,
+          "expected_value": 4.42,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "リゼルージュセリエ",
+          "jockey": "川端海翼",
+          "odds": 208.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1269,
+          "expected_value": 26.5,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "オウケンヴィーナス",
+          "jockey": "川又賢治",
+          "odds": 92.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1293,
+          "expected_value": 11.93,
+          "mark": ""
+        },
+        {
+          "umaban": 12,
+          "horse_name": "ディアマンドロップ",
+          "jockey": "西村淳也",
+          "odds": 17.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1485,
+          "expected_value": 2.52,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "エムバランス",
+          "jockey": "富田暁",
+          "odds": 37.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1356,
+          "expected_value": 5.14,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ワカメチャン",
+          "jockey": "永野猛蔵",
+          "odds": 15.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.151,
+          "expected_value": 2.33,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "ブリッジワン",
+          "jockey": "菱田裕二",
+          "odds": 110.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1286,
+          "expected_value": 14.15,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "オーヴァーザトップ",
+          "jockey": "黛弘人",
+          "odds": 59.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1317,
+          "expected_value": 7.86,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010605",
+      "race_num": 5,
+      "race_name": "2歳新馬",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 5,
+        "horse_name": "リアンベーレ",
+        "uma_index": 67.5,
+        "expected_value": 0.67
+      },
+      "horses": [
+        {
+          "umaban": 5,
+          "horse_name": "リアンベーレ",
+          "jockey": "武豊",
+          "odds": 1.6,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.4188,
+          "expected_value": 0.67,
+          "mark": "◎"
+        },
+        {
+          "umaban": 7,
+          "horse_name": "アルマヴェローチェ",
+          "jockey": "横山武史",
+          "odds": 3.9,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2669,
+          "expected_value": 1.04,
+          "mark": "○"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "ノースタンダード",
+          "jockey": "横山和生",
+          "odds": 4.3,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2574,
+          "expected_value": 1.11,
+          "mark": "▲"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "レイラインシチー",
+          "jockey": "永野猛蔵",
+          "odds": 20.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1446,
+          "expected_value": 2.95,
+          "mark": "△"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ブラックレーション",
+          "jockey": "丸山元気",
+          "odds": 23.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1422,
+          "expected_value": 3.31,
+          "mark": "×"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ダイウン",
+          "jockey": "川端海翼",
+          "odds": 90.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1294,
+          "expected_value": 11.7,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ブギウギウギ",
+          "jockey": "古川吉洋",
+          "odds": 42.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1343,
+          "expected_value": 5.76,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "ジルクン",
+          "jockey": "小林勝太",
+          "odds": 52.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1326,
+          "expected_value": 7.0,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010606",
+      "race_num": 6,
+      "race_name": "3歳未勝利",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 12,
+        "horse_name": "アークドール",
+        "uma_index": 65.8,
+        "expected_value": 0.98
+      },
+      "horses": [
+        {
+          "umaban": 12,
+          "horse_name": "アークドール",
+          "jockey": "武豊",
+          "odds": 3.5,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2787,
+          "expected_value": 0.98,
+          "mark": "◎"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "コンドライト",
+          "jockey": "横山武史",
+          "odds": 4.7,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2495,
+          "expected_value": 1.17,
+          "mark": "○"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "テイキットイージー",
+          "jockey": "丹内祐次",
+          "odds": 5.7,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2171,
+          "expected_value": 1.24,
+          "mark": "▲"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "タルタロス",
+          "jockey": "黛弘人",
+          "odds": 5.4,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2209,
+          "expected_value": 1.19,
+          "mark": "△"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ピエスダルジャン",
+          "jockey": "鮫島克駿",
+          "odds": 6.0,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2135,
+          "expected_value": 1.28,
+          "mark": "×"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ショウナンガチ",
+          "jockey": "池添謙一",
+          "odds": 31.5,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1508,
+          "expected_value": 4.75,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "レイフロレット",
+          "jockey": "岩田康誠",
+          "odds": 11.0,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1701,
+          "expected_value": 1.87,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "シングルハーテッド",
+          "jockey": "高杉吏麒",
+          "odds": 47.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1334,
+          "expected_value": 6.37,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "グランドブレーカー",
+          "jockey": "小林勝太",
+          "odds": 119.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1284,
+          "expected_value": 15.31,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "サーブザミッション",
+          "jockey": "永野猛蔵",
+          "odds": 182.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1272,
+          "expected_value": 23.26,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "ユーキャンドゥイッ",
+          "jockey": "斎藤新",
+          "odds": 47.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1335,
+          "expected_value": 6.31,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ホームアンドドライ",
+          "jockey": "亀田温心",
+          "odds": 51.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1327,
+          "expected_value": 6.86,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "マイネルガンナー",
+          "jockey": "佐々木大",
+          "odds": 32.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1375,
+          "expected_value": 4.41,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "シビックシャルル",
+          "jockey": "菱田裕二",
+          "odds": 118.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1284,
+          "expected_value": 15.19,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010607",
+      "race_num": 7,
+      "race_name": "3歳以上1勝クラス",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 12,
+        "horse_name": "サウンドアレグリア",
+        "uma_index": 67.5,
+        "expected_value": 0.74
+      },
+      "horses": [
+        {
+          "umaban": 12,
+          "horse_name": "サウンドアレグリア",
+          "jockey": "武豊",
+          "odds": 2.0,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.3688,
+          "expected_value": 0.74,
+          "mark": "◎"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "フェルンマンボ",
+          "jockey": "横山武史",
+          "odds": 7.2,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2068,
+          "expected_value": 1.49,
+          "mark": "○"
+        },
+        {
+          "umaban": 13,
+          "horse_name": "レイクスター",
+          "jockey": "横山和生",
+          "odds": 8.9,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.1962,
+          "expected_value": 1.75,
+          "mark": "▲"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "オーロヴェール",
+          "jockey": "浜中俊",
+          "odds": 5.5,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2196,
+          "expected_value": 1.21,
+          "mark": "△"
+        },
+        {
+          "umaban": 7,
+          "horse_name": "タマモプルメリア",
+          "jockey": "高杉吏麒",
+          "odds": 10.1,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1734,
+          "expected_value": 1.75,
+          "mark": "×"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "イッツオンリーユー",
+          "jockey": "佐々木大",
+          "odds": 10.3,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1726,
+          "expected_value": 1.78,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ヤエベニシダレ",
+          "jockey": "小林勝太",
+          "odds": 160.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1275,
+          "expected_value": 20.45,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "カフェノワール",
+          "jockey": "西村淳也",
+          "odds": 17.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1484,
+          "expected_value": 2.54,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "クラヴィコード",
+          "jockey": "鮫島克駿",
+          "odds": 58.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1319,
+          "expected_value": 7.68,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "トウロウノオノ",
+          "jockey": "長浜鴻緒",
+          "odds": 166.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1274,
+          "expected_value": 21.15,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "シュニー",
+          "jockey": "小崎綾也",
+          "odds": 103.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1289,
+          "expected_value": 13.38,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "レジュークレール",
+          "jockey": "永野猛蔵",
+          "odds": 150.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1277,
+          "expected_value": 19.24,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "サンセットブライト",
+          "jockey": "横山琉人",
+          "odds": 39.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.135,
+          "expected_value": 5.39,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010608",
+      "race_num": 8,
+      "race_name": "3歳以上1勝クラス",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 6,
+        "horse_name": "コスモレオナルド",
+        "uma_index": 64.0,
+        "expected_value": 1.36
+      },
+      "horses": [
+        {
+          "umaban": 6,
+          "horse_name": "コスモレオナルド",
+          "jockey": "横山武史",
+          "odds": 6.0,
+          "popularity": 0,
+          "uma_index": 64.0,
+          "win_probability": 0.2267,
+          "expected_value": 1.36,
+          "mark": "◎"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ハヤテノフクノスケ",
+          "jockey": "鮫島克駿",
+          "odds": 2.4,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3223,
+          "expected_value": 0.77,
+          "mark": "○"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "マイネルフランツ",
+          "jockey": "丹内祐次",
+          "odds": 2.9,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.2936,
+          "expected_value": 0.85,
+          "mark": "▲"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ダイヤモンドレイン",
+          "jockey": "池添謙一",
+          "odds": 8.4,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.1989,
+          "expected_value": 1.67,
+          "mark": "△"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "サルヴィアーノ",
+          "jockey": "横山和生",
+          "odds": 11.1,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.1829,
+          "expected_value": 2.03,
+          "mark": "×"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ソウルアンドジャズ",
+          "jockey": "富田暁",
+          "odds": 11.9,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1674,
+          "expected_value": 1.99,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ユイノオトコヤマ",
+          "jockey": "黛弘人",
+          "odds": 98.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1291,
+          "expected_value": 12.72,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "マイネルヒッツェ",
+          "jockey": "高杉吏麒",
+          "odds": 68.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1308,
+          "expected_value": 8.97,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "キングリスティア",
+          "jockey": "古川吉洋",
+          "odds": 205.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.127,
+          "expected_value": 26.04,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "チャイボーグ",
+          "jockey": "長浜鴻緒",
+          "odds": 134.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.128,
+          "expected_value": 17.22,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010609",
+      "race_num": 9,
+      "race_name": "HTB賞(2勝)",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 11,
+        "horse_name": "エリダヌス",
+        "uma_index": 65.8,
+        "expected_value": 1.16
+      },
+      "horses": [
+        {
+          "umaban": 11,
+          "horse_name": "エリダヌス",
+          "jockey": "横山武史",
+          "odds": 4.6,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2513,
+          "expected_value": 1.16,
+          "mark": "◎"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "マチカゼ",
+          "jockey": "武豊",
+          "odds": 5.9,
+          "popularity": 0,
+          "uma_index": 64.0,
+          "win_probability": 0.2278,
+          "expected_value": 1.34,
+          "mark": "○"
+        },
+        {
+          "umaban": 12,
+          "horse_name": "アマイ",
+          "jockey": "永野猛蔵",
+          "odds": 6.3,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2104,
+          "expected_value": 1.33,
+          "mark": "▲"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "テイデ",
+          "jockey": "佐々木大",
+          "odds": 6.0,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2135,
+          "expected_value": 1.28,
+          "mark": "△"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "エグランタイン",
+          "jockey": "鮫島克駿",
+          "odds": 7.9,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1888,
+          "expected_value": 1.49,
+          "mark": "×"
+        },
+        {
+          "umaban": 10,
+          "horse_name": "スカイフォール",
+          "jockey": "丹内祐次",
+          "odds": 7.9,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1888,
+          "expected_value": 1.49,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "ナリタザクラ",
+          "jockey": "横山和生",
+          "odds": 50.9,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.146,
+          "expected_value": 7.43,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ピンクジン",
+          "jockey": "黛弘人",
+          "odds": 10.9,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1704,
+          "expected_value": 1.86,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ノレッジビューティ",
+          "jockey": "岩田康誠",
+          "odds": 12.9,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1648,
+          "expected_value": 2.13,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ユイ",
+          "jockey": "富田暁",
+          "odds": 31.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1378,
+          "expected_value": 4.3,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "マンクスホップ",
+          "jockey": "斎藤新",
+          "odds": 52.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1327,
+          "expected_value": 6.9,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "コパノアントニオ",
+          "jockey": "高杉吏麒",
+          "odds": 93.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1293,
+          "expected_value": 12.04,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "スカーズ",
+          "jockey": "浜中俊",
+          "odds": 26.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1404,
+          "expected_value": 3.65,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ヴァンルーラー",
+          "jockey": "小林勝太",
+          "odds": 138.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1279,
+          "expected_value": 17.75,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010610",
+      "race_num": 10,
+      "race_name": "札幌スポニチ賞(2勝)",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 13,
+        "horse_name": "ゴルトリッチ",
+        "uma_index": 65.8,
+        "expected_value": 1.17
+      },
+      "horses": [
+        {
+          "umaban": 13,
+          "horse_name": "ゴルトリッチ",
+          "jockey": "横山武史",
+          "odds": 4.7,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2495,
+          "expected_value": 1.17,
+          "mark": "◎"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "スイミーユニバンス",
+          "jockey": "武豊",
+          "odds": 6.8,
+          "popularity": 0,
+          "uma_index": 64.0,
+          "win_probability": 0.2188,
+          "expected_value": 1.49,
+          "mark": "○"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ミズノコキュウ",
+          "jockey": "丹内祐次",
+          "odds": 5.2,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2238,
+          "expected_value": 1.16,
+          "mark": "▲"
+        },
+        {
+          "umaban": 15,
+          "horse_name": "ヤマニンアストロン",
+          "jockey": "浜中俊",
+          "odds": 6.5,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2084,
+          "expected_value": 1.35,
+          "mark": "△"
+        },
+        {
+          "umaban": 14,
+          "horse_name": "ヴィアドロローサ",
+          "jockey": "北村友一",
+          "odds": 42.9,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1474,
+          "expected_value": 6.33,
+          "mark": "×"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "コナブラック",
+          "jockey": "亀田温心",
+          "odds": 10.5,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1718,
+          "expected_value": 1.8,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "オルフェスト",
+          "jockey": "丸山元気",
+          "odds": 10.0,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1738,
+          "expected_value": 1.74,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "カイカノキセキ",
+          "jockey": "西村淳也",
+          "odds": 13.7,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1629,
+          "expected_value": 2.23,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "マルプリ",
+          "jockey": "斎藤新",
+          "odds": 59.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1317,
+          "expected_value": 7.82,
+          "mark": ""
+        },
+        {
+          "umaban": 12,
+          "horse_name": "ロゼクラン",
+          "jockey": "荻野琢真",
+          "odds": 34.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1365,
+          "expected_value": 4.75,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ゴキゲンサン",
+          "jockey": "永野猛蔵",
+          "odds": 59.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1317,
+          "expected_value": 7.86,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ポルタフォルトゥナ",
+          "jockey": "古川吉洋",
+          "odds": 19.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1458,
+          "expected_value": 2.8,
+          "mark": ""
+        },
+        {
+          "umaban": 16,
+          "horse_name": "アップストローク",
+          "jockey": "大野拓弥",
+          "odds": 27.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1396,
+          "expected_value": 3.83,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "アンビバレント",
+          "jockey": "菱田裕二",
+          "odds": 33.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1371,
+          "expected_value": 4.52,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "トリップトゥムーン",
+          "jockey": "佐々木大",
+          "odds": 59.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1317,
+          "expected_value": 7.86,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "スムースベルベット",
+          "jockey": "黛弘人",
+          "odds": 16.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1492,
+          "expected_value": 2.46,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010611",
+      "race_num": 11,
+      "race_name": "第29回エルムステークス(GIII)",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 10,
+        "horse_name": "ドゥラエレーデ",
+        "uma_index": 65.8,
+        "expected_value": 0.96
+      },
+      "horses": [
+        {
+          "umaban": 10,
+          "horse_name": "ドゥラエレーデ",
+          "jockey": "武豊",
+          "odds": 3.4,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.282,
+          "expected_value": 0.96,
+          "mark": "◎"
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ミトノオー",
+          "jockey": "松山弘平",
+          "odds": 5.1,
+          "popularity": 0,
+          "uma_index": 64.0,
+          "win_probability": 0.2384,
+          "expected_value": 1.22,
+          "mark": "○"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ペイシャエス",
+          "jockey": "横山和生",
+          "odds": 9.8,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.1921,
+          "expected_value": 1.88,
+          "mark": "▲"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ナチュラルハイ",
+          "jockey": "永野猛蔵",
+          "odds": 4.9,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2329,
+          "expected_value": 1.14,
+          "mark": "△"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ヴィクティファルス",
+          "jockey": "池添謙一",
+          "odds": 43.3,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1474,
+          "expected_value": 6.38,
+          "mark": "×"
+        },
+        {
+          "umaban": 14,
+          "horse_name": "プロミストウォリア",
+          "jockey": "西村淳也",
+          "odds": 7.4,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1922,
+          "expected_value": 1.42,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "サヴァ",
+          "jockey": "岩田康誠",
+          "odds": 11.2,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1695,
+          "expected_value": 1.9,
+          "mark": ""
+        },
+        {
+          "umaban": 12,
+          "horse_name": "テーオードレフォン",
+          "jockey": "丸山元気",
+          "odds": 26.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1404,
+          "expected_value": 3.65,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "シルトプレ",
+          "jockey": "石川倭",
+          "odds": 54.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1324,
+          "expected_value": 7.2,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "ベルダーイメル",
+          "jockey": "富田暁",
+          "odds": 23.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1417,
+          "expected_value": 3.39,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "フルム",
+          "jockey": "水口優也",
+          "odds": 22.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1432,
+          "expected_value": 3.15,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "タガノクリステル",
+          "jockey": "古川吉洋",
+          "odds": 156.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1276,
+          "expected_value": 19.96,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ホウオウアマゾン",
+          "jockey": "菱田裕二",
+          "odds": 86.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1296,
+          "expected_value": 11.18,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ユティタム",
+          "jockey": "佐々木大",
+          "odds": 17.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1475,
+          "expected_value": 2.62,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202401010612",
+      "race_num": 12,
+      "race_name": "3歳以上1勝クラス",
+      "venue": "札幌",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 8,
+        "horse_name": "ソルレース",
+        "uma_index": 65.8,
+        "expected_value": 1.04
+      },
+      "horses": [
+        {
+          "umaban": 8,
+          "horse_name": "ソルレース",
+          "jockey": "北村友一",
+          "odds": 3.9,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2669,
+          "expected_value": 1.04,
+          "mark": "◎"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ハレアカラフラ",
+          "jockey": "武豊",
+          "odds": 3.7,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2725,
+          "expected_value": 1.01,
+          "mark": "○"
+        },
+        {
+          "umaban": 14,
+          "horse_name": "ベアゴーゴー",
+          "jockey": "大野拓弥",
+          "odds": 4.7,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2364,
+          "expected_value": 1.11,
+          "mark": "▲"
+        },
+        {
+          "umaban": 15,
+          "horse_name": "ヒラボクミニー",
+          "jockey": "横山武史",
+          "odds": 12.6,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.1786,
+          "expected_value": 2.25,
+          "mark": "△"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ダークブロンド",
+          "jockey": "横山和生",
+          "odds": 10.0,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.1869,
+          "expected_value": 1.87,
+          "mark": "×"
+        },
+        {
+          "umaban": 12,
+          "horse_name": "レディーエンジェル",
+          "jockey": "松山弘平",
+          "odds": 48.0,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1465,
+          "expected_value": 7.03,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "ソングフォーユー",
+          "jockey": "鮫島克駿",
+          "odds": 11.6,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1682,
+          "expected_value": 1.95,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ランスオブサウンド",
+          "jockey": "藤岡佑介",
+          "odds": 27.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1394,
+          "expected_value": 3.86,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "サンポーニャ",
+          "jockey": "高杉吏麒",
+          "odds": 17.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1479,
+          "expected_value": 2.59,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "マテンロウアネモス",
+          "jockey": "鷲頭虎太",
+          "odds": 30.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1379,
+          "expected_value": 4.26,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "マイレーヌ",
+          "jockey": "斎藤新",
+          "odds": 27.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1394,
+          "expected_value": 3.88,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "ラリベラ",
+          "jockey": "菱田裕二",
+          "odds": 53.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1324,
+          "expected_value": 7.14,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ナムラシベラ",
+          "jockey": "川端海翼",
+          "odds": 98.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1291,
+          "expected_value": 12.7,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "ビアフォーナウ",
+          "jockey": "小林凌大",
+          "odds": 29.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1388,
+          "expected_value": 4.03,
+          "mark": ""
+        },
+        {
+          "umaban": 16,
+          "horse_name": "ソアラ",
+          "jockey": "佐々木大",
+          "odds": 90.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1294,
+          "expected_value": 11.65,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020401",
+      "race_num": 1,
+      "race_name": "2歳未勝利",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 2,
+        "horse_name": "グティ",
+        "uma_index": 67.5,
+        "expected_value": 0.82
+      },
+      "horses": [
+        {
+          "umaban": 2,
+          "horse_name": "グティ",
+          "jockey": "川田将雅",
+          "odds": 2.5,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.3287,
+          "expected_value": 0.82,
+          "mark": "◎"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "アイスモント",
+          "jockey": "坂井瑠星",
+          "odds": 6.8,
+          "popularity": 0,
+          "uma_index": 64.0,
+          "win_probability": 0.2188,
+          "expected_value": 1.49,
+          "mark": "○"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "コスモイシュタル",
+          "jockey": "松岡正海",
+          "odds": 4.5,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2401,
+          "expected_value": 1.08,
+          "mark": "▲"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "クレプスクルム",
+          "jockey": "三浦皇成",
+          "odds": 4.8,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2346,
+          "expected_value": 1.13,
+          "mark": "△"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "マイネルボス",
+          "jockey": "柴田大知",
+          "odds": 7.8,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1894,
+          "expected_value": 1.48,
+          "mark": "×"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "テーオービースト",
+          "jockey": "菊沢一樹",
+          "odds": 8.0,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1881,
+          "expected_value": 1.5,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "マイネルトラオム",
+          "jockey": "和田竜二",
+          "odds": 47.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1334,
+          "expected_value": 6.35,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ケアンズ",
+          "jockey": "武藤雅",
+          "odds": 65.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1311,
+          "expected_value": 8.61,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020402",
+      "race_num": 2,
+      "race_name": "2歳新馬",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 11,
+        "horse_name": "サリーチェ",
+        "uma_index": 67.5,
+        "expected_value": 0.69
+      },
+      "horses": [
+        {
+          "umaban": 11,
+          "horse_name": "サリーチェ",
+          "jockey": "ルメール",
+          "odds": 1.7,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.404,
+          "expected_value": 0.69,
+          "mark": "◎"
+        },
+        {
+          "umaban": 14,
+          "horse_name": "トレヴィ",
+          "jockey": "坂井瑠星",
+          "odds": 5.2,
+          "popularity": 0,
+          "uma_index": 64.0,
+          "win_probability": 0.2369,
+          "expected_value": 1.23,
+          "mark": "○"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "ダンツエラン",
+          "jockey": "団野大成",
+          "odds": 5.4,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2209,
+          "expected_value": 1.19,
+          "mark": "▲"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ウィルサヴァイブ",
+          "jockey": "戸崎圭太",
+          "odds": 16.8,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1619,
+          "expected_value": 2.72,
+          "mark": "△"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ラッキークラウン",
+          "jockey": "田辺裕信",
+          "odds": 24.3,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1546,
+          "expected_value": 3.76,
+          "mark": "×"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "ジョウショーメイク",
+          "jockey": "和田竜二",
+          "odds": 12.7,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1652,
+          "expected_value": 2.1,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "プリンセスロロ",
+          "jockey": "吉田豊",
+          "odds": 96.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1291,
+          "expected_value": 12.5,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "ケリフレッドアスク",
+          "jockey": "横山典弘",
+          "odds": 24.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1411,
+          "expected_value": 3.51,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "アルマグラース",
+          "jockey": "三浦皇成",
+          "odds": 41.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1347,
+          "expected_value": 5.55,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ミヤイグアス",
+          "jockey": "原優介",
+          "odds": 179.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1272,
+          "expected_value": 22.83,
+          "mark": ""
+        },
+        {
+          "umaban": 12,
+          "horse_name": "セラード",
+          "jockey": "石神深道",
+          "odds": 242.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1266,
+          "expected_value": 30.71,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "テーオーニルソン",
+          "jockey": "西塚洸二",
+          "odds": 65.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1312,
+          "expected_value": 8.53,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "クリノモノリス",
+          "jockey": "小沢大仁",
+          "odds": 279.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1264,
+          "expected_value": 35.31,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "バーミーズルビー",
+          "jockey": "幸英明",
+          "odds": 33.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1368,
+          "expected_value": 4.64,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020403",
+      "race_num": 3,
+      "race_name": "2歳新馬",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 6,
+        "horse_name": "ジェゼロ",
+        "uma_index": 67.5,
+        "expected_value": 0.62
+      },
+      "horses": [
+        {
+          "umaban": 6,
+          "horse_name": "ジェゼロ",
+          "jockey": "川田将雅",
+          "odds": 1.3,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.4764,
+          "expected_value": 0.62,
+          "mark": "◎"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "スカイタワー",
+          "jockey": "戸崎圭太",
+          "odds": 3.9,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2669,
+          "expected_value": 1.04,
+          "mark": "○"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "シベリアンデネブ",
+          "jockey": "田辺裕信",
+          "odds": 53.6,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1456,
+          "expected_value": 7.8,
+          "mark": "▲"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "フェイトライン",
+          "jockey": "坂井瑠星",
+          "odds": 15.7,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1636,
+          "expected_value": 2.57,
+          "mark": "△"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ニシノイストワール",
+          "jockey": "三浦皇成",
+          "odds": 12.5,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1658,
+          "expected_value": 2.07,
+          "mark": "×"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "サイモンベローチェ",
+          "jockey": "団野大成",
+          "odds": 75.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1303,
+          "expected_value": 9.84,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "メイショウハダル",
+          "jockey": "吉田豊",
+          "odds": 21.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1433,
+          "expected_value": 3.14,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "スペースリーガ",
+          "jockey": "原優介",
+          "odds": 128.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1281,
+          "expected_value": 16.43,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "セイウンピカイチ",
+          "jockey": "幸英明",
+          "odds": 51.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1328,
+          "expected_value": 6.84,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020404",
+      "race_num": 4,
+      "race_name": "3歳未勝利",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 4,
+        "horse_name": "レッドアレグロ",
+        "uma_index": 67.5,
+        "expected_value": 0.77
+      },
+      "horses": [
+        {
+          "umaban": 4,
+          "horse_name": "レッドアレグロ",
+          "jockey": "ルメール",
+          "odds": 2.2,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.3506,
+          "expected_value": 0.77,
+          "mark": "◎"
+        },
+        {
+          "umaban": 13,
+          "horse_name": "アンドゥーラ",
+          "jockey": "坂井瑠星",
+          "odds": 4.5,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2533,
+          "expected_value": 1.14,
+          "mark": "○"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "アドマイヤエイジア",
+          "jockey": "Ｍ．デム",
+          "odds": 4.2,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2465,
+          "expected_value": 1.04,
+          "mark": "▲"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "エグマリーヌ",
+          "jockey": "三浦皇成",
+          "odds": 5.3,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2223,
+          "expected_value": 1.18,
+          "mark": "△"
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ポチョラーダ",
+          "jockey": "吉村誠之",
+          "odds": 189.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1271,
+          "expected_value": 24.14,
+          "mark": "×"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "タイガノイッテキ",
+          "jockey": "永島まな",
+          "odds": 53.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1324,
+          "expected_value": 7.11,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "ツヨポンフェイス",
+          "jockey": "大江原比",
+          "odds": 60.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1316,
+          "expected_value": 7.99,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ノアファラオ",
+          "jockey": "小林脩斗",
+          "odds": 186.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1271,
+          "expected_value": 23.75,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "マジカルプリンス",
+          "jockey": "柴田大知",
+          "odds": 335.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1262,
+          "expected_value": 42.27,
+          "mark": ""
+        },
+        {
+          "umaban": 12,
+          "horse_name": "ワンダーヒナタ",
+          "jockey": "団野大成",
+          "odds": 107.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1287,
+          "expected_value": 13.85,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ボナーテソーロ",
+          "jockey": "木幡巧也",
+          "odds": 66.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1311,
+          "expected_value": 8.66,
+          "mark": ""
+        },
+        {
+          "umaban": 15,
+          "horse_name": "オセアハートマン",
+          "jockey": "野中悠太",
+          "odds": 59.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1318,
+          "expected_value": 7.79,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "メイショウタイセツ",
+          "jockey": "酒井学",
+          "odds": 173.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1273,
+          "expected_value": 22.04,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "パワーマックィーン",
+          "jockey": "幸英明",
+          "odds": 15.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1505,
+          "expected_value": 2.36,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "レイズルノワール",
+          "jockey": "江田照男",
+          "odds": 221.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1268,
+          "expected_value": 28.1,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020405",
+      "race_num": 5,
+      "race_name": "3歳未勝利",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 7,
+        "horse_name": "ハニーコム",
+        "uma_index": 65.8,
+        "expected_value": 1.16
+      },
+      "horses": [
+        {
+          "umaban": 7,
+          "horse_name": "ハニーコム",
+          "jockey": "戸崎圭太",
+          "odds": 4.6,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2513,
+          "expected_value": 1.16,
+          "mark": "◎"
+        },
+        {
+          "umaban": 18,
+          "horse_name": "ラガークイン",
+          "jockey": "坂井瑠星",
+          "odds": 3.2,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2894,
+          "expected_value": 0.93,
+          "mark": "○"
+        },
+        {
+          "umaban": 6,
+          "horse_name": "レッドレクス",
+          "jockey": "西塚洸二",
+          "odds": 3.9,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2538,
+          "expected_value": 0.99,
+          "mark": "▲"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "アクシノス",
+          "jockey": "吉村誠之",
+          "odds": 9.1,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1821,
+          "expected_value": 1.66,
+          "mark": "△"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "マンウォル",
+          "jockey": "菊沢一樹",
+          "odds": 14.0,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1623,
+          "expected_value": 2.27,
+          "mark": "×"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "テーオーロバート",
+          "jockey": "小沢大仁",
+          "odds": 15.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.151,
+          "expected_value": 2.33,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "カンティーク",
+          "jockey": "角田大和",
+          "odds": 37.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1358,
+          "expected_value": 5.03,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "レッドスウィング",
+          "jockey": "荻野極",
+          "odds": 91.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1294,
+          "expected_value": 11.78,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "モンタンヴェール",
+          "jockey": "藤田菜七",
+          "odds": 17.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1475,
+          "expected_value": 2.62,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "ホーハイト",
+          "jockey": "石橋脩",
+          "odds": 136.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1279,
+          "expected_value": 17.49,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "オメガジャスミン",
+          "jockey": "原優介",
+          "odds": 209.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1269,
+          "expected_value": 26.56,
+          "mark": ""
+        },
+        {
+          "umaban": 17,
+          "horse_name": "エクセプション",
+          "jockey": "菅原隆一",
+          "odds": 416.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.126,
+          "expected_value": 52.41,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "キタサンシデン",
+          "jockey": "和田竜二",
+          "odds": 20.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1444,
+          "expected_value": 2.98,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "アドマイヤポーシュ",
+          "jockey": "杉原誠人",
+          "odds": 106.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1288,
+          "expected_value": 13.68,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "クランベリーダンス",
+          "jockey": "永島まな",
+          "odds": 42.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1344,
+          "expected_value": 5.74,
+          "mark": ""
+        },
+        {
+          "umaban": 15,
+          "horse_name": "ジョリアンジュ",
+          "jockey": "団野大成",
+          "odds": 48.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1332,
+          "expected_value": 6.51,
+          "mark": ""
+        },
+        {
+          "umaban": 16,
+          "horse_name": "エリツィーノ",
+          "jockey": "酒井学",
+          "odds": 107.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1287,
+          "expected_value": 13.83,
+          "mark": ""
+        },
+        {
+          "umaban": 12,
+          "horse_name": "アーコレード",
+          "jockey": "三浦皇成",
+          "odds": 340.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1262,
+          "expected_value": 42.9,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020406",
+      "race_num": 6,
+      "race_name": "驀進特別(2勝)",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 16,
+        "horse_name": "ジャスパーノワール",
+        "uma_index": 62.2,
+        "expected_value": 0.74
+      },
+      "horses": [
+        {
+          "umaban": 16,
+          "horse_name": "ジャスパーノワール",
+          "jockey": "団野大成",
+          "odds": 2.2,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3374,
+          "expected_value": 0.74,
+          "mark": "◎"
+        },
+        {
+          "umaban": 17,
+          "horse_name": "キングクー",
+          "jockey": "藤田菜七",
+          "odds": 9.9,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1785,
+          "expected_value": 1.77,
+          "mark": "○"
+        },
+        {
+          "umaban": 11,
+          "horse_name": "クインズコスモス",
+          "jockey": "石橋脩",
+          "odds": 8.3,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1863,
+          "expected_value": 1.55,
+          "mark": "▲"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "アサギリ",
+          "jockey": "石川裕紀",
+          "odds": 8.0,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1881,
+          "expected_value": 1.5,
+          "mark": "△"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "テンジュイン",
+          "jockey": "坂井瑠星",
+          "odds": 82.8,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.143,
+          "expected_value": 11.84,
+          "mark": "×"
+        },
+        {
+          "umaban": 12,
+          "horse_name": "オルコス",
+          "jockey": "杉原誠人",
+          "odds": 10.9,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1704,
+          "expected_value": 1.86,
+          "mark": ""
+        },
+        {
+          "umaban": 18,
+          "horse_name": "バスドラムガール",
+          "jockey": "藤懸貴志",
+          "odds": 13.0,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1645,
+          "expected_value": 2.14,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "トウカイファクター",
+          "jockey": "Ｍ．デム",
+          "odds": 50.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1329,
+          "expected_value": 6.76,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "オリアメンディ",
+          "jockey": "内田博幸",
+          "odds": 41.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1347,
+          "expected_value": 5.57,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "セイウンハルカニ",
+          "jockey": "松本大輝",
+          "odds": 43.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1343,
+          "expected_value": 5.8,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "アイヲツグモノ",
+          "jockey": "菊沢一樹",
+          "odds": 17.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1477,
+          "expected_value": 2.6,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ヨール",
+          "jockey": "嶋田純次",
+          "odds": 113.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1285,
+          "expected_value": 14.53,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "キュートヘスティア",
+          "jockey": "小沢大仁",
+          "odds": 39.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1351,
+          "expected_value": 5.37,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "カジュフェイス",
+          "jockey": "和田竜二",
+          "odds": 127.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1281,
+          "expected_value": 16.32,
+          "mark": ""
+        },
+        {
+          "umaban": 15,
+          "horse_name": "フォルテース",
+          "jockey": "長岡禎仁",
+          "odds": 19.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1458,
+          "expected_value": 2.8,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "セイウンダマシイ",
+          "jockey": "三浦皇成",
+          "odds": 89.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1295,
+          "expected_value": 11.61,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "フラッシュアーク",
+          "jockey": "原優介",
+          "odds": 20.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1449,
+          "expected_value": 2.91,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "フクノワカバ",
+          "jockey": "松岡正海",
+          "odds": 252.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1266,
+          "expected_value": 31.96,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020407",
+      "race_num": 7,
+      "race_name": "第16回レパードステークス(GIII)",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 1,
+        "horse_name": "ミッキーファイト",
+        "uma_index": 67.5,
+        "expected_value": 0.77
+      },
+      "horses": [
+        {
+          "umaban": 1,
+          "horse_name": "ミッキーファイト",
+          "jockey": "戸崎圭太",
+          "odds": 2.2,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.3506,
+          "expected_value": 0.77,
+          "mark": "◎"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "ソニックスター",
+          "jockey": "川田将雅",
+          "odds": 4.9,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.246,
+          "expected_value": 1.21,
+          "mark": "○"
+        },
+        {
+          "umaban": 12,
+          "horse_name": "サンライズソレイユ",
+          "jockey": "ルメール",
+          "odds": 8.4,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.1989,
+          "expected_value": 1.67,
+          "mark": "▲"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ミッキークレスト",
+          "jockey": "坂井瑠星",
+          "odds": 15.3,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1643,
+          "expected_value": 2.51,
+          "mark": "△"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ジーサイクロン",
+          "jockey": "Ｍ．デム",
+          "odds": 8.2,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1869,
+          "expected_value": 1.53,
+          "mark": "×"
+        },
+        {
+          "umaban": 11,
+          "horse_name": "ブルーサン",
+          "jockey": "石橋脩",
+          "odds": 11.3,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1691,
+          "expected_value": 1.91,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "サトノフェニックス",
+          "jockey": "和田竜二",
+          "odds": 52.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1326,
+          "expected_value": 7.01,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "バロンドール",
+          "jockey": "横山典弘",
+          "odds": 48.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1332,
+          "expected_value": 6.5,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ハビレ",
+          "jockey": "三浦皇成",
+          "odds": 24.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1415,
+          "expected_value": 3.44,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ピュアキアン",
+          "jockey": "吉田豊",
+          "odds": 59.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1318,
+          "expected_value": 7.8,
+          "mark": ""
+        },
+        {
+          "umaban": 15,
+          "horse_name": "アラレタバシル",
+          "jockey": "野中悠太",
+          "odds": 26.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1403,
+          "expected_value": 3.66,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "ロジアデレード",
+          "jockey": "内田博幸",
+          "odds": 22.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1432,
+          "expected_value": 3.15,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "メイショウフウドウ",
+          "jockey": "西塚洸二",
+          "odds": 71.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1306,
+          "expected_value": 9.27,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ノットイナフ",
+          "jockey": "幸英明",
+          "odds": 232.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1267,
+          "expected_value": 29.49,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ハーバーライト",
+          "jockey": "小沢大仁",
+          "odds": 136.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1279,
+          "expected_value": 17.47,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020408",
+      "race_num": 8,
+      "race_name": "3歳以上1勝クラス",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 4,
+        "horse_name": "ランスオブクイーン",
+        "uma_index": 67.5,
+        "expected_value": 0.69
+      },
+      "horses": [
+        {
+          "umaban": 4,
+          "horse_name": "ランスオブクイーン",
+          "jockey": "川田将雅",
+          "odds": 1.7,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.404,
+          "expected_value": 0.69,
+          "mark": "◎"
+        },
+        {
+          "umaban": 12,
+          "horse_name": "オルトパラティウム",
+          "jockey": "ルメール",
+          "odds": 3.8,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2696,
+          "expected_value": 1.02,
+          "mark": "○"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "イゾレエオリア",
+          "jockey": "坂井瑠星",
+          "odds": 11.0,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.1832,
+          "expected_value": 2.02,
+          "mark": "▲"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "サンセットビュー",
+          "jockey": "三浦皇成",
+          "odds": 7.5,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1915,
+          "expected_value": 1.44,
+          "mark": "△"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "モモンウールー",
+          "jockey": "吉村誠之",
+          "odds": 15.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1515,
+          "expected_value": 2.29,
+          "mark": "×"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "アレナリア",
+          "jockey": "団野大成",
+          "odds": 36.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.136,
+          "expected_value": 4.96,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "トラストエムシー",
+          "jockey": "幸英明",
+          "odds": 85.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1297,
+          "expected_value": 11.08,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ヴァンデスト",
+          "jockey": "藤田菜七",
+          "odds": 67.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.131,
+          "expected_value": 8.78,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "ピエナオルフェ",
+          "jockey": "城戸義政",
+          "odds": 319.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1263,
+          "expected_value": 40.3,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ムーンスカイ",
+          "jockey": "国分恭介",
+          "odds": 108.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1287,
+          "expected_value": 13.92,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "コスモゴレアドール",
+          "jockey": "木幡巧也",
+          "odds": 262.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1265,
+          "expected_value": 33.25,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "ダノンブリザード",
+          "jockey": "荻野極",
+          "odds": 16.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.15,
+          "expected_value": 2.4,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "ロンギングドクター",
+          "jockey": "丸田恭介",
+          "odds": 423.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1259,
+          "expected_value": 53.38,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ウイニングライブ",
+          "jockey": "永島まな",
+          "odds": 148.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1277,
+          "expected_value": 18.99,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020409",
+      "race_num": 9,
+      "race_name": "3歳未勝利",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 1,
+        "horse_name": "アメリカンランナー",
+        "uma_index": 62.2,
+        "expected_value": 0.82
+      },
+      "horses": [
+        {
+          "umaban": 1,
+          "horse_name": "アメリカンランナー",
+          "jockey": "Ｍ．デム",
+          "odds": 2.7,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3038,
+          "expected_value": 0.82,
+          "mark": "◎"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "フォルスタクラス",
+          "jockey": "三浦皇成",
+          "odds": 3.9,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2538,
+          "expected_value": 0.99,
+          "mark": "○"
+        },
+        {
+          "umaban": 10,
+          "horse_name": "メロディアスハード",
+          "jockey": "長岡禎仁",
+          "odds": 5.7,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2171,
+          "expected_value": 1.24,
+          "mark": "▲"
+        },
+        {
+          "umaban": 12,
+          "horse_name": "タマエスポワール",
+          "jockey": "石川裕紀",
+          "odds": 11.3,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1691,
+          "expected_value": 1.91,
+          "mark": "△"
+        },
+        {
+          "umaban": 6,
+          "horse_name": "グローリーロード",
+          "jockey": "幸英明",
+          "odds": 11.4,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1688,
+          "expected_value": 1.92,
+          "mark": "×"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ライトニングゼウス",
+          "jockey": "菊沢一樹",
+          "odds": 24.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1415,
+          "expected_value": 3.42,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "シューンカイゼリン",
+          "jockey": "小林脩斗",
+          "odds": 71.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1306,
+          "expected_value": 9.39,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ヴァルタリ",
+          "jockey": "吉村誠之",
+          "odds": 104.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1288,
+          "expected_value": 13.41,
+          "mark": ""
+        },
+        {
+          "umaban": 14,
+          "horse_name": "ニシノサイエン",
+          "jockey": "原優介",
+          "odds": 106.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1288,
+          "expected_value": 13.71,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ハナチルサト",
+          "jockey": "永島まな",
+          "odds": 16.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1492,
+          "expected_value": 2.46,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "オールドマイン",
+          "jockey": "荻野極",
+          "odds": 46.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1336,
+          "expected_value": 6.19,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "テンメリーアーサー",
+          "jockey": "国分恭介",
+          "odds": 28.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1389,
+          "expected_value": 4.0,
+          "mark": ""
+        },
+        {
+          "umaban": 15,
+          "horse_name": "レモンシフォン",
+          "jockey": "吉田豊",
+          "odds": 24.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1415,
+          "expected_value": 3.42,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "レーヌガレット",
+          "jockey": "橋木太希",
+          "odds": 83.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1298,
+          "expected_value": 10.78,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "ドリームライク",
+          "jockey": "加藤祥太",
+          "odds": 27.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1394,
+          "expected_value": 3.86,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020410",
+      "race_num": 10,
+      "race_name": "3歳以上1勝クラス",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 17,
+        "horse_name": "アルトゥーム",
+        "uma_index": 65.8,
+        "expected_value": 0.98
+      },
+      "horses": [
+        {
+          "umaban": 17,
+          "horse_name": "アルトゥーム",
+          "jockey": "戸崎圭太",
+          "odds": 3.5,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2787,
+          "expected_value": 0.98,
+          "mark": "◎"
+        },
+        {
+          "umaban": 14,
+          "horse_name": "ソニックライン",
+          "jockey": "ルメール",
+          "odds": 3.7,
+          "popularity": 0,
+          "uma_index": 65.8,
+          "win_probability": 0.2725,
+          "expected_value": 1.01,
+          "mark": "○"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "シヴァース",
+          "jockey": "Ｍ．デム",
+          "odds": 3.5,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2655,
+          "expected_value": 0.93,
+          "mark": "▲"
+        },
+        {
+          "umaban": 15,
+          "horse_name": "ホウオウシェリー",
+          "jockey": "坂井瑠星",
+          "odds": 7.3,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.206,
+          "expected_value": 1.5,
+          "mark": "△"
+        },
+        {
+          "umaban": 11,
+          "horse_name": "アームテイル",
+          "jockey": "横山典弘",
+          "odds": 30.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1383,
+          "expected_value": 4.16,
+          "mark": "×"
+        },
+        {
+          "umaban": 18,
+          "horse_name": "アランヴェリテ",
+          "jockey": "柴田裕一",
+          "odds": 104.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1288,
+          "expected_value": 13.45,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "カフジキアッキエレ",
+          "jockey": "和田竜二",
+          "odds": 23.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1422,
+          "expected_value": 3.3,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "プリズマジコ",
+          "jockey": "秋山稔樹",
+          "odds": 33.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.137,
+          "expected_value": 4.56,
+          "mark": ""
+        },
+        {
+          "umaban": 12,
+          "horse_name": "トクシーカイザー",
+          "jockey": "菊沢一樹",
+          "odds": 33.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1369,
+          "expected_value": 4.59,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "メランポジューム",
+          "jockey": "幸英明",
+          "odds": 181.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1272,
+          "expected_value": 23.1,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "アイキャンドウイッ",
+          "jockey": "荻野極",
+          "odds": 88.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1295,
+          "expected_value": 11.44,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "エイシンオニキス",
+          "jockey": "団野大成",
+          "odds": 74.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1304,
+          "expected_value": 9.71,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "マイネルフォルツァ",
+          "jockey": "石橋脩",
+          "odds": 50.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.133,
+          "expected_value": 6.65,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "マフィン",
+          "jockey": "吉村誠之",
+          "odds": 23.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1421,
+          "expected_value": 3.32,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ドラミモン",
+          "jockey": "江田勇亮",
+          "odds": 118.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1284,
+          "expected_value": 15.16,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "アマミツツキ",
+          "jockey": "永島まな",
+          "odds": 189.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1271,
+          "expected_value": 24.04,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "メリージェーン",
+          "jockey": "石川裕紀",
+          "odds": 41.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1347,
+          "expected_value": 5.56,
+          "mark": ""
+        },
+        {
+          "umaban": 16,
+          "horse_name": "セリオーソ",
+          "jockey": "三浦皇成",
+          "odds": 139.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1279,
+          "expected_value": 17.79,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020411",
+      "race_num": 11,
+      "race_name": "ダリア賞(OP)",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "A",
+      "honmei": {
+        "umaban": 8,
+        "horse_name": "プリティディーヴァ",
+        "uma_index": 67.5,
+        "expected_value": 0.72
+      },
+      "horses": [
+        {
+          "umaban": 8,
+          "horse_name": "プリティディーヴァ",
+          "jockey": "ルメール",
+          "odds": 1.9,
+          "popularity": 0,
+          "uma_index": 67.5,
+          "win_probability": 0.3793,
+          "expected_value": 0.72,
+          "mark": "◎"
+        },
+        {
+          "umaban": 7,
+          "horse_name": "サニーサルサ",
+          "jockey": "永島まな",
+          "odds": 3.1,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2803,
+          "expected_value": 0.87,
+          "mark": "○"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "セイウンビッグバン",
+          "jockey": "三浦皇成",
+          "odds": 5.9,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2147,
+          "expected_value": 1.27,
+          "mark": "▲"
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ミーントゥビー",
+          "jockey": "松岡正海",
+          "odds": 7.2,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1937,
+          "expected_value": 1.39,
+          "mark": "△"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ユメシバイ",
+          "jockey": "横山典弘",
+          "odds": 16.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1492,
+          "expected_value": 2.46,
+          "mark": "×"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ナムラトロム",
+          "jockey": "丸田恭介",
+          "odds": 20.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1445,
+          "expected_value": 2.96,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "カミーチェ",
+          "jockey": "菊沢一樹",
+          "odds": 244.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1266,
+          "expected_value": 30.95,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "クマノコ",
+          "jockey": "原優介",
+          "odds": 116.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1284,
+          "expected_value": 14.94,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "チューリップ",
+          "jockey": "小林脩斗",
+          "odds": 230.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1267,
+          "expected_value": 29.15,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202404020412",
+      "race_num": 12,
+      "race_name": "苗場特別(2勝)",
+      "venue": "新潟",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 8,
+        "horse_name": "ダイメイセブン",
+        "uma_index": 62.2,
+        "expected_value": 0.85
+      },
+      "horses": [
+        {
+          "umaban": 8,
+          "horse_name": "ダイメイセブン",
+          "jockey": "酒井学",
+          "odds": 2.9,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.2936,
+          "expected_value": 0.85,
+          "mark": "◎"
+        },
+        {
+          "umaban": 14,
+          "horse_name": "リジン",
+          "jockey": "幸英明",
+          "odds": 4.5,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2401,
+          "expected_value": 1.08,
+          "mark": "○"
+        },
+        {
+          "umaban": 11,
+          "horse_name": "ブレイゼスト",
+          "jockey": "Ｍ．デム",
+          "odds": 3.8,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2565,
+          "expected_value": 0.97,
+          "mark": "▲"
+        },
+        {
+          "umaban": 7,
+          "horse_name": "モントブレッチア",
+          "jockey": "石川裕紀",
+          "odds": 7.3,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1929,
+          "expected_value": 1.41,
+          "mark": "△"
+        },
+        {
+          "umaban": 12,
+          "horse_name": "レディベル",
+          "jockey": "内田博幸",
+          "odds": 12.9,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1648,
+          "expected_value": 2.13,
+          "mark": "×"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ヤウガウ",
+          "jockey": "菊沢一樹",
+          "odds": 53.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1325,
+          "expected_value": 7.06,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "スズノテレサ",
+          "jockey": "西塚洸二",
+          "odds": 25.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.141,
+          "expected_value": 3.53,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "サンライズゴラッソ",
+          "jockey": "吉田豊",
+          "odds": 32.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1374,
+          "expected_value": 4.42,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "コロンビアテソーロ",
+          "jockey": "原優介",
+          "odds": 30.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.138,
+          "expected_value": 4.25,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "インペラートル",
+          "jockey": "野中悠太",
+          "odds": 148.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1277,
+          "expected_value": 18.94,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "クリノクリスタル",
+          "jockey": "永島まな",
+          "odds": 29.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1386,
+          "expected_value": 4.09,
+          "mark": ""
+        },
+        {
+          "umaban": 15,
+          "horse_name": "キガサ",
+          "jockey": "柴田大知",
+          "odds": 135.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1279,
+          "expected_value": 17.38,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "コンソレーション",
+          "jockey": "嶋田純次",
+          "odds": 41.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1347,
+          "expected_value": 5.55,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "シャドウアイル",
+          "jockey": "団野大成",
+          "odds": 40.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1349,
+          "expected_value": 5.46,
+          "mark": ""
+        },
+        {
+          "umaban": 13,
+          "horse_name": "ブロードリーチ",
+          "jockey": "丸田恭介",
+          "odds": 184.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1272,
+          "expected_value": 23.44,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202435080401",
+      "race_num": 1,
+      "race_name": "C2",
+      "venue": "京都",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 12,
+        "horse_name": "ガイアメモリ",
+        "uma_index": 62.2,
+        "expected_value": 0.63
+      },
+      "horses": [
+        {
+          "umaban": 12,
+          "horse_name": "ガイアメモリ",
+          "jockey": "佐々木志",
+          "odds": 1.5,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.4223,
+          "expected_value": 0.63,
+          "mark": "◎"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "マイネルチューダ",
+          "jockey": "坂口裕一",
+          "odds": 6.6,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2075,
+          "expected_value": 1.37,
+          "mark": "○"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "スマイルジーニアス",
+          "jockey": "山本聡哉",
+          "odds": 8.4,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1857,
+          "expected_value": 1.56,
+          "mark": "▲"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ユウガオ",
+          "jockey": "高松亮",
+          "odds": 12.1,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1668,
+          "expected_value": 2.02,
+          "mark": "△"
+        },
+        {
+          "umaban": 11,
+          "horse_name": "キタクイン",
+          "jockey": "鈴木祐",
+          "odds": 12.6,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1655,
+          "expected_value": 2.09,
+          "mark": "×"
+        },
+        {
+          "umaban": 10,
+          "horse_name": "キタノフロスト",
+          "jockey": "小林凌",
+          "odds": 89.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1295,
+          "expected_value": 11.6,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "マーマネ",
+          "jockey": "塚本涼人",
+          "odds": 33.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1369,
+          "expected_value": 4.59,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "パンテーラネーラ",
+          "jockey": "阿部英俊",
+          "odds": 18.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1466,
+          "expected_value": 2.71,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ミナノキング",
+          "jockey": "大坪慎",
+          "odds": 20.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1449,
+          "expected_value": 2.91,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "メモワールロマン",
+          "jockey": "山本政聡",
+          "odds": 174.6,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1273,
+          "expected_value": 22.22,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "フレンドパーティー",
+          "jockey": "南郷家全",
+          "odds": 32.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1373,
+          "expected_value": 4.46,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "エムワンシゲタ",
+          "jockey": "関本淳",
+          "odds": 167.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1274,
+          "expected_value": 21.39,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202435080402",
+      "race_num": 2,
+      "race_name": "C2八組",
+      "venue": "京都",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 4,
+        "horse_name": "トリテレイア",
+        "uma_index": 62.2,
+        "expected_value": 0.74
+      },
+      "horses": [
+        {
+          "umaban": 4,
+          "horse_name": "トリテレイア",
+          "jockey": "高松亮",
+          "odds": 2.2,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3374,
+          "expected_value": 0.74,
+          "mark": "◎"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "フレンドショコラ",
+          "jockey": "鈴木祐",
+          "odds": 3.9,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2538,
+          "expected_value": 0.99,
+          "mark": "○"
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ラストサミット",
+          "jockey": "佐々木志",
+          "odds": 5.5,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2196,
+          "expected_value": 1.21,
+          "mark": "▲"
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ワンダーフルーリ",
+          "jockey": "小林凌",
+          "odds": 5.0,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2269,
+          "expected_value": 1.13,
+          "mark": "△"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "ウインドアベニュー",
+          "jockey": "大坪慎",
+          "odds": 8.6,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1846,
+          "expected_value": 1.59,
+          "mark": "×"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ガビーズドリーム",
+          "jockey": "高橋悠里",
+          "odds": 24.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1411,
+          "expected_value": 3.51,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ポルカグリース",
+          "jockey": "菅原辰徳",
+          "odds": 67.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1309,
+          "expected_value": 8.81,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "マイネルステレール",
+          "jockey": "坂井瑛音",
+          "odds": 119.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1283,
+          "expected_value": 15.39,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "デルマクビナゲ",
+          "jockey": "岩本怜",
+          "odds": 154.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1276,
+          "expected_value": 19.74,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202435080403",
+      "race_num": 3,
+      "race_name": "C2七組",
+      "venue": "京都",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 6,
+        "horse_name": "クリノインパクト",
+        "uma_index": 62.2,
+        "expected_value": 0.66
+      },
+      "horses": [
+        {
+          "umaban": 6,
+          "horse_name": "クリノインパクト",
+          "jockey": "山本聡哉",
+          "odds": 1.7,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3909,
+          "expected_value": 0.66,
+          "mark": "◎"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "サーフライド",
+          "jockey": "村上忍",
+          "odds": 3.7,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2594,
+          "expected_value": 0.96,
+          "mark": "○"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ノヴェント",
+          "jockey": "岩本怜",
+          "odds": 10.9,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1704,
+          "expected_value": 1.86,
+          "mark": "▲"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "アトラクティッド",
+          "jockey": "陶文峰",
+          "odds": 13.0,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1645,
+          "expected_value": 2.14,
+          "mark": "△"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "ゴールデンウエスト",
+          "jockey": "関本玲花",
+          "odds": 14.0,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1623,
+          "expected_value": 2.27,
+          "mark": "×"
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ミヨノイナズマ",
+          "jockey": "菅原辰徳",
+          "odds": 21.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1436,
+          "expected_value": 3.09,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "カドノユトリ",
+          "jockey": "阿部英俊",
+          "odds": 27.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1394,
+          "expected_value": 3.86,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "サンクエトワール",
+          "jockey": "佐々木志",
+          "odds": 68.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1309,
+          "expected_value": 8.93,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "サンファボル",
+          "jockey": "大坪慎",
+          "odds": 42.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1344,
+          "expected_value": 5.74,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "テンカウント",
+          "jockey": "塚本涼人",
+          "odds": 20.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1441,
+          "expected_value": 3.01,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202435080404",
+      "race_num": 4,
+      "race_name": "C2六組",
+      "venue": "京都",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 6,
+        "horse_name": "イントゥフリー",
+        "uma_index": 62.2,
+        "expected_value": 0.66
+      },
+      "horses": [
+        {
+          "umaban": 6,
+          "horse_name": "イントゥフリー",
+          "jockey": "山本聡哉",
+          "odds": 1.7,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3909,
+          "expected_value": 0.66,
+          "mark": "◎"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "ラシェル",
+          "jockey": "鈴木祐",
+          "odds": 4.4,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2422,
+          "expected_value": 1.07,
+          "mark": "○"
+        },
+        {
+          "umaban": 10,
+          "horse_name": "エムワンピーコ",
+          "jockey": "関本淳",
+          "odds": 7.1,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1945,
+          "expected_value": 1.38,
+          "mark": "▲"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "フォルツァモンド",
+          "jockey": "大坪慎",
+          "odds": 10.8,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1708,
+          "expected_value": 1.84,
+          "mark": "△"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "メトロフィルム",
+          "jockey": "岩本怜",
+          "odds": 10.4,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1722,
+          "expected_value": 1.79,
+          "mark": "×"
+        },
+        {
+          "umaban": 7,
+          "horse_name": "チャオコーリー",
+          "jockey": "坂井瑛音",
+          "odds": 36.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1358,
+          "expected_value": 5.01,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "メイクマイチョイス",
+          "jockey": "佐々木志",
+          "odds": 19.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1453,
+          "expected_value": 2.86,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "グラデュエイト",
+          "jockey": "南郷家全",
+          "odds": 28.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1391,
+          "expected_value": 3.94,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ホークピラー",
+          "jockey": "菅原辰徳",
+          "odds": 52.9,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1326,
+          "expected_value": 7.01,
+          "mark": ""
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ホウオウアルマン",
+          "jockey": "高松亮",
+          "odds": 128.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1281,
+          "expected_value": 16.41,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202435080405",
+      "race_num": 5,
+      "race_name": "C1",
+      "venue": "京都",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 1,
+        "horse_name": "モーモーグリーン",
+        "uma_index": 60.5,
+        "expected_value": 1.1
+      },
+      "horses": [
+        {
+          "umaban": 1,
+          "horse_name": "モーモーグリーン",
+          "jockey": "山本聡哉",
+          "odds": 4.6,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2382,
+          "expected_value": 1.1,
+          "mark": "◎"
+        },
+        {
+          "umaban": 11,
+          "horse_name": "ビッグロジールーフ",
+          "jockey": "高松亮",
+          "odds": 4.5,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2401,
+          "expected_value": 1.08,
+          "mark": "○"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ロマンスオーサー",
+          "jockey": "高橋悠里",
+          "odds": 4.9,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2329,
+          "expected_value": 1.14,
+          "mark": "▲"
+        },
+        {
+          "umaban": 10,
+          "horse_name": "ヤマショウキャット",
+          "jockey": "菅原辰徳",
+          "odds": 5.9,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2147,
+          "expected_value": 1.27,
+          "mark": "△"
+        },
+        {
+          "umaban": 9,
+          "horse_name": "チハヤブルラン",
+          "jockey": "塚本涼人",
+          "odds": 12.0,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1671,
+          "expected_value": 2.0,
+          "mark": "×"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "モンセラット",
+          "jockey": "村上忍",
+          "odds": 11.4,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1688,
+          "expected_value": 1.92,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "メイクミーラフ",
+          "jockey": "鈴木祐",
+          "odds": 12.7,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1652,
+          "expected_value": 2.1,
+          "mark": ""
+        },
+        {
+          "umaban": 8,
+          "horse_name": "サッチモ",
+          "jockey": "山本政聡",
+          "odds": 14.1,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1621,
+          "expected_value": 2.29,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "インザライフ",
+          "jockey": "阿部英俊",
+          "odds": 12.1,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1668,
+          "expected_value": 2.02,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "マキシラリア",
+          "jockey": "佐々木志",
+          "odds": 27.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1397,
+          "expected_value": 3.81,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "セイペイシェンス",
+          "jockey": "大坪慎",
+          "odds": 112.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1285,
+          "expected_value": 14.49,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202435080406",
+      "race_num": 6,
+      "race_name": "C1",
+      "venue": "京都",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 9,
+        "horse_name": "アイルビーゼア",
+        "uma_index": 62.2,
+        "expected_value": 0.71
+      },
+      "horses": [
+        {
+          "umaban": 9,
+          "horse_name": "アイルビーゼア",
+          "jockey": "阿部英俊",
+          "odds": 2.0,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3556,
+          "expected_value": 0.71,
+          "mark": "◎"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ファインローズ",
+          "jockey": "鈴木祐",
+          "odds": 5.3,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2223,
+          "expected_value": 1.18,
+          "mark": "○"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ハシュマル",
+          "jockey": "坂口裕一",
+          "odds": 7.7,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1901,
+          "expected_value": 1.46,
+          "mark": "▲"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "ドラゴンズバック",
+          "jockey": "高松亮",
+          "odds": 7.7,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1901,
+          "expected_value": 1.46,
+          "mark": "△"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "ミヤコノアカリ",
+          "jockey": "菅原辰徳",
+          "odds": 12.6,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1655,
+          "expected_value": 2.09,
+          "mark": "×"
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ロジフェーヴル",
+          "jockey": "佐々木志",
+          "odds": 13.9,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1625,
+          "expected_value": 2.26,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "ハリケーンメファ",
+          "jockey": "岩本怜",
+          "odds": 18.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1464,
+          "expected_value": 2.74,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "ミキノイチゴ",
+          "jockey": "陶文峰",
+          "odds": 41.0,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1348,
+          "expected_value": 5.53,
+          "mark": ""
+        },
+        {
+          "umaban": 1,
+          "horse_name": "ウインディ",
+          "jockey": "塚本涼人",
+          "odds": 50.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.133,
+          "expected_value": 6.66,
+          "mark": ""
+        },
+        {
+          "umaban": 10,
+          "horse_name": "ムーンムーンムーン",
+          "jockey": "関本玲花",
+          "odds": 21.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1438,
+          "expected_value": 3.06,
+          "mark": ""
+        },
+        {
+          "umaban": 11,
+          "horse_name": "メイショウホガラカ",
+          "jockey": "坂井瑛音",
+          "odds": 56.3,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1321,
+          "expected_value": 7.44,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202435080407",
+      "race_num": 7,
+      "race_name": "C1三組",
+      "venue": "京都",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 7,
+        "horse_name": "フォルデュラン",
+        "uma_index": 62.2,
+        "expected_value": 0.7
+      },
+      "horses": [
+        {
+          "umaban": 7,
+          "horse_name": "フォルデュラン",
+          "jockey": "村上忍",
+          "odds": 1.9,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.3662,
+          "expected_value": 0.7,
+          "mark": "◎"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "ロッキータイタン",
+          "jockey": "高橋悠里",
+          "odds": 3.5,
+          "popularity": 0,
+          "uma_index": 60.5,
+          "win_probability": 0.2655,
+          "expected_value": 0.93,
+          "mark": "○"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "バジガクアリア",
+          "jockey": "南郷家全",
+          "odds": 6.4,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2094,
+          "expected_value": 1.34,
+          "mark": "▲"
+        },
+        {
+          "umaban": 6,
+          "horse_name": "カシノフォワード",
+          "jockey": "山本政聡",
+          "odds": 8.5,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1852,
+          "expected_value": 1.57,
+          "mark": "△"
+        },
+        {
+          "umaban": 10,
+          "horse_name": "アスノヒロイン",
+          "jockey": "山本聡哉",
+          "odds": 10.7,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1711,
+          "expected_value": 1.83,
+          "mark": "×"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "ステーロ",
+          "jockey": "坂井瑛音",
+          "odds": 43.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1343,
+          "expected_value": 5.79,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "プライムデイ",
+          "jockey": "坂口裕一",
+          "odds": 137.7,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1279,
+          "expected_value": 17.61,
+          "mark": ""
+        },
+        {
+          "umaban": 3,
+          "horse_name": "アスマスティーブ",
+          "jockey": "鈴木祐",
+          "odds": 24.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1415,
+          "expected_value": 3.42,
+          "mark": ""
+        },
+        {
+          "umaban": 9,
+          "horse_name": "キタノズーナクア",
+          "jockey": "塚本涼人",
+          "odds": 62.8,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1314,
+          "expected_value": 8.25,
+          "mark": ""
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ワクワクルンルン",
+          "jockey": "阿部英俊",
+          "odds": 73.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1304,
+          "expected_value": 9.58,
+          "mark": ""
+        }
+      ]
+    },
+    {
+      "race_id": "202435080408",
+      "race_num": 8,
+      "race_name": "ほやこおねえさん賞(C1)",
+      "venue": "京都",
+      "distance": 0,
+      "track_type": "",
+      "track_condition": "",
+      "rank": "B",
+      "honmei": {
+        "umaban": 10,
+        "horse_name": "ビッグシシールーフ",
+        "uma_index": 62.2,
+        "expected_value": 0.63
+      },
+      "horses": [
+        {
+          "umaban": 10,
+          "horse_name": "ビッグシシールーフ",
+          "jockey": "山本聡哉",
+          "odds": 1.5,
+          "popularity": 0,
+          "uma_index": 62.2,
+          "win_probability": 0.4223,
+          "expected_value": 0.63,
+          "mark": "◎"
+        },
+        {
+          "umaban": 8,
+          "horse_name": "マイラシャーン",
+          "jockey": "村上忍",
+          "odds": 6.6,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2075,
+          "expected_value": 1.37,
+          "mark": "○"
+        },
+        {
+          "umaban": 3,
+          "horse_name": "ナムラドン",
+          "jockey": "菅原辰徳",
+          "odds": 5.2,
+          "popularity": 0,
+          "uma_index": 58.8,
+          "win_probability": 0.2238,
+          "expected_value": 1.16,
+          "mark": "▲"
+        },
+        {
+          "umaban": 4,
+          "horse_name": "オーケストラ",
+          "jockey": "高橋悠里",
+          "odds": 8.8,
+          "popularity": 0,
+          "uma_index": 55.2,
+          "win_probability": 0.1836,
+          "expected_value": 1.62,
+          "mark": "△"
+        },
+        {
+          "umaban": 2,
+          "horse_name": "ヒロシゲパール",
+          "jockey": "阿部英俊",
+          "odds": 12.0,
+          "popularity": 0,
+          "uma_index": 53.5,
+          "win_probability": 0.1671,
+          "expected_value": 2.0,
+          "mark": "×"
+        },
+        {
+          "umaban": 1,
+          "horse_name": "キャビネットバトル",
+          "jockey": "山本政聡",
+          "odds": 58.2,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1319,
+          "expected_value": 7.68,
+          "mark": ""
+        },
+        {
+          "umaban": 6,
+          "horse_name": "メイショウフラム",
+          "jockey": "坂口裕一",
+          "odds": 39.5,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1351,
+          "expected_value": 5.34,
+          "mark": ""
+        },
+        {
+          "umaban": 5,
+          "horse_name": "コルテーゼ",
+          "jockey": "塚本涼人",
+          "odds": 166.1,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1274,
+          "expected_value": 21.16,
+          "mark": ""
+        },
+        {
+          "umaban": 7,
+          "horse_name": "ミルキー",
+          "jockey": "坂井瑛音",
+          "odds": 31.4,
+          "popularity": 0,
+          "uma_index": 50.0,
+          "win_probability": 0.1377,
+          "expected_value": 4.32,
+          "mark": ""
+        }
+      ]
+    }
+  ]
+}

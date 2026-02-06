@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # scripts/ensemble_agents.py
 # UMA-Logic PRO - アンサンブル学習エンジン（厳格バックテスト版）
-# 完全版（Full Code）- Train/Test分離、データリーク防止
+# 多券種対応 + ケリー基準投資モデル
 
 import json
 import math
@@ -30,26 +30,22 @@ DEFAULT_WEIGHTS = {
 
 @dataclass
 class HorseFeatures:
-    """
-    馬の特徴量（レース前に分かる情報のみ）
-    ※ 着順、タイム、上がり3F、払戻金は含めない（データリーク防止）
-    """
+    """馬の特徴量（レース前に分かる情報のみ）"""
     umaban: int = 0
     horse_name: str = ""
-    odds: float = 0.0           # 発走前オッズ
-    popularity: int = 0         # 人気順
-    weight: float = 0.0         # 馬体重
-    weight_diff: float = 0.0    # 馬体重増減
-    age: int = 0                # 馬齢
-    sex: str = ""               # 性別
-    jockey: str = ""            # 騎手
-    trainer: str = ""           # 調教師
-    father: str = ""            # 父馬
-    mother_father: str = ""     # 母父
-    gate_num: int = 0           # 枠番
-    # 過去成績（前走以前のデータのみ）
-    prev_results: List[int] = field(default_factory=list)  # 過去の着順リスト
-    prev_odds: List[float] = field(default_factory=list)   # 過去のオッズリスト
+    odds: float = 0.0
+    popularity: int = 0
+    weight: float = 0.0
+    weight_diff: float = 0.0
+    age: int = 0
+    sex: str = ""
+    jockey: str = ""
+    trainer: str = ""
+    father: str = ""
+    mother_father: str = ""
+    gate_num: int = 0
+    prev_results: List[int] = field(default_factory=list)
+    prev_odds: List[float] = field(default_factory=list)
 
 
 @dataclass
@@ -59,9 +55,9 @@ class RaceFeatures:
     race_num: int = 0
     venue: str = ""
     distance: int = 0
-    track_type: str = ""        # 芝/ダート
-    track_condition: str = ""   # 良/稍重/重/不良
-    grade: str = ""             # クラス
+    track_type: str = ""
+    track_condition: str = ""
+    grade: str = ""
     race_name: str = ""
     date: str = ""
 
@@ -70,28 +66,23 @@ class RaceFeatures:
 class RaceResult:
     """レース結果（検証用、学習には使用しない）"""
     race_id: str = ""
-    winner_umaban: int = 0      # 1着馬番
-    winner_odds: float = 0.0    # 1着馬オッズ
-    top3_umaban: List[int] = field(default_factory=list)  # 1-3着馬番
+    winner_umaban: int = 0
+    winner_odds: float = 0.0
+    top3_umaban: List[int] = field(default_factory=list)
 
 
 # --- エージェントクラス ---
 
 class SpeedAgent:
-    """
-    スピードエージェント
-    オッズと人気から期待スピードを推定
-    """
+    """スピードエージェント: オッズと人気から期待スピードを推定"""
     
     def __init__(self, weight: float = 0.35):
         self.weight = weight
         self.name = "SpeedAgent"
     
     def calculate_score(self, horse: HorseFeatures, race: RaceFeatures) -> float:
-        """スピードスコアを計算（0-100）"""
         score = 50.0
         
-        # オッズが低い（人気がある）ほど高スコア
         if horse.odds > 0:
             if horse.odds < 2.0:
                 score += 30
@@ -104,7 +95,6 @@ class SpeedAgent:
             else:
                 score -= 10
         
-        # 人気順
         if horse.popularity > 0:
             if horse.popularity <= 3:
                 score += 15
@@ -113,7 +103,6 @@ class SpeedAgent:
             else:
                 score -= 5
         
-        # 過去成績（前走以前）
         if horse.prev_results:
             avg_result = sum(horse.prev_results[:3]) / len(horse.prev_results[:3])
             if avg_result <= 3:
@@ -125,14 +114,11 @@ class SpeedAgent:
             else:
                 score -= 10
         
-        # 距離適性（簡易版）
         if race.distance > 0:
             if race.distance <= 1400:
-                # 短距離は内枠有利
                 if horse.gate_num <= 4:
                     score += 5
             elif race.distance >= 2000:
-                # 長距離は差し馬有利（人気薄でも）
                 if horse.popularity > 5 and horse.odds < 30:
                     score += 5
         
@@ -140,23 +126,17 @@ class SpeedAgent:
 
 
 class AdaptabilityAgent:
-    """
-    適応性エージェント
-    馬場状態、枠順、コース適性を評価
-    """
+    """適応性エージェント: 馬場状態、枠順、コース適性を評価"""
     
     def __init__(self, weight: float = 0.35):
         self.weight = weight
         self.name = "AdaptabilityAgent"
     
     def calculate_score(self, horse: HorseFeatures, race: RaceFeatures) -> float:
-        """適応性スコアを計算（0-100）"""
         score = 50.0
         
-        # 枠順評価
         if race.distance > 0 and horse.gate_num > 0:
             if race.distance <= 1400:
-                # 短距離は内枠有利
                 if horse.gate_num <= 3:
                     score += 15
                 elif horse.gate_num <= 5:
@@ -164,57 +144,40 @@ class AdaptabilityAgent:
                 elif horse.gate_num >= 7:
                     score -= 5
             elif race.distance <= 1800:
-                # 中距離はフラット
                 pass
             else:
-                # 長距離は外枠不利
                 if horse.gate_num >= 7:
                     score -= 10
         
-        # 馬場状態
         if race.track_condition:
             if race.track_condition in ["重", "不良"]:
-                # 重馬場は馬体重が重い馬有利
                 if horse.weight >= 500:
                     score += 10
                 elif horse.weight <= 440:
                     score -= 5
         
-        # 馬体重増減
         if horse.weight_diff != 0:
             if abs(horse.weight_diff) > 20:
-                score -= 10  # 大幅増減はマイナス
+                score -= 10
             elif -10 <= horse.weight_diff <= 10:
-                score += 5   # 安定はプラス
+                score += 5
         
-        # 年齢
         if horse.age > 0:
             if horse.age == 3:
-                score += 5   # 3歳は成長期
+                score += 5
             elif horse.age >= 7:
-                score -= 5   # 高齢馬は減点
+                score -= 5
         
         return max(0, min(100, score))
 
 
 class PedigreeFormAgent:
-    """
-    血統・調子エージェント
-    血統パターンと直近の調子を評価
-    """
+    """血統・調子エージェント: 血統パターンと直近の調子を評価"""
     
-    # 有名種牡馬のスコア補正
     SIRE_BONUS = {
-        "ディープインパクト": 15,
-        "キングカメハメハ": 12,
-        "ロードカナロア": 12,
-        "ハーツクライ": 10,
-        "エピファネイア": 10,
-        "ドゥラメンテ": 10,
-        "キタサンブラック": 10,
-        "モーリス": 8,
-        "オルフェーヴル": 8,
-        "ゴールドシップ": 5,
+        "ディープインパクト": 15, "キングカメハメハ": 12, "ロードカナロア": 12,
+        "ハーツクライ": 10, "エピファネイア": 10, "ドゥラメンテ": 10,
+        "キタサンブラック": 10, "モーリス": 8, "オルフェーヴル": 8, "ゴールドシップ": 5,
     }
     
     def __init__(self, weight: float = 0.30):
@@ -222,36 +185,27 @@ class PedigreeFormAgent:
         self.name = "PedigreeFormAgent"
     
     def calculate_score(self, horse: HorseFeatures, race: RaceFeatures) -> float:
-        """血統・調子スコアを計算（0-100）"""
         score = 50.0
         
-        # 血統評価
         if horse.father:
             bonus = self.SIRE_BONUS.get(horse.father, 0)
             score += bonus
         
-        # 過去成績の傾向（上昇傾向か下降傾向か）
         if len(horse.prev_results) >= 2:
-            recent = horse.prev_results[0]  # 最新
-            older = horse.prev_results[1]   # 1つ前
-            
+            recent = horse.prev_results[0]
+            older = horse.prev_results[1]
             if recent < older:
-                score += 10  # 上昇傾向
+                score += 10
             elif recent > older:
-                score -= 5   # 下降傾向
+                score -= 5
         
-        # オッズと過去成績の乖離（穴馬発見）
         if horse.prev_results and horse.odds > 0:
             avg_result = sum(horse.prev_results[:3]) / len(horse.prev_results[:3])
-            
-            # 過去成績が良いのにオッズが高い → 穴馬候補
             if avg_result <= 5 and horse.odds >= 10:
                 score += 15
-            # 過去成績が悪いのにオッズが低い → 過大評価
             elif avg_result >= 8 and horse.odds < 5:
                 score -= 10
         
-        # 騎手評価（簡易版）
         TOP_JOCKEYS = ["ルメール", "川田将雅", "戸崎圭太", "横山武史", "福永祐一", "武豊"]
         if horse.jockey in TOP_JOCKEYS:
             score += 10
@@ -259,13 +213,283 @@ class PedigreeFormAgent:
         return max(0, min(100, score))
 
 
+# --- ケリー基準計算 ---
+
+class KellyCriterion:
+    """
+    ケリー基準による最適投資額計算
+    f* = (bp - q) / b
+    b = オッズ - 1（純利益倍率）
+    p = 的中確率
+    q = 1 - p（不的中確率）
+    """
+    
+    @staticmethod
+    def calculate_fraction(win_probability: float, odds: float, 
+                           fraction_cap: float = 0.25) -> float:
+        """
+        ケリー基準で最適投資比率を計算
+        
+        Args:
+            win_probability: 的中確率 (0-1)
+            odds: オッズ
+            fraction_cap: 最大投資比率（デフォルト25%）
+        
+        Returns:
+            最適投資比率 (0-fraction_cap)
+        """
+        if odds <= 1.0 or win_probability <= 0 or win_probability >= 1:
+            return 0.0
+        
+        b = odds - 1.0  # 純利益倍率
+        p = win_probability
+        q = 1.0 - p
+        
+        kelly_f = (b * p - q) / b
+        
+        # 負の値（期待値マイナス）は0にする
+        if kelly_f <= 0:
+            return 0.0
+        
+        # ハーフケリー（リスク軽減）
+        half_kelly = kelly_f * 0.5
+        
+        # 上限を設定
+        return min(half_kelly, fraction_cap)
+    
+    @staticmethod
+    def calculate_expected_value(win_probability: float, odds: float) -> float:
+        """
+        期待値を計算
+        期待値 = (的中確率 * オッズ) / 1.0
+        1.0以上なら期待値プラス
+        """
+        if odds <= 0 or win_probability <= 0:
+            return 0.0
+        return win_probability * odds
+    
+    @staticmethod
+    def estimate_win_probability(uma_index: float, num_horses: int = 16) -> float:
+        """
+        UMA指数から的中確率を推定
+        
+        シグモイド関数ベースで、UMA指数が高いほど的中確率が高い
+        num_horses で補正（出走頭数が少ないほど確率が上がる）
+        """
+        if uma_index <= 0:
+            return 0.01
+        
+        # ベース確率: シグモイド関数
+        # UMA指数70で約30%、60で約20%、50で約10%
+        x = (uma_index - 50) / 10
+        base_prob = 1.0 / (1.0 + math.exp(-x))
+        
+        # 出走頭数による補正
+        horse_factor = 16.0 / max(num_horses, 5)
+        
+        # 最終確率（上限80%）
+        prob = base_prob * horse_factor * 0.4
+        return min(max(prob, 0.01), 0.80)
+    
+    @staticmethod
+    def estimate_place_probability(uma_index: float, num_horses: int = 16) -> float:
+        """UMA指数から複勝（3着以内）確率を推定"""
+        win_prob = KellyCriterion.estimate_win_probability(uma_index, num_horses)
+        # 複勝確率は単勝の約2.5倍（経験的な値）
+        return min(win_prob * 2.5, 0.90)
+    
+    @staticmethod
+    def estimate_quinella_probability(uma_index_1: float, uma_index_2: float, 
+                                       num_horses: int = 16) -> float:
+        """2頭のUMA指数から馬連確率を推定"""
+        p1 = KellyCriterion.estimate_win_probability(uma_index_1, num_horses)
+        p2 = KellyCriterion.estimate_win_probability(uma_index_2, num_horses)
+        # 馬連: 2頭が1-2着（順不同）
+        return p1 * p2 * 2 * 0.8  # 補正係数0.8
+    
+    @staticmethod
+    def estimate_wide_probability(uma_index_1: float, uma_index_2: float,
+                                   num_horses: int = 16) -> float:
+        """2頭のUMA指数からワイド確率を推定"""
+        p1 = KellyCriterion.estimate_place_probability(uma_index_1, num_horses)
+        p2 = KellyCriterion.estimate_place_probability(uma_index_2, num_horses)
+        # ワイド: 2頭が3着以内
+        return p1 * p2 * 0.7  # 補正係数0.7
+
+
+# --- 多券種期待値計算 ---
+
+class MultiTicketCalculator:
+    """
+    多券種の期待値を一括計算
+    単勝、複勝、馬連、ワイドの期待値とケリー基準を算出
+    """
+    
+    def __init__(self):
+        self.kelly = KellyCriterion()
+    
+    def calculate_all_tickets(self, horses: list, race: dict, 
+                               bankroll: float = 100000) -> List[Dict]:
+        """
+        全券種の推奨馬券リストを生成
+        
+        Args:
+            horses: 馬リスト（uma_index, odds 含む）
+            race: レース情報
+            bankroll: 現在の資金
+        
+        Returns:
+            推奨馬券リスト（期待値1.0超のみ）
+        """
+        recommendations = []
+        num_horses = len(horses)
+        
+        if num_horses < 2:
+            return recommendations
+        
+        # UMA指数でソート
+        sorted_horses = sorted(horses, key=lambda x: x.get("uma_index", 0), reverse=True)
+        
+        # --- 単勝 ---
+        for horse in sorted_horses[:5]:  # 上位5頭
+            uma_idx = horse.get("uma_index", 0)
+            odds = float(horse.get("オッズ", horse.get("odds", 0)) or 0)
+            if odds <= 0:
+                continue
+            
+            win_prob = self.kelly.estimate_win_probability(uma_idx, num_horses)
+            ev = self.kelly.calculate_expected_value(win_prob, odds)
+            kelly_f = self.kelly.calculate_fraction(win_prob, odds)
+            bet_amount = int(bankroll * kelly_f / 100) * 100  # 100円単位
+            
+            recommendations.append({
+                "券種": "単勝",
+                "馬番": horse.get("umaban", horse.get("馬番", "")),
+                "馬名": horse.get("horse_name", horse.get("馬名", "")),
+                "オッズ": odds,
+                "的中確率": round(win_prob * 100, 1),
+                "期待値": round(ev, 3),
+                "ケリー比率": round(kelly_f * 100, 2),
+                "推奨投資額": max(bet_amount, 0),
+                "uma_index": uma_idx,
+            })
+        
+        # --- 複勝 ---
+        for horse in sorted_horses[:5]:
+            uma_idx = horse.get("uma_index", 0)
+            odds = float(horse.get("オッズ", horse.get("odds", 0)) or 0)
+            if odds <= 0:
+                continue
+            
+            # 複勝オッズは単勝の約1/3（推定）
+            place_odds = max(odds * 0.35, 1.1)
+            place_prob = self.kelly.estimate_place_probability(uma_idx, num_horses)
+            ev = self.kelly.calculate_expected_value(place_prob, place_odds)
+            kelly_f = self.kelly.calculate_fraction(place_prob, place_odds)
+            bet_amount = int(bankroll * kelly_f / 100) * 100
+            
+            recommendations.append({
+                "券種": "複勝",
+                "馬番": horse.get("umaban", horse.get("馬番", "")),
+                "馬名": horse.get("horse_name", horse.get("馬名", "")),
+                "オッズ": round(place_odds, 1),
+                "的中確率": round(place_prob * 100, 1),
+                "期待値": round(ev, 3),
+                "ケリー比率": round(kelly_f * 100, 2),
+                "推奨投資額": max(bet_amount, 0),
+                "uma_index": uma_idx,
+            })
+        
+        # --- 馬連（上位3頭の組み合わせ） ---
+        top3 = sorted_horses[:3]
+        for i in range(len(top3)):
+            for j in range(i + 1, len(top3)):
+                h1, h2 = top3[i], top3[j]
+                uma1 = h1.get("uma_index", 0)
+                uma2 = h2.get("uma_index", 0)
+                odds1 = float(h1.get("オッズ", h1.get("odds", 0)) or 0)
+                odds2 = float(h2.get("オッズ", h2.get("odds", 0)) or 0)
+                
+                if odds1 <= 0 or odds2 <= 0:
+                    continue
+                
+                # 馬連オッズの推定（2頭の単勝オッズの積の平方根 * 補正）
+                quinella_odds = max(math.sqrt(odds1 * odds2) * 1.5, 2.0)
+                quinella_prob = self.kelly.estimate_quinella_probability(uma1, uma2, num_horses)
+                ev = self.kelly.calculate_expected_value(quinella_prob, quinella_odds)
+                kelly_f = self.kelly.calculate_fraction(quinella_prob, quinella_odds)
+                bet_amount = int(bankroll * kelly_f / 100) * 100
+                
+                umaban1 = h1.get("umaban", h1.get("馬番", ""))
+                umaban2 = h2.get("umaban", h2.get("馬番", ""))
+                name1 = h1.get("horse_name", h1.get("馬名", ""))
+                name2 = h2.get("horse_name", h2.get("馬名", ""))
+                
+                recommendations.append({
+                    "券種": "馬連",
+                    "馬番": f"{umaban1}-{umaban2}",
+                    "馬名": f"{name1} - {name2}",
+                    "オッズ": round(quinella_odds, 1),
+                    "的中確率": round(quinella_prob * 100, 1),
+                    "期待値": round(ev, 3),
+                    "ケリー比率": round(kelly_f * 100, 2),
+                    "推奨投資額": max(bet_amount, 0),
+                    "uma_index": (uma1 + uma2) / 2,
+                })
+        
+        # --- ワイド（上位3頭の組み合わせ） ---
+        for i in range(len(top3)):
+            for j in range(i + 1, len(top3)):
+                h1, h2 = top3[i], top3[j]
+                uma1 = h1.get("uma_index", 0)
+                uma2 = h2.get("uma_index", 0)
+                odds1 = float(h1.get("オッズ", h1.get("odds", 0)) or 0)
+                odds2 = float(h2.get("オッズ", h2.get("odds", 0)) or 0)
+                
+                if odds1 <= 0 or odds2 <= 0:
+                    continue
+                
+                # ワイドオッズの推定
+                wide_odds = max(math.sqrt(odds1 * odds2) * 0.5, 1.2)
+                wide_prob = self.kelly.estimate_wide_probability(uma1, uma2, num_horses)
+                ev = self.kelly.calculate_expected_value(wide_prob, wide_odds)
+                kelly_f = self.kelly.calculate_fraction(wide_prob, wide_odds)
+                bet_amount = int(bankroll * kelly_f / 100) * 100
+                
+                umaban1 = h1.get("umaban", h1.get("馬番", ""))
+                umaban2 = h2.get("umaban", h2.get("馬番", ""))
+                name1 = h1.get("horse_name", h1.get("馬名", ""))
+                name2 = h2.get("horse_name", h2.get("馬名", ""))
+                
+                recommendations.append({
+                    "券種": "ワイド",
+                    "馬番": f"{umaban1}-{umaban2}",
+                    "馬名": f"{name1} - {name2}",
+                    "オッズ": round(wide_odds, 1),
+                    "的中確率": round(wide_prob * 100, 1),
+                    "期待値": round(ev, 3),
+                    "ケリー比率": round(kelly_f * 100, 2),
+                    "推奨投資額": max(bet_amount, 0),
+                    "uma_index": (uma1 + uma2) / 2,
+                })
+        
+        # 期待値でソート（降順）
+        recommendations.sort(key=lambda x: x["期待値"], reverse=True)
+        
+        return recommendations
+    
+    def get_positive_ev_tickets(self, horses: list, race: dict,
+                                 bankroll: float = 100000,
+                                 min_ev: float = 1.0) -> List[Dict]:
+        """期待値がmin_ev以上の推奨馬券のみ返す"""
+        all_tickets = self.calculate_all_tickets(horses, race, bankroll)
+        return [t for t in all_tickets if t["期待値"] >= min_ev]
+
+
 # --- 統合計算クラス ---
 
 class IntegratedCalculator:
-    """
-    アンサンブル統合計算機
-    3つのエージェントのスコアを統合
-    """
+    """アンサンブル統合計算機"""
     
     def __init__(self):
         self.weights = self._load_weights()
@@ -274,9 +498,9 @@ class IntegratedCalculator:
             "AdaptabilityAgent": AdaptabilityAgent(self.weights.get("AdaptabilityAgent", 0.35)),
             "PedigreeFormAgent": PedigreeFormAgent(self.weights.get("PedigreeFormAgent", 0.30)),
         }
+        self.ticket_calculator = MultiTicketCalculator()
     
     def _load_weights(self) -> Dict[str, float]:
-        """保存された重みを読み込み"""
         if WEIGHTS_FILE.exists():
             try:
                 with open(WEIGHTS_FILE, 'r', encoding='utf-8') as f:
@@ -287,7 +511,6 @@ class IntegratedCalculator:
         return DEFAULT_WEIGHTS.copy()
     
     def calculate_integrated_score(self, horse: HorseFeatures, race: RaceFeatures) -> float:
-        """統合スコアを計算"""
         total_score = 0.0
         total_weight = 0.0
         
@@ -302,16 +525,11 @@ class IntegratedCalculator:
         return 50.0
     
     def predict_race(self, horses: List[HorseFeatures], race: RaceFeatures) -> List[Tuple[int, str, float]]:
-        """
-        レースの予測を行い、推奨馬をランキング
-        Returns: [(馬番, 馬名, スコア), ...]
-        """
         results = []
         for horse in horses:
             score = self.calculate_integrated_score(horse, race)
             results.append((horse.umaban, horse.horse_name, score))
         
-        # スコア降順でソート
         results.sort(key=lambda x: x[2], reverse=True)
         return results
 
@@ -319,10 +537,7 @@ class IntegratedCalculator:
 # --- バックテストクラス ---
 
 class StrictBacktester:
-    """
-    厳格なバックテスター
-    Train/Test分離、データリーク防止
-    """
+    """厳格なバックテスター（Train/Test分離、データリーク防止）"""
     
     def __init__(self, train_years: List[int], test_years: List[int]):
         self.train_years = train_years
@@ -330,10 +545,8 @@ class StrictBacktester:
         self.calculator = IntegratedCalculator()
     
     def load_race_data(self, year: int) -> List[Dict]:
-        """指定年のレースデータを読み込み"""
         races = []
         
-        # アーカイブから読み込み
         year_dir = ARCHIVE_DIR / str(year)
         if year_dir.exists():
             for month_dir in sorted(year_dir.iterdir()):
@@ -349,7 +562,6 @@ class StrictBacktester:
                                 except Exception:
                                     continue
         
-        # data/ 直下からも読み込み
         for json_file in DATA_DIR.glob(f"results_{year}*.json"):
             try:
                 with open(json_file, 'r', encoding='utf-8') as f:
@@ -362,10 +574,6 @@ class StrictBacktester:
         return races
     
     def extract_features(self, race_data: Dict) -> Tuple[RaceFeatures, List[HorseFeatures], Optional[RaceResult]]:
-        """
-        レースデータから特徴量を抽出
-        ※ 結果データ（着順、タイム）は特徴量に含めない
-        """
         race = RaceFeatures(
             race_id=race_data.get("race_id", ""),
             race_num=race_data.get("race_num", 0),
@@ -381,14 +589,11 @@ class StrictBacktester:
         horses = []
         all_results = race_data.get("all_results", [])
         top3 = race_data.get("top3", [])
-        
-        # 出走馬の情報を取得
         horse_list = all_results if all_results else top3
         
         for h in horse_list:
-            # 着順、タイム、上がり3Fは特徴量に含めない（データリーク防止）
             horse = HorseFeatures(
-                umaban=int(h.get("馬番", h.get("umaban", 0))),
+                umaban=int(h.get("馬番", h.get("umaban", 0)) or 0),
                 horse_name=h.get("馬名", h.get("horse_name", "")),
                 odds=float(h.get("オッズ", h.get("odds", 0)) or 0),
                 popularity=int(h.get("人気", h.get("popularity", 0)) or 0),
@@ -399,7 +604,6 @@ class StrictBacktester:
             )
             horses.append(horse)
         
-        # 結果データ（検証用）
         result = None
         if top3:
             winner = top3[0] if top3 else {}
@@ -413,23 +617,13 @@ class StrictBacktester:
         return race, horses, result
     
     def evaluate_prediction(self, prediction: List[Tuple[int, str, float]], result: RaceResult) -> Dict:
-        """
-        予測結果を評価
-        ◎（1位予測）が1着になったかで判定
-        """
         if not prediction or not result or result.winner_umaban == 0:
             return {"hit": False, "investment": 0, "return": 0}
         
-        # ◎（最高スコアの馬）を予測
         top_pick_umaban = prediction[0][0]
-        
-        # 的中判定：◎が1着になったか
         hit = (top_pick_umaban == result.winner_umaban)
-        
-        # 投資額（単勝100円）
         investment = 100
         
-        # 払戻金
         if hit and result.winner_odds > 0:
             payout = int(result.winner_odds * 100)
         else:
@@ -445,10 +639,6 @@ class StrictBacktester:
         }
     
     def run_backtest(self, years: List[int], weights: Dict[str, float]) -> Dict:
-        """
-        指定した重みでバックテストを実行
-        """
-        # 重みを適用
         self.calculator.weights = weights
         for agent_name, agent in self.calculator.agents.items():
             agent.weight = weights.get(agent_name, agent.weight)
@@ -467,10 +657,7 @@ class StrictBacktester:
                 if not horses or not result:
                     continue
                 
-                # 予測
                 prediction = self.calculator.predict_race(horses, race)
-                
-                # 評価
                 eval_result = self.evaluate_prediction(prediction, result)
                 
                 total_races += 1
@@ -492,9 +679,6 @@ class StrictBacktester:
         }
     
     def optimize_weights(self, iterations: int = 100, learning_rate: float = 0.1) -> Dict:
-        """
-        Train データで重みを最適化し、Test データで検証
-        """
         print("\n" + "=" * 60)
         print("🧠 重み最適化開始（厳格バックテスト版）")
         print("=" * 60)
@@ -503,28 +687,21 @@ class StrictBacktester:
         print(f"[INFO] イテレーション: {iterations}")
         print(f"[INFO] 学習率: {learning_rate}")
         
-        # 初期重み
         best_weights = DEFAULT_WEIGHTS.copy()
         best_score = -float('inf')
         
-        # 学習データでの初期評価
         print("\n[PHASE 1] 学習データで最適化中...")
         
         for i in range(iterations):
-            # 重みをランダムに変動
             new_weights = {}
             for key in best_weights:
                 delta = random.uniform(-learning_rate, learning_rate)
                 new_weights[key] = max(0.05, min(0.9, best_weights[key] + delta))
             
-            # 正規化
             total = sum(new_weights.values())
             new_weights = {k: v / total for k, v in new_weights.items()}
             
-            # 学習データで評価
             result = self.run_backtest(self.train_years, new_weights)
-            
-            # スコア = 回収率（的中率だけでなく、回収率を重視）
             score = result["recovery_rate"]
             
             if score > best_score:
@@ -534,7 +711,6 @@ class StrictBacktester:
                 if (i + 1) % 20 == 0:
                     print(f"  [{i+1}/{iterations}] 回収率: {score*100:.2f}% (的中率: {result['hit_rate']*100:.2f}%)")
         
-        # テストデータで検証
         print("\n[PHASE 2] テストデータで検証中...")
         train_result = self.run_backtest(self.train_years, best_weights)
         test_result = self.run_backtest(self.test_years, best_weights)
@@ -559,7 +735,6 @@ class StrictBacktester:
         for agent, weight in best_weights.items():
             print(f"  {agent}: {weight*100:.1f}%")
         
-        # 結果を保存
         result_data = {
             "weights": best_weights,
             "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -585,7 +760,6 @@ class StrictBacktester:
             }
         }
         
-        # 保存
         MODELS_DIR.mkdir(parents=True, exist_ok=True)
         with open(WEIGHTS_FILE, 'w', encoding='utf-8') as f:
             json.dump(result_data, f, ensure_ascii=False, indent=2)
@@ -598,29 +772,26 @@ class StrictBacktester:
 # --- メイン関数 ---
 
 def main():
-    """メイン関数"""
     print("=" * 60)
     print("🧠 UMA-Logic PRO - アンサンブル学習エンジン")
     print("   （厳格バックテスト版 - データリーク防止）")
+    print("   （多券種対応 + ケリー基準投資モデル）")
     print("=" * 60)
     
     args = sys.argv[1:]
     
-    # デフォルト設定
     train_years = [2024]
     test_years = [2025]
     iterations = 100
     learning_rate = 0.1
     source_dir = None
     
-    # 引数解析
     i = 0
     while i < len(args):
         if args[i] == "--optimize":
             i += 1
         elif args[i] == "--source" and i + 1 < len(args):
             source_dir = args[i + 1]
-            # ソースディレクトリから年を推定
             if "2024" in source_dir:
                 train_years = [2024]
                 test_years = [2025]
@@ -644,7 +815,6 @@ def main():
             i += 1
     
     if "--optimize" in args or not args:
-        # 最適化実行
         backtester = StrictBacktester(train_years, test_years)
         result = backtester.optimize_weights(iterations, learning_rate)
         
@@ -653,7 +823,6 @@ def main():
         print("=" * 60)
     
     elif "--backtest" in args:
-        # バックテストのみ実行
         backtester = StrictBacktester(train_years, test_years)
         
         print("\n[INFO] 現在の重みでバックテスト実行中...")
@@ -671,7 +840,6 @@ def main():
         print(f"  回収率: {test_result['recovery_rate']*100:.2f}%")
     
     elif "--show-weights" in args:
-        # 現在の重みを表示
         calculator = IntegratedCalculator()
         print("\n【現在の重み】")
         for agent, weight in calculator.weights.items():

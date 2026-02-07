@@ -637,7 +637,7 @@ with tab1:
                         ticket_df = pd.DataFrame(positive_tickets)
                         display_cols = ["券種", "馬番", "馬名", "オッズ", "的中確率", "期待値", "推奨投資額"]
                         display_cols = [c for c in display_cols if c in ticket_df.columns]
-                        st.dataframe(ticket_df[display_cols], use_container_width=True, hide_index=True)
+                        st.dataframe(ticket_df[display_cols], width="stretch", hide_index=True)
                     else:
                         st.info("期待値フィルタを満たす推奨馬券はありません。フィルタを下げてみてください。")
     else:
@@ -748,7 +748,7 @@ with tab2:
                                         show_cols = ["着順", "馬番", "馬名", "騎手", "タイム", "上がり3F", "オッズ"]
                                         show_cols = [c for c in show_cols if c in result_df.columns]
                                         if show_cols:
-                                            st.dataframe(result_df[show_cols], use_container_width=True, hide_index=True)
+                                            st.dataframe(result_df[show_cols], width="stretch", hide_index=True)
                                     else:
                                         st.info("着順データがありません")
 
@@ -912,7 +912,7 @@ with tab5:
             fig.add_hline(y=initial_capital, line_dash="dash", line_color="#fbbf24", annotation_text="初期資金")
             fig.update_layout(title=f"資産推移（的中率: {hit_rate*100:.1f}%, 回収率: {recovery_rate*100:.1f}%）",
                               xaxis_title="レース数", yaxis_title="資産 (円)", template="plotly_dark", height=400)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.line_chart(equity_curve)
 

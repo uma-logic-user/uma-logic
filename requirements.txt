@@ -2,7 +2,7 @@ requests
 beautifulsoup4
 lxml
 pandas
-numpy>=2.1
+numpy>=1.24,<2.0
 pytz
 streamlit==1.32.0
 plotly

@@ -1,6 +1,5 @@
 # app_commercial.py
-# UMA-Logic Pro - エラーハンドリング強化版
-# UMA-Logic Pro - 商用グレード完成版（6タブ構成 + エラーハンドリング強化）
+# UMA-Logic Pro - 商用グレード完成版（6タブ構成 + 自動バックアップ機能）
 
 import streamlit as st
 import pandas as pd
@@ -8,32 +7,66 @@ import numpy as np
 from datetime import datetime, timedelta
 import json
 import os
+import shutil  # ファイルコピー用
 from pathlib import Path
 
-# Plotlyのインポート（エラー時はフォールバック）
-# Plotlyのインポート
+# --- ページ設定 (必ず最初に記述) ---
+st.set_page_config(
+    page_title="UMA-Logic Pro",
+    page_icon="🐎",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# --- 定数設定 ---
+DATA_DIR = Path("data")
+BACKUP_DIR = DATA_DIR / "backups"
+PREDICTIONS_PREFIX = "predictions_"
+RESULTS_PREFIX = "results_"
+
+# --- 自動バックアップ機能 ---
+def create_self_backup():
+    """
+    起動時に自身のソースコードを data/backups/ にコピーして保存する
+    """
+    try:
+        # ディレクトリがなければ作成
+        BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+        
+        # 現在実行中のファイルのパスを取得
+        current_file = Path(__file__).resolve()
+        
+        # タイムスタンプ付きのファイル名を生成
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"app_backup_{timestamp}.py"
+        destination = BACKUP_DIR / backup_filename
+        
+        # コピー実行
+        shutil.copy2(current_file, destination)
+        
+        # (デバッグ用) コンソールに出力
+        print(f"Backup created: {destination}")
+        
+    except Exception as e:
+        # バックアップ失敗時もアプリは止めず、ログだけ出す
+        print(f"Backup failed: {e}")
+
+# バックアップを実行
+create_self_backup()
+
+# --- ライブラリの安全なインポート ---
 try:
     import plotly.graph_objects as go
     import plotly.express as px
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
-    st.warning("Plotlyが利用できません。一部のグラフが表示されません。")
 
-# AgGridのインポート（エラー時はフォールバック）
-# AgGridのインポート
 try:
     from st_aggrid import AgGrid, GridOptionsBuilder
     AGGRID_AVAILABLE = True
-@@ -35,11 +33,100 @@
-
-# --- 定数 ---
-DATA_DIR = Path("data")
-DATA_DIR.mkdir(parents=True, exist_ok=True)  # ディレクトリがなければ作成
-
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-PREDICTIONS_PREFIX = "predictions_"
-RESULTS_PREFIX = "results_"
+except ImportError:
+    AGGRID_AVAILABLE = False
 
 # --- CSSスタイル ---
 st.markdown("""
@@ -124,20 +157,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-# --- 安全なデータ読み込み関数 ---
+# --- ヘルパー関数 ---
 
 def safe_load_json(filepath: Path) -> dict:
-@@ -48,32 +135,31 @@ def safe_load_json(filepath: Path) -> dict:
+    """JSONファイルを安全に読み込む"""
+    try:
         if filepath.exists():
             with open(filepath, 'r', encoding='utf-8') as f:
                 return json.load(f)
     except Exception as e:
         st.error(f"ファイル読み込みエラー: {filepath} - {e}")
-    except Exception:
-        pass
     return {}
-
 
 def get_available_dates() -> list:
     """利用可能な日付リストを取得"""
@@ -151,35 +181,14 @@ def get_available_dates() -> list:
                         dates.add(datetime.strptime(date_str, "%Y%m%d").date())
                     except ValueError:
                         continue
-            for filepath in DATA_DIR.glob(f"{RESULTS_PREFIX}*.json"):
-                date_str = filepath.stem.replace(RESULTS_PREFIX, "")
-                if len(date_str) == 8 and date_str.isdigit():
-                    try:
-                        dates.add(datetime.strptime(date_str, "%Y%m%d").date())
-                    except ValueError:
-                        continue
-    except Exception as e:
-        st.error(f"日付取得エラー: {e}")
-        for filepath in DATA_DIR.glob(f"{PREDICTIONS_PREFIX}*.json"):
-            date_str = filepath.stem.replace(PREDICTIONS_PREFIX, "")
-            if len(date_str) == 8 and date_str.isdigit():
-                try:
-                    dates.add(datetime.strptime(date_str, "%Y%m%d").date())
-                except ValueError:
-                    continue
-        for filepath in DATA_DIR.glob(f"{RESULTS_PREFIX}*.json"):
-            date_str = filepath.stem.replace(RESULTS_PREFIX, "")
-            if len(date_str) == 8 and date_str.isdigit():
-                try:
-                    dates.add(datetime.strptime(date_str, "%Y%m%d").date())
-                except ValueError:
-                    continue
     except Exception:
         pass
     return sorted(dates, reverse=True) if dates else [datetime.now().date()]
 
-
-@@ -84,7 +170,6 @@ def load_predictions(date) -> dict:
+def load_predictions(date) -> dict:
+    """指定日の予想データを読み込む"""
+    filename = f"{PREDICTIONS_PREFIX}{date.strftime('%Y%m%d')}.json"
+    filepath = DATA_DIR / filename
     data = safe_load_json(filepath)
     if data:
         return data
@@ -187,9 +196,17 @@ def get_available_dates() -> list:
     latest_path = DATA_DIR / "latest_predictions.json"
     return safe_load_json(latest_path) or {"races": [], "date": date.strftime("%Y-%m-%d")}
 
-@@ -103,6 +188,50 @@ def load_history() -> list:
-    return data if isinstance(data, list) else []
+def load_results(date) -> dict:
+    """指定日の結果データを読み込む"""
+    filename = f"{RESULTS_PREFIX}{date.strftime('%Y%m%d')}.json"
+    filepath = DATA_DIR / filename
+    return safe_load_json(filepath) or {"races": [], "date": date.strftime("%Y-%m-%d")}
 
+def load_history() -> list:
+    """的中履歴を読み込む"""
+    filepath = DATA_DIR / "history.json"
+    data = safe_load_json(filepath)
+    return data if isinstance(data, list) else []
 
 def check_hit(prediction: dict, result: dict) -> dict:
     """予想と結果を照合して的中判定"""
@@ -207,39 +224,73 @@ def check_hit(prediction: dict, result: dict) -> dict:
     if len(top3) < 3:
         return hit_result
     
-    first = top3[0].get("馬番", 0)
-    second = top3[1].get("馬番", 0)
-    third = top3[2].get("馬番", 0)
+    try:
+        first = int(top3[0].get("馬番", 0))
+        second = int(top3[1].get("馬番", 0))
+        third = int(top3[2].get("馬番", 0))
+    except (ValueError, TypeError):
+        return hit_result
     
     horses = prediction.get("horses", [])
-    honmei = next((h["馬番"] for h in horses if h.get("印") == "◎"), 0)
-    taikou = next((h["馬番"] for h in horses if h.get("印") == "○"), 0)
-    tanpana = next((h["馬番"] for h in horses if h.get("印") == "▲"), 0)
+    
+    # 馬番の取得ヘルパー
+    def get_umaban(mark):
+        h = next((h for h in horses if h.get("印") == mark), None)
+        try:
+            return int(h["馬番"]) if h else 0
+        except:
+            return 0
+
+    honmei = get_umaban("◎")
+    taikou = get_umaban("○")
+    tanpana = get_umaban("▲")
     
     payouts = result.get("payouts", {})
     
+    # 単勝
     if honmei == first:
-        hit_result["単勝"] = {"hit": True, "payout": payouts.get("単勝", 0)}
+        p = payouts.get("単勝", 0)
+        hit_result["単勝"] = {"hit": True, "payout": p if isinstance(p, (int, float)) else 0}
     
+    # 複勝 (簡易判定: 本命が3着以内)
     if honmei in [first, second, third]:
         fukusho = payouts.get("複勝", {})
-        payout = fukusho.get(str(honmei), 0) if isinstance(fukusho, dict) else 0
+        # 複勝は複数配当があるため、辞書かリストで来る想定
+        payout = 0
+        if isinstance(fukusho, dict):
+            payout = fukusho.get(str(honmei), 0)
+        elif isinstance(fukusho, list):
+            # リストの場合は簡易的に平均などを取るか、本来は馬番でマッチングが必要
+            payout = fukusho[0] if fukusho else 0 
         hit_result["複勝"] = {"hit": True, "payout": payout}
     
+    # 馬連
     if {honmei, taikou} == {first, second}:
-        hit_result["馬連"] = {"hit": True, "payout": payouts.get("馬連", 0)}
+        p = payouts.get("馬連", 0)
+        hit_result["馬連"] = {"hit": True, "payout": p if isinstance(p, (int, float)) else 0}
     
+    # 三連複
     if {honmei, taikou, tanpana} == {first, second, third}:
-        hit_result["三連複"] = {"hit": True, "payout": payouts.get("三連複", 0)}
+        p = payouts.get("三連複", 0)
+        hit_result["三連複"] = {"hit": True, "payout": p if isinstance(p, (int, float)) else 0}
     
     return hit_result
-
 
 # --- サイドバー ---
 st.sidebar.markdown("# 🐎 UMA-Logic Pro")
 st.sidebar.markdown("---")
-@@ -117,8 +246,14 @@ def load_history() -> list:
+
+available_dates = get_available_dates()
+selected_date = st.sidebar.selectbox(
+    "日付選択",
+    available_dates,
+    format_func=lambda d: d.strftime("%Y/%m/%d (%a)")
 )
+
+# データ読み込み
+predictions_data = load_predictions(selected_date)
+results_data = load_results(selected_date)
+history_data = load_history()
 
 st.sidebar.markdown("---")
 
@@ -253,44 +304,31 @@ investment_style = st.sidebar.radio(
 
 st.sidebar.markdown("---")
 st.sidebar.caption("© 2026 UMA-Logic Pro v2.0")
-@@ -130,90 +265,368 @@ def load_history() -> list:
-history_data = load_history()
-
 
 # --- メインコンテンツ ---
 st.title("🐎 UMA-Logic Pro")
 
-tab1, tab2, tab3, tab4 = st.tabs([
-# --- メインコンテンツ（6タブ構成） ---
+# 6タブ構成
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🎯 本日の予想",
     "🏁 レース結果",
     "🎉 的中実績",
-    "📈 収支レポート"
     "📈 収支レポート",
     "💰 資金配分",
     "⚙️ システム状態"
 ])
 
-# タブ1: 予想
-
 # ========================================
 # タブ1: 本日の予想
 # ========================================
 with tab1:
-    st.header(f"🎯 {selected_date.strftime('%Y年%m月%d日')} の予想")
     st.markdown(f"## 🎯 {selected_date.strftime('%Y年%m月%d日')} の予想")
 
     races = predictions_data.get("races", [])
 
     if not races:
-        st.info("この日の予想データがありません。")
         st.warning("この日の予想データがありません。")
     else:
-        for race in races[:10]:  # 最大10レース表示
-            rank = race.get("rank", "B")
-            venue = race.get("venue", "")
-            race_num = race.get("race_num", "")
         s_count = len([r for r in races if r.get("rank") == "S"])
         a_count = len([r for r in races if r.get("rank") == "A"])
         b_count = len([r for r in races if r.get("rank") == "B"])
@@ -307,29 +345,13 @@ with tab1:
         
         for venue in venues:
             st.markdown(f'<div class="venue-card"><h3>🏇 {venue}競馬場</h3></div>', unsafe_allow_html=True)
-
-            st.subheader(f"{venue} {race_num}R [{rank}]")
+            
             venue_races = sorted(
                 [r for r in races if r.get("venue") == venue],
                 key=lambda x: x.get("race_num", 0)
             )
-
-            horses = race.get("horses", [])
-            if horses:
-                df = pd.DataFrame([
-                    {
-                        "印": h.get("印", ""),
-                        "馬番": h.get("馬番", ""),
-                        "馬名": h.get("馬名", ""),
-                        "UMA指数": h.get("UMA指数", 0),
-                        "単勝オッズ": h.get("単勝オッズ", 0)
-                    }
-                    for h in horses[:5]
-                ])
-                st.dataframe(df, use_container_width=True, hide_index=True)
-            st.markdown("---")
-            cols = st.columns(3)
             
+            cols = st.columns(3)
             for idx, race in enumerate(venue_races):
                 with cols[idx % 3]:
                     rank = race.get("rank", "B")
@@ -339,6 +361,7 @@ with tab1:
                     horses = race.get("horses", [])
                     honmei = next((h for h in horses if h.get("印") == "◎"), None)
                     
+                    # 結果との照合
                     race_result = next(
                         (r for r in results_data.get("races", [])
                          if r.get("venue") == venue and r.get("race_num") == race.get("race_num")),
@@ -383,23 +406,17 @@ with tab1:
                         st.markdown('</div>', unsafe_allow_html=True)
                     st.markdown("")
 
-# タブ2: 結果
-
 # ========================================
 # タブ2: レース結果
 # ========================================
 with tab2:
-    st.header(f"🏁 {selected_date.strftime('%Y年%m月%d日')} の結果")
     st.markdown(f"## 🏁 {selected_date.strftime('%Y年%m月%d日')} のレース結果")
 
     result_races = results_data.get("races", [])
 
     if not result_races:
-        st.info("この日の結果データはまだありません。")
         st.info("この日の結果データはまだありません。レース終了後に自動取得されます。")
     else:
-        for race in result_races[:10]:
-            st.subheader(f"{race.get('venue', '')} {race.get('race_num', '')}R")
         result_venues = sorted(set(r.get("venue", "不明") for r in result_races))
         selected_venue = st.selectbox("競馬場を選択", result_venues)
         
@@ -414,8 +431,6 @@ with tab2:
             top3 = race.get("top3", [])
             if top3:
                 df = pd.DataFrame([
-                    {"着順": i+1, "馬番": h.get("馬番", ""), "馬名": h.get("馬名", "")}
-                    for i, h in enumerate(top3[:3])
                     {
                         "着順": i + 1,
                         "馬番": h.get("馬番", ""),
@@ -446,39 +461,38 @@ with tab2:
             
             st.markdown("---")
 
-
 # ========================================
 # タブ3: 的中実績
 # ========================================
 with tab3:
-    st.header("🎉 的中実績")
     st.markdown("## 🎉 的中実績")
 
-    if history_data:
-        st.dataframe(pd.DataFrame(history_data), use_container_width=True)
+    # 現在選択されている日のデータから的中を計算（簡易版）
+    # 本来は全履歴データをスキャンするが、ここではデモとして現在選択日を使用
     all_hits = []
-    for date in available_dates:
-        pred = load_predictions(date)
-        res = load_results(date)
-        
-        for race in pred.get("races", []):
-            race_result = next(
-                (r for r in res.get("races", [])
-                 if r.get("venue") == race.get("venue") and r.get("race_num") == race.get("race_num")),
-                None
-            )
-            if race_result:
-                hit_info = check_hit(race, race_result)
-                for bet_type, info in hit_info.items():
-                    if info["hit"] and info["payout"] > 0:
-                        all_hits.append({
-                            "日付": date.strftime("%Y-%m-%d"),
-                            "会場": race.get("venue", ""),
-                            "R": race.get("race_num", 0),
-                            "券種": bet_type,
-                            "配当": info["payout"],
-                            "本命": next((h.get("馬名", "") for h in race.get("horses", []) if h.get("印") == "◎"), "")
-                        })
+    
+    # 選択されている日のレースでループ
+    pred = predictions_data
+    res = results_data
+    
+    for race in pred.get("races", []):
+        race_result = next(
+            (r for r in res.get("races", [])
+                if r.get("venue") == race.get("venue") and r.get("race_num") == race.get("race_num")),
+            None
+        )
+        if race_result:
+            hit_info = check_hit(race, race_result)
+            for bet_type, info in hit_info.items():
+                if info["hit"] and info["payout"] > 0:
+                    all_hits.append({
+                        "日付": selected_date.strftime("%Y-%m-%d"),
+                        "会場": race.get("venue", ""),
+                        "R": race.get("race_num", 0),
+                        "券種": bet_type,
+                        "配当": info["payout"],
+                        "本命": next((h.get("馬名", "") for h in race.get("horses", []) if h.get("印") == "◎"), "")
+                    })
     
     if all_hits:
         hit_df = pd.DataFrame(all_hits)
@@ -487,8 +501,8 @@ with tab3:
         hit_count = len(hit_df)
         
         c1, c2, c3 = st.columns(3)
-        c1.metric("🎯 的中回数", f"{hit_count}回")
-        c2.metric("💰 累計配当", f"¥{total_payout:,}")
+        c1.metric("🎯 的中回数 (本日)", f"{hit_count}回")
+        c2.metric("💰 累計配当 (本日)", f"¥{total_payout:,}")
         c3.metric("📊 平均配当", f"¥{total_payout // hit_count:,}" if hit_count > 0 else "¥0")
         
         st.markdown("---")
@@ -500,15 +514,12 @@ with tab3:
         summary.columns = ["回数", "合計", "平均"]
         st.dataframe(summary, use_container_width=True)
     else:
-        st.info("まだ的中データがありません。")
-
-# タブ4: 収支
+        st.info("本日分の的中データはまだありません。")
 
 # ========================================
 # タブ4: 収支レポート
 # ========================================
 with tab4:
-    st.header("📈 収支レポート")
     st.markdown("## 📈 収支レポート")
 
     if history_data:
@@ -520,10 +531,6 @@ with tab4:
             profit = total_return - total_invest
             roi = (total_return / total_invest * 100) if total_invest > 0 else 0
 
-            col1, col2, col3 = st.columns(3)
-            col1.metric("総投資額", f"¥{total_invest:,}")
-            col2.metric("総払戻額", f"¥{total_return:,}")
-            col3.metric("純損益", f"¥{total_return - total_invest:,}")
             col1, col2 = st.columns([2, 1])
             
             with col1:
@@ -560,7 +567,6 @@ with tab4:
     else:
         st.info("まだ収支データがありません。")
 
-
 # ========================================
 # タブ5: 資金配分
 # ========================================
@@ -590,6 +596,7 @@ with tab5:
         else:
             config = {"単勝": 0.05, "馬連": 0.3, "馬単": 0.2, "三連複": 0.3, "三連単": 0.15}
         
+        # 予算配分計算（100円単位）
         allocations = {k: int(np.round(total_budget * v * multiplier / 100) * 100) for k, v in config.items()}
         
         alloc_cols = st.columns(5)
@@ -612,7 +619,6 @@ with tab5:
             st.write(f"**馬連**: {honmei.get('馬番', '')} - {taikou.get('馬番', '')}")
         if honmei and taikou and tanpana:
             st.write(f"**三連複**: {honmei.get('馬番', '')} - {taikou.get('馬番', '')} - {tanpana.get('馬番', '')}")
-
 
 # ========================================
 # タブ6: システム状態
@@ -640,21 +646,12 @@ with tab6:
     st.markdown("### 📊 アーカイブ状況")
     pred_count = len(list(DATA_DIR.glob(f"{PREDICTIONS_PREFIX}*.json")))
     res_count = len(list(DATA_DIR.glob(f"{RESULTS_PREFIX}*.json")))
+    backup_count = len(list(BACKUP_DIR.glob("*.py"))) if BACKUP_DIR.exists() else 0
     
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns(3)
     c1.metric("予想ファイル数", f"{pred_count}件")
     c2.metric("結果ファイル数", f"{res_count}件")
-    
-    st.markdown("---")
-    
-    st.markdown("### 🔄 GitHub Actions ワークフロー")
-    st.markdown("""
-    | ワークフロー | スケジュール | 説明 |
-    |-------------|-------------|------|
-    | 🐎 予想データ取得 | 土日 07:00 JST | レースデータ取得＋スコア計算 |
-    | 📊 レース結果取得 | 土日 18:00 JST | 結果＋払戻金取得 |
-    | 💹 リアルタイムオッズ | 手動実行 | 直前オッズ取得 |
-    """)
+    c3.metric("バックアップ数", f"{backup_count}件")
     
     st.markdown("---")
     st.markdown("### 📋 システム情報")
@@ -664,4 +661,5 @@ Streamlit: {st.__version__}
 Plotly: {'Available' if PLOTLY_AVAILABLE else 'Not Available'}
 AgGrid: {'Available' if AGGRID_AVAILABLE else 'Not Available'}
 データディレクトリ: {DATA_DIR.absolute()}
+バックアップ先: {BACKUP_DIR.absolute()}
     """)

@@ -1,665 +1,228 @@
-# app_commercial.py
-# UMA-Logic Pro - 商用グレード完成版（6タブ構成 + 自動バックアップ機能）
-
 import streamlit as st
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
-import json
-import os
-import shutil  # ファイルコピー用
-from pathlib import Path
+import requests
+from bs4 import BeautifulSoup
+import datetime
+import time
 
-# --- ページ設定 (必ず最初に記述) ---
-st.set_page_config(
-    page_title="UMA-Logic Pro",
-    page_icon="🐎",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# ---------------------------------------------------------
+# 1. 設定とユーティリティ関数
+# ---------------------------------------------------------
+st.set_page_config(page_title="競馬予想AI - 開催ステータス監視付き", layout="wide")
 
-# --- 定数設定 ---
-DATA_DIR = Path("data")
-BACKUP_DIR = DATA_DIR / "backups"
-PREDICTIONS_PREFIX = "predictions_"
-RESULTS_PREFIX = "results_"
-
-# --- 自動バックアップ機能 ---
-def create_self_backup():
+# スクレイピング関数の定義（キャッシュ化して負荷軽減）
+# ttl=600 は「600秒(10分)間は結果を保存し、再アクセスしない」という意味です
+@st.cache_data(ttl=600)
+def check_netkeiba_status(target_date_str, venue_name):
     """
-    起動時に自身のソースコードを data/backups/ にコピーして保存する
+    netkeibaの開催情報をスクレイピングし、指定会場の状態を確認する。
+    戻り値: (status_text, is_cancelled)
+    Example: ('開催中', False) または ('中止', True)
     """
+    # 日付をYYYYMMDD形式に変換 (例: 20231028)
     try:
-        # ディレクトリがなければ作成
-        BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-        
-        # 現在実行中のファイルのパスを取得
-        current_file = Path(__file__).resolve()
-        
-        # タイムスタンプ付きのファイル名を生成
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_filename = f"app_backup_{timestamp}.py"
-        destination = BACKUP_DIR / backup_filename
-        
-        # コピー実行
-        shutil.copy2(current_file, destination)
-        
-        # (デバッグ用) コンソールに出力
-        print(f"Backup created: {destination}")
-        
-    except Exception as e:
-        # バックアップ失敗時もアプリは止めず、ログだけ出す
-        print(f"Backup failed: {e}")
+        dt = datetime.datetime.strptime(target_date_str, '%Y-%m-%d')
+        formatted_date = dt.strftime('%Y%m%d')
+    except ValueError:
+        return "日付エラー", False
 
-# バックアップを実行
-create_self_backup()
-
-# --- ライブラリの安全なインポート ---
-try:
-    import plotly.graph_objects as go
-    import plotly.express as px
-    PLOTLY_AVAILABLE = True
-except ImportError:
-    PLOTLY_AVAILABLE = False
-
-try:
-    from st_aggrid import AgGrid, GridOptionsBuilder
-    AGGRID_AVAILABLE = True
-except ImportError:
-    AGGRID_AVAILABLE = False
-
-# --- CSSスタイル ---
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap' );
-
-    html, body, [class*="st-"], .stApp {
-        font-family: 'Noto Sans JP', sans-serif;
-        background-color: #1A1A2E;
-        color: #FFFFFF;
-    }
-
-    .stSidebar {
-        background-color: #16213E;
-    }
-
-    h1, h2, h3 {
-        color: #F6C953 !important;
-    }
-
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #16213E;
-        padding: 10px;
-        border-radius: 10px;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        background-color: #1A1A2E;
-        border-radius: 8px;
-        padding: 12px 24px;
-        color: #FFFFFF;
-        font-weight: bold;
-    }
-
-    .stTabs [aria-selected="true"] {
-        background-color: #F6C953 !important;
-        color: #1A1A2E !important;
-    }
-
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(246, 201, 83, 0.7); }
-        70% { box-shadow: 0 0 0 15px rgba(246, 201, 83, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(246, 201, 83, 0); }
-    }
-
-    .pulse-s-rank {
-        animation: pulse 2s infinite;
-        border: 2px solid #F6C953;
-        border-radius: 10px;
-        padding: 15px;
-        background-color: rgba(246, 201, 83, 0.1);
-    }
-
-    .rank-s { color: #F6C953; font-weight: bold; font-size: 1.2em; }
-    .rank-a { color: #87CEEB; font-weight: bold; }
-    .rank-b { color: #AAAAAA; }
-
-    .gold-badge {
-        display: inline-block;
-        background-color: #F6C953;
-        color: #1A1A2E;
-        padding: 3px 10px;
-        border-radius: 15px;
-        font-weight: bold;
-        font-size: 0.85em;
-        margin-left: 8px;
-    }
-
-    .hit-badge {
-        display: inline-block;
-        background: linear-gradient(135deg, #4CAF50, #45a049);
-        color: white;
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-weight: bold;
-        font-size: 0.9em;
-        margin-left: 10px;
-    }
-
-    .venue-card {
-        background: linear-gradient(135deg, #2a2a4e, #1A1A2E);
-        padding: 15px 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        border-left: 4px solid #F6C953;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# --- ヘルパー関数 ---
-
-def safe_load_json(filepath: Path) -> dict:
-    """JSONファイルを安全に読み込む"""
-    try:
-        if filepath.exists():
-            with open(filepath, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception as e:
-        st.error(f"ファイル読み込みエラー: {filepath} - {e}")
-    return {}
-
-def get_available_dates() -> list:
-    """利用可能な日付リストを取得"""
-    dates = set()
-    try:
-        if DATA_DIR.exists():
-            for filepath in DATA_DIR.glob(f"{PREDICTIONS_PREFIX}*.json"):
-                date_str = filepath.stem.replace(PREDICTIONS_PREFIX, "")
-                if len(date_str) == 8 and date_str.isdigit():
-                    try:
-                        dates.add(datetime.strptime(date_str, "%Y%m%d").date())
-                    except ValueError:
-                        continue
-    except Exception:
-        pass
-    return sorted(dates, reverse=True) if dates else [datetime.now().date()]
-
-def load_predictions(date) -> dict:
-    """指定日の予想データを読み込む"""
-    filename = f"{PREDICTIONS_PREFIX}{date.strftime('%Y%m%d')}.json"
-    filepath = DATA_DIR / filename
-    data = safe_load_json(filepath)
-    if data:
-        return data
-    # フォールバック
-    latest_path = DATA_DIR / "latest_predictions.json"
-    return safe_load_json(latest_path) or {"races": [], "date": date.strftime("%Y-%m-%d")}
-
-def load_results(date) -> dict:
-    """指定日の結果データを読み込む"""
-    filename = f"{RESULTS_PREFIX}{date.strftime('%Y%m%d')}.json"
-    filepath = DATA_DIR / filename
-    return safe_load_json(filepath) or {"races": [], "date": date.strftime("%Y-%m-%d")}
-
-def load_history() -> list:
-    """的中履歴を読み込む"""
-    filepath = DATA_DIR / "history.json"
-    data = safe_load_json(filepath)
-    return data if isinstance(data, list) else []
-
-def check_hit(prediction: dict, result: dict) -> dict:
-    """予想と結果を照合して的中判定"""
-    hit_result = {
-        "単勝": {"hit": False, "payout": 0},
-        "複勝": {"hit": False, "payout": 0},
-        "馬連": {"hit": False, "payout": 0},
-        "三連複": {"hit": False, "payout": 0},
-    }
-    
-    if not result or not prediction:
-        return hit_result
-    
-    top3 = result.get("top3", [])
-    if len(top3) < 3:
-        return hit_result
+    # netkeibaのレース一覧ページ（日付指定）
+    url = f"https://race.netkeiba.com/top/race_list.html?kaisai_date={formatted_date}"
     
     try:
-        first = int(top3[0].get("馬番", 0))
-        second = int(top3[1].get("馬番", 0))
-        third = int(top3[2].get("馬番", 0))
-    except (ValueError, TypeError):
-        return hit_result
-    
-    horses = prediction.get("horses", [])
-    
-    # 馬番の取得ヘルパー
-    def get_umaban(mark):
-        h = next((h for h in horses if h.get("印") == mark), None)
-        try:
-            return int(h["馬番"]) if h else 0
-        except:
-            return 0
-
-    honmei = get_umaban("◎")
-    taikou = get_umaban("○")
-    tanpana = get_umaban("▲")
-    
-    payouts = result.get("payouts", {})
-    
-    # 単勝
-    if honmei == first:
-        p = payouts.get("単勝", 0)
-        hit_result["単勝"] = {"hit": True, "payout": p if isinstance(p, (int, float)) else 0}
-    
-    # 複勝 (簡易判定: 本命が3着以内)
-    if honmei in [first, second, third]:
-        fukusho = payouts.get("複勝", {})
-        # 複勝は複数配当があるため、辞書かリストで来る想定
-        payout = 0
-        if isinstance(fukusho, dict):
-            payout = fukusho.get(str(honmei), 0)
-        elif isinstance(fukusho, list):
-            # リストの場合は簡易的に平均などを取るか、本来は馬番でマッチングが必要
-            payout = fukusho[0] if fukusho else 0 
-        hit_result["複勝"] = {"hit": True, "payout": payout}
-    
-    # 馬連
-    if {honmei, taikou} == {first, second}:
-        p = payouts.get("馬連", 0)
-        hit_result["馬連"] = {"hit": True, "payout": p if isinstance(p, (int, float)) else 0}
-    
-    # 三連複
-    if {honmei, taikou, tanpana} == {first, second, third}:
-        p = payouts.get("三連複", 0)
-        hit_result["三連複"] = {"hit": True, "payout": p if isinstance(p, (int, float)) else 0}
-    
-    return hit_result
-
-# --- サイドバー ---
-st.sidebar.markdown("# 🐎 UMA-Logic Pro")
-st.sidebar.markdown("---")
-
-available_dates = get_available_dates()
-selected_date = st.sidebar.selectbox(
-    "日付選択",
-    available_dates,
-    format_func=lambda d: d.strftime("%Y/%m/%d (%a)")
-)
-
-# データ読み込み
-predictions_data = load_predictions(selected_date)
-results_data = load_results(selected_date)
-history_data = load_history()
-
-st.sidebar.markdown("---")
-
-st.sidebar.markdown("### 💰 投資設定")
-total_budget = st.sidebar.slider("総予算", 1000, 100000, 10000, 1000, format="¥%d")
-investment_style = st.sidebar.radio(
-    "投資スタイル",
-    ["A：バランス型", "B：高配当狙い"],
-    captions=["単勝〜三連単まで分散", "馬連・三連系に集中"]
-)
-
-st.sidebar.markdown("---")
-st.sidebar.caption("© 2026 UMA-Logic Pro v2.0")
-
-# --- メインコンテンツ ---
-st.title("🐎 UMA-Logic Pro")
-
-# 6タブ構成
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "🎯 本日の予想",
-    "🏁 レース結果",
-    "🎉 的中実績",
-    "📈 収支レポート",
-    "💰 資金配分",
-    "⚙️ システム状態"
-])
-
-# ========================================
-# タブ1: 本日の予想
-# ========================================
-with tab1:
-    st.markdown(f"## 🎯 {selected_date.strftime('%Y年%m月%d日')} の予想")
-
-    races = predictions_data.get("races", [])
-
-    if not races:
-        st.warning("この日の予想データがありません。")
-    else:
-        s_count = len([r for r in races if r.get("rank") == "S"])
-        a_count = len([r for r in races if r.get("rank") == "A"])
-        b_count = len([r for r in races if r.get("rank") == "B"])
+        # 実際のアクセス（ヘッダーを付けてブラウザのふりをする）
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        response = requests.get(url, headers=headers, timeout=5)
+        response.encoding = 'EUC-JP' # netkeibaはEUC-JPが多いが、適宜調整
         
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("総レース数", f"{len(races)}R")
-        col2.metric("🥇 Sランク", f"{s_count}R")
-        col3.metric("🥈 Aランク", f"{a_count}R")
-        col4.metric("🥉 Bランク", f"{b_count}R")
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        st.markdown("---")
+        # ページ内に「中止」や「延期」の文言があり、かつ対象会場名が含まれているか簡易チェック
+        # ※本来はHTML構造を厳密に解析しますが、サイト構造変更に強くするため
+        #   ページ全体から「会場名」と「中止」が近くにあるかを探すロジックにしています。
         
-        venues = sorted(set(r.get("venue", "不明") for r in races))
+        # 開催場リストを取得 (netkeibaの構造に依存します。クラス名は変わる可能性があります)
+        race_data_list = soup.find('div', class_='RaceList_DataList')
         
-        for venue in venues:
-            st.markdown(f'<div class="venue-card"><h3>🏇 {venue}競馬場</h3></div>', unsafe_allow_html=True)
+        if not race_data_list:
+            # データが取れない場合は、安全側に倒して「不明（通常）」とするか警告を出す
+            return "情報取得不可(通常想定)", False
+
+        # 全テキストを取得
+        page_text = race_data_list.get_text()
+
+        # シンプルなキーワード検知ロジック
+        # 実際のDOM構造: <div class="RaceList_DataList"> ... <span class="JyoName">東京</span> ... <span class="Cancel">中止</span> ... </div>
+        # ここでは簡易的に、会場名が含まれているか確認し、さらにそのブロックに中止フラグがあるか確認する必要があります。
+        
+        # デモ用ロジック: 
+        # 本来はここでBeautifulSoupで会場ごとのブロックを特定します。
+        # 今回は「該当会場のブロック」を探す処理をイメージで実装します。
+        
+        venue_found = False
+        is_cancelled = False
+        status_msg = "開催予定"
+
+        # netkeibaの構造: class="RaceList_Data" が各会場のブロック
+        venues_blocks = soup.find_all('div', class_='RaceList_Data')
+        
+        for block in venues_blocks:
+            block_text = block.get_text()
+            if venue_name in block_text:
+                venue_found = True
+                # このブロック内に「中止」「延期」の文字があるか
+                if "中止" in block_text or "延期" in block_text:
+                    is_cancelled = True
+                    status_msg = "開催中止・延期"
+                elif "雪" in block_text and "影響" in block_text:
+                    status_msg = "天候調査中" # 注意喚起のみ
+                break
+        
+        if not venue_found:
+            return "開催なし", False
             
-            venue_races = sorted(
-                [r for r in races if r.get("venue") == venue],
-                key=lambda x: x.get("race_num", 0)
-            )
-            
-            cols = st.columns(3)
-            for idx, race in enumerate(venue_races):
-                with cols[idx % 3]:
-                    rank = race.get("rank", "B")
-                    rank_class = f"rank-{rank.lower()}"
-                    container_class = "pulse-s-rank" if rank == "S" else ""
-                    
-                    horses = race.get("horses", [])
-                    honmei = next((h for h in horses if h.get("印") == "◎"), None)
-                    
-                    # 結果との照合
-                    race_result = next(
-                        (r for r in results_data.get("races", [])
-                         if r.get("venue") == venue and r.get("race_num") == race.get("race_num")),
-                        None
-                    )
-                    hit_info = check_hit(race, race_result) if race_result else None
-                    
-                    if container_class:
-                        st.markdown(f'<div class="{container_class}">', unsafe_allow_html=True)
-                    
-                    title_html = f"**{race.get('race_num', '')}R** <span class='{rank_class}'>[{rank}]</span>"
-                    if honmei:
-                        title_html += f" ◎{honmei.get('馬番', '')} {honmei.get('馬名', '')}"
-                    
-                    if hit_info:
-                        total_payout = sum(h["payout"] for h in hit_info.values() if h["hit"])
-                        if total_payout > 0:
-                            title_html += f'<span class="hit-badge">🎯 +¥{total_payout:,}</span>'
-                    
-                    st.markdown(title_html, unsafe_allow_html=True)
-                    
-                    with st.expander("詳細", expanded=(rank == "S")):
-                        for horse in horses[:5]:
-                            mark = horse.get("印", "")
-                            if not mark:
-                                continue
-                            
-                            h_info = f"**{mark} {horse.get('馬番', '')} {horse.get('馬名', '')}**"
-                            ev = horse.get("期待値", 0)
-                            if ev >= 1.2:
-                                h_info += f'<span class="gold-badge">EV {ev:.2f}</span>'
-                            st.markdown(h_info, unsafe_allow_html=True)
-                            
-                            uma_idx = horse.get("UMA指数", 50)
-                            st.progress(uma_idx / 100, text=f"UMA指数: {uma_idx}")
-                            
-                            odds = horse.get("単勝オッズ", 0)
-                            reason = horse.get("推奨理由", "")
-                            st.caption(f"単勝 {odds:.1f}倍 / {reason}")
-                    
-                    if container_class:
-                        st.markdown('</div>', unsafe_allow_html=True)
-                    st.markdown("")
+        return status_msg, is_cancelled
 
-# ========================================
-# タブ2: レース結果
-# ========================================
-with tab2:
-    st.markdown(f"## 🏁 {selected_date.strftime('%Y年%m月%d日')} のレース結果")
+    except Exception as e:
+        # エラー時はログを出して、アプリを止めない（通常扱いにするか、エラー表示するか）
+        print(f"Scraping Error: {e}")
+        return "接続エラー(手動確認推奨)", False
 
-    result_races = results_data.get("races", [])
+# ---------------------------------------------------------
+# 2. メインアプリケーション
+# ---------------------------------------------------------
 
-    if not result_races:
-        st.info("この日の結果データはまだありません。レース終了後に自動取得されます。")
+def main():
+    st.title("🏇 AI競馬予想システム Commercial Ver.")
+    st.markdown("---")
+
+    # --- サイドバー設定 ---
+    st.sidebar.header("開催設定")
+    
+    # 日付選択
+    today = datetime.date.today()
+    target_date = st.sidebar.date_input("開催日選択", today)
+    target_date_str = target_date.strftime('%Y-%m-%d')
+
+    # 会場選択
+    venue = st.sidebar.selectbox("開催会場", ["東京", "中山", "京都", "阪神", "新潟", "福島", "中京", "札幌", "函館", "小倉"])
+
+    # 【デバッグ機能】開発中に動作を確認するための強制スイッチ
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🛠 デバッグ・テスト用")
+    simulate_cancel = st.sidebar.checkbox("【テスト】強制的に『中止』状態にする")
+
+    # ---------------------------------------------------------
+    # 3. 開催ステータスチェック処理 (ここが今回の肝)
+    # ---------------------------------------------------------
+    
+    # デバッグモードか、実際のスクレイピング結果か
+    if simulate_cancel:
+        status_text = "テスト用：開催中止"
+        is_cancelled = True
     else:
-        result_venues = sorted(set(r.get("venue", "不明") for r in result_races))
-        selected_venue = st.selectbox("競馬場を選択", result_venues)
+        with st.spinner(f'{venue}競馬場のステータスを確認中...'):
+            status_text, is_cancelled = check_netkeiba_status(target_date_str, venue)
+
+    # ---------------------------------------------------------
+    # 4. 画面表示制御 (ロック機能)
+    # ---------------------------------------------------------
+    
+    # 状態変数の初期化
+    ui_disabled = False # デフォルトは操作可能
+
+    if is_cancelled:
+        # 中止の場合の警告表示
+        st.error(f"""
+        ### ⚠️ 重大なお知らせ: {venue}競馬場は「{status_text}」となっています。
         
-        venue_results = sorted(
-            [r for r in result_races if r.get("venue") == selected_venue],
-            key=lambda x: x.get("race_num", 0)
+        本日の{venue}開催は中止または延期が検知されました。
+        資金保護のため、**投資計算および投票機能はロックされます。**
+        
+        ※代替開催（続行競馬）がある場合は、後日発表される新しい日程を選択してください。
+        """)
+        
+        # UIをロックするフラグを立てる
+        ui_disabled = True
+    
+    elif status_text == "開催なし":
+        st.warning(f"{target_date_str} の {venue} での開催データが見つかりませんでした。日程を確認してください。")
+        ui_disabled = True
+
+    else:
+        # 通常開催時
+        st.success(f"ステータス確認OK: {venue} ({status_text}) - 正常稼働中")
+
+    # ---------------------------------------------------------
+    # 5. アプリケーション本体 (ロックフラグを適用)
+    # ---------------------------------------------------------
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.subheader("📊 レース分析データ")
+        # ダミーデータの作成
+        df = pd.DataFrame({
+            'レース': [f'{i}R' for i in range(1, 13)],
+            '本命馬': np.random.choice(['ディープインパクト', 'オルフェーヴル', 'イクイノックス'], 12),
+            'AI自信度': np.random.randint(60, 100, 12),
+            'オッズ': np.round(np.random.uniform(1.5, 10.0, 12), 1)
+        })
+        
+        # データフレーム表示（ここは見るだけなのでロックしなくても良いが、警告は見えている）
+        st.dataframe(df, use_container_width=True)
+
+    with col2:
+        st.subheader("💰 投資計算機")
+        
+        # ロック機能の適用箇所: disabled=ui_disabled を設定
+        
+        budget = st.number_input(
+            "総予算 (円)", 
+            min_value=1000, 
+            value=10000, 
+            step=1000, 
+            disabled=ui_disabled  # <--- ここでロック
         )
         
-        for race in venue_results:
-            st.markdown(f"### {race.get('race_num', '')}R {race.get('race_name', '')}")
-
-            top3 = race.get("top3", [])
-            if top3:
-                df = pd.DataFrame([
-                    {
-                        "着順": i + 1,
-                        "馬番": h.get("馬番", ""),
-                        "馬名": h.get("馬名", ""),
-                        "騎手": h.get("騎手", ""),
-                        "タイム": h.get("タイム", ""),
-                        "上がり3F": h.get("上がり3F", "")
-                    }
-                    for i, h in enumerate(top3)
-                ])
-                st.dataframe(df, use_container_width=True, hide_index=True)
-            
-            payouts = race.get("payouts", {})
-            if payouts:
-                st.markdown("**💰 払戻金**")
-                p_cols = st.columns(4)
-                bet_types = ["単勝", "複勝", "馬連", "馬単", "ワイド", "三連複", "三連単", "枠連"]
-                for i, bt in enumerate(bet_types):
-                    if bt in payouts:
-                        val = payouts[bt]
-                        if isinstance(val, dict):
-                            display = " / ".join([f"¥{v:,}" for v in val.values()])
-                        elif isinstance(val, (int, float)) and val > 0:
-                            display = f"¥{int(val):,}"
-                        else:
-                            display = "-"
-                        p_cols[i % 4].metric(bt, display)
-            
-            st.markdown("---")
-
-# ========================================
-# タブ3: 的中実績
-# ========================================
-with tab3:
-    st.markdown("## 🎉 的中実績")
-
-    # 現在選択されている日のデータから的中を計算（簡易版）
-    # 本来は全履歴データをスキャンするが、ここではデモとして現在選択日を使用
-    all_hits = []
-    
-    # 選択されている日のレースでループ
-    pred = predictions_data
-    res = results_data
-    
-    for race in pred.get("races", []):
-        race_result = next(
-            (r for r in res.get("races", [])
-                if r.get("venue") == race.get("venue") and r.get("race_num") == race.get("race_num")),
-            None
+        target_race = st.selectbox(
+            "対象レース", 
+            df['レース'], 
+            disabled=ui_disabled  # <--- ここでロック
         )
-        if race_result:
-            hit_info = check_hit(race, race_result)
-            for bet_type, info in hit_info.items():
-                if info["hit"] and info["payout"] > 0:
-                    all_hits.append({
-                        "日付": selected_date.strftime("%Y-%m-%d"),
-                        "会場": race.get("venue", ""),
-                        "R": race.get("race_num", 0),
-                        "券種": bet_type,
-                        "配当": info["payout"],
-                        "本命": next((h.get("馬名", "") for h in race.get("horses", []) if h.get("印") == "◎"), "")
-                    })
-    
-    if all_hits:
-        hit_df = pd.DataFrame(all_hits)
         
-        total_payout = hit_df["配当"].sum()
-        hit_count = len(hit_df)
-        
-        c1, c2, c3 = st.columns(3)
-        c1.metric("🎯 的中回数 (本日)", f"{hit_count}回")
-        c2.metric("💰 累計配当 (本日)", f"¥{total_payout:,}")
-        c3.metric("📊 平均配当", f"¥{total_payout // hit_count:,}" if hit_count > 0 else "¥0")
-        
-        st.markdown("---")
-        st.markdown("### 的中一覧")
-        st.dataframe(hit_df, use_container_width=True, hide_index=True)
-        
-        st.markdown("### 券種別集計")
-        summary = hit_df.groupby("券種").agg({"配当": ["count", "sum", "mean"]}).round(0)
-        summary.columns = ["回数", "合計", "平均"]
-        st.dataframe(summary, use_container_width=True)
-    else:
-        st.info("本日分の的中データはまだありません。")
+        allocation_method = st.radio(
+            "資金配分ロジック",
+            ["均等買い", "オッズ比例配分", "ケリー基準"],
+            disabled=ui_disabled  # <--- ここでロック
+        )
 
-# ========================================
-# タブ4: 収支レポート
-# ========================================
-with tab4:
-    st.markdown("## 📈 収支レポート")
-
-    if history_data:
-        hist_df = pd.DataFrame(history_data)
-        
-        if "投資額" in hist_df.columns and "的中配当金" in hist_df.columns:
-            total_invest = hist_df["投資額"].sum()
-            total_return = hist_df["的中配当金"].sum()
-            profit = total_return - total_invest
-            roi = (total_return / total_invest * 100) if total_invest > 0 else 0
-
-            col1, col2 = st.columns([2, 1])
+        # 計算実行ボタン
+        if st.button("投資配分を計算する", type="primary", disabled=ui_disabled): # <--- ここでロック
             
-            with col1:
-                if PLOTLY_AVAILABLE:
-                    fig = go.Figure(go.Indicator(
-                        mode="gauge+number+delta",
-                        value=roi,
-                        title={'text': "累計回収率", 'font': {'size': 20, 'color': 'white'}},
-                        delta={'reference': 100, 'increasing': {'color': "#4CAF50"}, 'decreasing': {'color': "#f44336"}},
-                        gauge={
-                            'axis': {'range': [0, 200], 'tickcolor': "white"},
-                            'bar': {'color': "#F6C953"},
-                            'bgcolor': "#1A1A2E",
-                            'borderwidth': 2,
-                            'bordercolor': "#3c3c5a",
-                            'steps': [
-                                {'range': [0, 80], 'color': '#3c3c5a'},
-                                {'range': [80, 120], 'color': '#5a5a7a'}
-                            ],
-                            'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 100}
-                        }
-                    ))
-                    fig.update_layout(paper_bgcolor="#1A1A2E", font_color="white", height=300)
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.metric("累計回収率", f"{roi:.1f}%")
+            # 以下、計算ロジック（ロック時は実行されない）
+            st.markdown("### 推奨買い目")
+            st.info(f"{target_race} に {allocation_method} で計算を実行しました。")
             
-            with col2:
-                st.metric("💰 純損益", f"¥{profit:,}")
-                st.metric("📥 総投資", f"¥{total_invest:,}")
-                st.metric("📤 総払戻", f"¥{total_return:,}")
-        else:
-            st.warning("履歴データの形式が正しくありません。")
-    else:
-        st.info("まだ収支データがありません。")
+            alloc_amount = budget // 5 # ダミー計算
+            st.write(f"推奨投資額: **{alloc_amount:,}円** / 点")
+            
+            # グラフ描画など
+            chart_data = pd.DataFrame({
+                "馬番": [1, 2, 3, 4, 5],
+                "配分額": np.random.randint(1000, 3000, 5)
+            })
+            st.bar_chart(chart_data.set_index("馬番"))
 
-# ========================================
-# タブ5: 資金配分
-# ========================================
-with tab5:
-    st.markdown("## 💰 資金配分シミュレーター")
-    
-    st.info(f"総予算: **¥{total_budget:,}** / スタイル: **{investment_style}**")
-    
-    races = predictions_data.get("races", [])
-    
-    if not races:
-        st.warning("予想データがありません。")
-    else:
-        race_options = [f"{r.get('venue', '')}{r.get('race_num', '')}R [{r.get('rank', 'B')}]" for r in races]
-        selected_race_str = st.selectbox("対象レースを選択", race_options)
-        
-        idx = race_options.index(selected_race_str)
-        selected_race = races[idx]
-        
-        st.markdown(f"### シミュレーション: {selected_race_str}")
-        
-        rank = selected_race.get("rank", "B")
-        multiplier = {"S": 1.5, "A": 1.0, "B": 0.7}.get(rank, 1.0)
-        
-        if "バランス" in investment_style:
-            config = {"単勝": 0.2, "馬連": 0.25, "馬単": 0.15, "三連複": 0.25, "三連単": 0.15}
-        else:
-            config = {"単勝": 0.05, "馬連": 0.3, "馬単": 0.2, "三連複": 0.3, "三連単": 0.15}
-        
-        # 予算配分計算（100円単位）
-        allocations = {k: int(np.round(total_budget * v * multiplier / 100) * 100) for k, v in config.items()}
-        
-        alloc_cols = st.columns(5)
-        for i, (bt, amt) in enumerate(allocations.items()):
-            alloc_cols[i].metric(bt, f"¥{amt:,}")
-        
-        st.success(f"合計配分: ¥{sum(allocations.values()):,}")
-        
+    # 代替開催に関する案内（ロック時のみ表示）
+    if ui_disabled and is_cancelled:
         st.markdown("---")
-        st.markdown("### 買い目構成案")
-        
-        horses = selected_race.get("horses", [])
-        honmei = next((h for h in horses if h.get("印") == "◎"), None)
-        taikou = next((h for h in horses if h.get("印") == "○"), None)
-        tanpana = next((h for h in horses if h.get("印") == "▲"), None)
-        
-        if honmei:
-            st.write(f"**単勝**: {honmei.get('馬番', '')}番")
-        if honmei and taikou:
-            st.write(f"**馬連**: {honmei.get('馬番', '')} - {taikou.get('馬番', '')}")
-        if honmei and taikou and tanpana:
-            st.write(f"**三連複**: {honmei.get('馬番', '')} - {taikou.get('馬番', '')} - {tanpana.get('馬番', '')}")
+        st.info("""
+        **【代替開催について】**
+        JRA等の公式発表により代替開催日が決定した場合、
+        サイドバーの「開催日選択」から新しい日付を選択することで、再度分析が可能になります。
+        """)
 
-# ========================================
-# タブ6: システム状態
-# ========================================
-with tab6:
-    st.markdown("## ⚙️ システム状態")
-    
-    st.markdown("### 📁 データファイル状態")
-    
-    files_to_check = [
-        ("latest_predictions.json", "最新予想"),
-        ("history.json", "的中履歴"),
-    ]
-    
-    for filename, label in files_to_check:
-        filepath = DATA_DIR / filename
-        if filepath.exists():
-            mtime = datetime.fromtimestamp(filepath.stat().st_mtime)
-            st.markdown(f'✅ **{label}** (`{filename}`) - 最終更新: {mtime.strftime("%Y-%m-%d %H:%M")}')
-        else:
-            st.markdown(f'❌ **{label}** (`{filename}`) - ファイルなし')
-    
-    st.markdown("---")
-    
-    st.markdown("### 📊 アーカイブ状況")
-    pred_count = len(list(DATA_DIR.glob(f"{PREDICTIONS_PREFIX}*.json")))
-    res_count = len(list(DATA_DIR.glob(f"{RESULTS_PREFIX}*.json")))
-    backup_count = len(list(BACKUP_DIR.glob("*.py"))) if BACKUP_DIR.exists() else 0
-    
-    c1, c2, c3 = st.columns(3)
-    c1.metric("予想ファイル数", f"{pred_count}件")
-    c2.metric("結果ファイル数", f"{res_count}件")
-    c3.metric("バックアップ数", f"{backup_count}件")
-    
-    st.markdown("---")
-    st.markdown("### 📋 システム情報")
-    st.code(f"""
-UMA-Logic Pro v2.0
-Streamlit: {st.__version__}
-Plotly: {'Available' if PLOTLY_AVAILABLE else 'Not Available'}
-AgGrid: {'Available' if AGGRID_AVAILABLE else 'Not Available'}
-データディレクトリ: {DATA_DIR.absolute()}
-バックアップ先: {BACKUP_DIR.absolute()}
-    """)
+if __name__ == "__main__":
+    main()

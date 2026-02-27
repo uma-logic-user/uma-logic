@@ -1,0 +1,32 @@
+{
+  "weights": {
+    "SpeedAgent": 0.3636681194801026,
+    "AdaptabilityAgent": 0.32842131490825494,
+    "PedigreeFormAgent": 0.30791056561164254
+  },
+  "updated_at": "2026-02-04 08:27:33",
+  "train_metrics": {
+    "years": [
+      2024
+    ],
+    "total_races": 7586,
+    "hit_rate": 0.4671763775375692,
+    "recovery_rate": 1.2614579488531505
+  },
+  "test_metrics": {
+    "years": [
+      2025
+    ],
+    "total_races": 7788,
+    "hit_rate": 0.4478685156651258,
+    "recovery_rate": 1.216502311248074
+  },
+  "metrics": {
+    "total_races": 7788,
+    "correct_predictions": 3488,
+    "hit_rate": 0.4478685156651258,
+    "recovery_rate": 1.216502311248074,
+    "total_investment": 778800,
+    "total_return": 947412
+  }
+}

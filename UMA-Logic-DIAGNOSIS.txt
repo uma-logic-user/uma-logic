@@ -1,0 +1,117 @@
+UMA-Logic PRO 診断用サマリー（他AI向け）
+
+目的
+- UMA-Logic PRO の現状仕様、ロジック構成、主要ファイルと階層構造を共有するための概要資料
+
+概要
+- 競馬予測・結果取得・アーカイブ・回収率分析・学習管理を備えたStreamlitアプリ
+- 予測ロジックはMLモデル（LightGBM）とルール/エージェント統合を併用
+- データ取得・更新・学習・アーカイブは scripts/ の自動化スクリプトで実行
+
+エントリポイント
+- app.py: Streamlit UI 本体（認証・タブ構成・表示ロジック）
+- main.py: 5分毎同期ループ＋Streamlit起動
+- start_app.bat: Windows起動バッチ
+
+UIタブ（app.py）
+- 本日の予想
+- レース結果
+- 的中実績
+- 回収率分析
+- 資金配分
+- AI学習状況
+- 予想アーカイブ
+- 設定
+
+認証
+- app.py 内でパスワード認証
+- secrets.toml の password を優先、未設定時は "uma2026" をフォールバック
+
+データフロー（代表例）
+- 予想生成: fetch_future_races.py → calculator_pro.py / calculator_ml.py → predictions_YYYYMMDD.json
+- 結果取得: update_results.py / fetch_recent_results_official.py → results_YYYYMMDD.json
+- アーカイブ: archive_manager.py → data/archive/YYYY/MM/DD/ に移動＋index.json更新
+- 的中照合: verify_predictions.py → 検証結果出力（verification_YYYYMMDD.json）
+
+ロジックの中心
+- scripts/calculator_ml.py
+  - LightGBMモデル＋FeatureEngineer
+  - UMAスコア、期待値、券種別推奨の生成（単勝〜3連単）
+- scripts/calculator_pro.py
+  - 3エージェント統合（Speed/Adaptability/Pedigree）
+  - UMA指数、期待値、ケリー基準投資、インサイダー検知
+- scripts/ensemble_agents.py
+  - アンサンブル学習エンジン、バックテスト、券種別期待値
+
+データ処理/検証
+- scripts/data_processor.py: 取消/中止検知、ログ出力、代替開催フラグ
+- scripts/update_results.py: 日付/年月単位で結果再取得
+- scripts/fetch_recent_results_official.py: 公式結果再取得（異常データ掃除）
+
+モデル/学習
+- data/models/lgbm_model.pkl: MLモデル
+- data/models/feature_names.json: 特徴量定義
+- data/models/weights.json: エージェント重み
+- scripts/train_model.py: 学習実行
+- scripts/run_backtest.py, run_backtest_all.py: バックテスト
+
+自動化/運用
+- scripts/daily_automation.py: 毎朝更新＋発走前オッズ更新
+- main.py: 5分毎の同期ループ（結果/オッズ/資金配分）
+- .github/workflows: GitHub Actions 自動実行（予想/結果/学習/再生成）
+
+設定・機密
+- .streamlit/secrets.toml: パスワードなど
+- config: 取得/ログ/性能設定
+
+主要ディレクトリ構成（抜粋）
+uma-logic-new/
+├─ app.py
+├─ main.py
+├─ start_app.bat
+├─ config
+├─ .streamlit/
+│  └─ secrets.toml
+├─ scripts/
+│  ├─ calculator_ml.py
+│  ├─ calculator_pro.py
+│  ├─ ensemble_agents.py
+│  ├─ update_results.py
+│  ├─ fetch_future_races.py
+│  ├─ fetch_realtime_odds.py
+│  ├─ fetch_recent_results_official.py
+│  ├─ archive_manager.py
+│  ├─ verify_predictions.py
+│  ├─ run_backtest.py
+│  ├─ run_backtest_all.py
+│  ├─ train_model.py
+│  ├─ data_processor.py
+│  └─ notifier.py
+├─ data/
+│  ├─ archive/
+│  │  ├─ index.json
+│  │  └─ YYYY/MM/DD/results_YYYYMMDD.json
+│  ├─ history/
+│  │  └─ predictions_YYYYMMDD.json
+│  ├─ models/
+│  │  ├─ lgbm_model.pkl
+│  │  ├─ feature_names.json
+│  │  ├─ model_meta.json
+│  │  ├─ weights.json
+│  │  └─ insider_alerts.json
+│  └─ (results_YYYYMMDD.json が一時的に直下に存在する場合あり)
+├─ .github/workflows/
+│  ├─ auto_update.yml
+│  ├─ fetch_predictions.yml
+│  ├─ fetch_results.yml
+│  ├─ fetch_historical.yml
+│  ├─ optimize_2025.yml
+│  ├─ realtime_odds.yml
+│  ├─ regenerate_predictions.yml
+│  └─ uma_logic_cron.yml
+└─ logs/
+   └─ uma_logic.log
+
+補足
+- app.py にはUTF-8/CP932読み込みのフォールバック、全券種の的中判定、アーカイブ表示の強化が含まれる
+- 予想アーカイブは data/history の predictions_*.json を参照し、結果データは data/archive を優先参照

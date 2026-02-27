@@ -1,0 +1,108 @@
+# .github/workflows/optimize_ai.yml
+# UMA-Logic PRO - AI学習・重み最適化ワークフロー
+# スマホから「AI学習ボタン」を押せる
+
+name: 🧠 AI学習（重み最適化）
+
+on:
+  schedule:
+    # 毎週月曜03:00 JST (UTC 18:00 日曜) - 週末の結果を学習
+    - cron: '0 18 * * 0'
+  workflow_dispatch:
+    inputs:
+      learning_period:
+        description: '学習期間（月数）'
+        required: false
+        default: '6'
+        type: choice
+        options:
+          - '3'
+          - '6'
+          - '12'
+          - '24'
+      notify:
+        description: '通知を送信する'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  TZ: Asia/Tokyo
+
+jobs:
+  optimize-ai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: 📥 リポジトリをチェックアウト
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🐍 Python環境をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 依存パッケージをインストール
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 📁 ディレクトリを作成
+        run: |
+          mkdir -p data/archive
+          mkdir -p data/models
+
+      - name: 🧠 AI学習を実行
+        id: optimize
+        run: |
+          echo "=========================================="
+          echo "🧠 AI学習（重み最適化）開始"
+          echo "学習期間: ${{ github.event.inputs.learning_period || '6' }}ヶ月"
+          echo "=========================================="
+          
+          python scripts/ensemble_agents.py --optimize --months ${{ github.event.inputs.learning_period || '6' }}
+          
+          echo "optimize_status=success" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: 📊 学習結果を表示
+        run: |
+          echo "=========================================="
+          echo "📊 学習結果"
+          echo "=========================================="
+          if [ -f "data/models/weights.json" ]; then
+            cat data/models/weights.json
+          else
+            echo "weights.json が見つかりません"
+          fi
+
+      - name: 💾 学習結果をコミット＆プッシュ
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "UMA-Logic Bot"
+          git pull --rebase origin main || git pull origin main
+          git add data/models/
+          if git diff --staged --quiet; then
+            echo "📭 変更なし"
+          else
+            git commit -m "🧠 AI学習完了: $(date +'%Y-%m-%d %H:%M') - 重み更新"
+            git push
+            echo "✅ 学習結果をプッシュしました"
+          fi
+
+      - name: 📱 通知を送信
+        if: github.event.inputs.notify != 'false'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          python scripts/notifier.py --type optimize --status ${{ steps.optimize.outputs.optimize_status || 'completed' }}
+        continue-on-error: true

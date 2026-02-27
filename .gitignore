@@ -1,0 +1,8 @@
+# Backups and heavy files
+backups/
+*.tar.gz
+*.zip
+
+# Generated archives and history data
+data/archive/
+data/history/

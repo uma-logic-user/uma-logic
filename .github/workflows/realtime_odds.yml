@@ -1,0 +1,65 @@
+name: 💹 リアルタイムオッズ取得
+
+on:
+  workflow_dispatch:
+
+env:
+  TZ: Asia/Tokyo
+
+jobs:
+  fetch-odds:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 リポジトリをチェックアウト
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🐍 Python環境をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 依存パッケージをインストール
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 📁 データディレクトリを作成
+        run: |
+          mkdir -p data
+          mkdir -p data/archive
+          mkdir -p data/models
+
+      - name: 💹 リアルタイムオッズを取得
+        run: python scripts/scraper_realtime.py || echo "Odds fetch skipped"
+
+      - name: 💾 変更をコミット＆プッシュ（コンフリクト回避）
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          
+          # 変更をステージング
+          git add data/ || true
+          
+          # 変更がある場合のみコミット
+          if ! git diff --staged --quiet; then
+            # 一時的にstashして最新を取得
+            git stash push -m "temp-changes" || true
+            
+            # 最新を取得（コンフリクト回避）
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # stashを戻す
+            git stash pop || git checkout stash -- . || true
+            
+            # 再度ステージングしてコミット
+            git add data/ || true
+            git commit -m "💹 オッズ更新: $(date +'%Y-%m-%d %H:%M')" || true
+            git push origin main || true
+          else
+            echo "📭 変更なし"
+          fi

@@ -1,0 +1,52 @@
+# オッズ取得設定
+[odds_fetch]
+# 最大リトライ回数
+max_retries = 3
+# タイムアウト時間（秒）
+timeout = 15
+# 指数関数的バックオフのベース時間（秒）
+backoff_base = 2
+
+# ネットワーク設定
+[network]
+# ユーザーエージェント
+user_agent = Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36
+# リファラ
+referer = https://race.netkeiba.com/
+# 言語設定
+accept_language = ja,en-US;q=0.9,en;q=0.8
+
+# ロギング設定
+[logging]
+# ログレベル (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+level = INFO
+# ログファイルの最大サイズ（MB）
+max_file_size = 10
+# 保持するログファイル数
+backup_count = 5
+
+# パフォーマンス設定
+[performance]
+# 実行時間警告閾値（秒）
+warning_threshold = 30
+# 実行時間エラー閾値（秒）
+error_threshold = 60
+# バッチサイズ（一度に処理するレース数）
+batch_size = 5
+
+# メール通知設定
+[email]
+# メール通知を有効にする
+enabled = false
+# SMTPサーバー
+smtp_server = smtp.gmail.com
+# SMTPポート
+smtp_port = 587
+# メールアドレス
+email_from = your_email@gmail.com
+# メールパスワード（アプリパスワード）
+email_password = your_app_password
+# 通知先メールアドレス（カンマ区切り）
+email_to = recipient@example.com
+# SSL/TLSを使用
+use_tls = true

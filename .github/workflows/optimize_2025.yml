@@ -1,0 +1,115 @@
+# .github/workflows/optimize_2025.yml
+# UMA-Logic PRO - 2025年データシミュレーション＆AI学習
+# スマホからボタン一つで実行可能
+
+name: 🧪 2025年シミュレーション
+
+on:
+  workflow_dispatch:
+    inputs:
+      learning_rate:
+        description: '学習率（0.01-0.5）'
+        required: false
+        default: '0.1'
+      iterations:
+        description: '最適化イテレーション数'
+        required: false
+        default: '100'
+      notify:
+        description: '通知を送信する'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  TZ: Asia/Tokyo
+
+jobs:
+  simulate-2025:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # 1. 環境セットアップ
+      - name: 📥 リポジトリをチェックアウト
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🐍 Python環境をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 依存パッケージをインストール
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 📁 ディレクトリを作成
+        run: |
+          mkdir -p data/archive
+          mkdir -p data/models
+
+      # 2. データ準備
+      - name: 📂 全データをアーカイブ形式に整理
+        run: python scripts/archive_manager.py --archive-all || echo "Archive step skipped"
+
+      - name: 🔍 インデックスを再構築
+        run: python scripts/archive_manager.py --rebuild-index || echo "Index rebuild skipped"
+
+      # 3. 2025年データでAI学習
+      - name: 🧠 2025年データでAI学習を実行
+        id: optimize
+        run: |
+          python scripts/ensemble_agents.py --optimize --source data/archive/2025 \
+            --learning-rate ${{ github.event.inputs.learning_rate }} \
+            --iterations ${{ github.event.inputs.iterations }}
+          
+          # 結果を取得してログに出力
+          if [ -f "data/models/weights.json" ]; then
+            HIT_RATE=$(python3 -c "import json; print(json.load(open('data/models/weights.json')).get('test_metrics', {}).get('hit_rate', 0))" 2>/dev/null || echo "0")
+            ROI=$(python3 -c "import json; print(json.load(open('data/models/weights.json')).get('test_metrics', {}).get('recovery_rate', 0))" 2>/dev/null || echo "0")
+            echo "hit_rate=$HIT_RATE" >> $GITHUB_OUTPUT
+            echo "roi=$ROI" >> $GITHUB_OUTPUT
+          fi
+
+      # 4. 結果を自動保存（修正版：stashを使用してコンフリクト回避）
+      - name: 💾 学習結果をリポジトリに自動保存
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "UMA-Logic Bot"
+          
+          # 変更をステージング
+          git add data/models/weights.json data/archive/ || true
+          
+          # 変更がある場合のみコミット
+          if ! git diff --staged --quiet; then
+            # 一時的にstashして最新を取得
+            git stash push -m "temp-changes" || true
+            
+            # 最新を取得（コンフリクト回避）
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # stashを戻す（コンフリクトがあれば上書き）
+            git stash pop || git checkout stash -- . || true
+            
+            # 再度ステージングしてコミット
+            git add data/models/weights.json data/archive/ || true
+            git commit -m "🧪 2025年シミュレーション完了 - $(date +'%Y-%m-%d %H:%M')" || true
+            git push origin main || true
+          else
+            echo "No changes to commit"
+          fi
+
+      # 5. 完了通知
+      - name: 📱 通知を送信
+        if: github.event.inputs.notify != 'false'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: python scripts/notifier.py --type optimize --status success || echo "Notification skipped"

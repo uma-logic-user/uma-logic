@@ -1,0 +1,113 @@
+name: 🔄 過去予想再生成
+
+on:
+  workflow_dispatch:
+    inputs:
+      dates:
+        description: '日付（YYYYMMDD形式、カンマ区切りで複数指定可、空欄で全期間）'
+        required: false
+        default: ''
+        type: string
+      force:
+        description: '既存の予想ファイルを上書きする'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: 📥 リポジトリをチェックアウト
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 🐍 Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📦 依存関係インストール
+        run: |
+          pip install requests beautifulsoup4
+      
+      - name: 🔄 過去予想を再生成
+        run: |
+          echo "=============================================="
+          echo "🔄 過去予想再生成"
+          echo "=============================================="
+          
+          if [ -n "${{ github.event.inputs.dates }}" ]; then
+            # カンマ区切りの日付を引数に変換
+            DATES=$(echo "${{ github.event.inputs.dates }}" | tr ',' ' ')
+            echo "指定日付: $DATES"
+            
+            if [ "${{ github.event.inputs.force }}" = "true" ]; then
+              python scripts/regenerate_predictions.py $DATES --force
+            else
+              python scripts/regenerate_predictions.py $DATES
+            fi
+          else
+            # 全期間
+            echo "全期間を処理"
+            
+            if [ "${{ github.event.inputs.force }}" = "true" ]; then
+              python scripts/regenerate_predictions.py --force
+            else
+              python scripts/regenerate_predictions.py
+            fi
+          fi
+      
+      - name: 📊 生成結果を確認
+        run: |
+          echo "=============================================="
+          echo "📊 生成された予想ファイル"
+          echo "=============================================="
+          ls -la data/predictions_*.json | head -20
+          echo ""
+          echo "合計: $(ls -1 data/predictions_*.json 2>/dev/null | wc -l) ファイル"
+      
+      - name: 📤 変更をコミット・プッシュ
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # 変更があるか確認
+          if [ -n "$(git status --porcelain data/predictions_*.json 2>/dev/null)" ]; then
+            git add data/predictions_*.json
+            git commit -m "🔄 過去予想を再生成 ($(date '+%Y-%m-%d %H:%M'))"
+            
+            # 直接プッシュ（リトライ付き）
+            for i in 1 2 3; do
+              echo "プッシュ試行 $i/3..."
+              if git push origin main; then
+                echo "✅ プッシュ成功"
+                break
+              else
+                echo "⚠️ プッシュ失敗、リトライ..."
+                git pull --rebase origin main || true
+                sleep 5
+              fi
+            done
+            
+            echo "✅ 予想ファイルをプッシュしました"
+          else
+            echo "ℹ️ 変更なし（新しい予想ファイルはありません）"
+          fi
+      
+      - name: 📱 Discord通知
+        if: always()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK" ]; then
+            PRED_COUNT=$(ls -1 data/predictions_*.json 2>/dev/null | wc -l)
+            
+            curl -H "Content-Type: application/json" \
+                 -X POST \
+                 -d "{\"content\": \"🔄 **過去予想再生成完了**\n予想ファイル数: ${PRED_COUNT}件\"}" \
+                 "$DISCORD_WEBHOOK" || true
+          fi

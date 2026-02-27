@@ -1,0 +1,97 @@
+name: UMA-Logic Auto Update
+
+on:
+  schedule:
+    # 金曜21:00 JST (UTC 12:00) - 土曜の予想準備
+    - cron: '0 12 * * 5'
+    # 土曜07:00 JST (UTC 22:00 前日) - 土曜の予想生成
+    - cron: '0 22 * * 5'
+    # 日曜07:00 JST (UTC 22:00 前日) - 日曜の予想生成
+    - cron: '0 22 * * 6'
+    # 土曜18:00 JST (UTC 09:00) - 土曜の結果取得
+    - cron: '0 9 * * 6'
+    # 日曜18:00 JST (UTC 09:00) - 日曜の結果取得
+    - cron: '0 9 * * 0'
+  workflow_dispatch:  # 手動実行も可能
+
+env:
+  TZ: Asia/Tokyo
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create Data Directory
+        run: |
+          mkdir -p data
+          mkdir -p data/archive
+          mkdir -p data/models
+
+      - name: Run Prediction Scripts (Morning)
+        if: github.event.schedule == '0 22 * * 5' || github.event.schedule == '0 22 * * 6' || github.event_name == 'workflow_dispatch'
+        run: |
+          echo "=== 1. Fetching Race Data ==="
+          python scripts/fetch_race_data.py && echo "✅ Fetch DONE" || echo "⚠️ Fetch SKIP (No Race Today)"
+          
+          echo ""
+          echo "=== 2. Running Calculator Pro ==="
+          python scripts/calculator_pro.py && echo "✅ Calculator DONE" || echo "⚠️ Calculator SKIP"
+          
+          echo ""
+          echo "=== 3. Running Realtime Scraper (Optional) ==="
+          if [ -f "scripts/scraper_realtime.py" ]; then
+            python scripts/scraper_realtime.py && echo "✅ Scraper DONE" || echo "⚠️ Scraper SKIP"
+          else
+            echo "ℹ️ scraper_realtime.py not found, skipping..."
+          fi
+
+      - name: Run Result Scripts (Evening)
+        if: github.event.schedule == '0 9 * * 6' || github.event.schedule == '0 9 * * 0'
+        run: |
+          echo "=== Fetching Race Results ==="
+          python scripts/update_results.py && echo "✅ Results DONE" || echo "⚠️ Results SKIP"
+
+      - name: Commit and Push Changes (Conflict-Safe)
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # 変更をステージング
+          git add data/ || true
+          
+          # 変更がある場合のみコミット
+          if ! git diff --staged --quiet; then
+            # 一時的にstashして最新を取得
+            git stash push -m "temp-changes" || true
+            
+            # 最新を取得（コンフリクト回避）
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # stashを戻す
+            git stash pop || git checkout stash -- . || true
+            
+            # 再度ステージングしてコミット
+            git add data/ || true
+            git commit -m "🐎 Auto update: $(date +'%Y-%m-%d %H:%M')" || true
+            git push origin main || true
+          else
+            echo "No changes to commit"
+          fi
